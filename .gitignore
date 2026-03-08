@@ -1,3 +1,7 @@
+# Environment files
+.env
+.env.local
+
 # Java / Maven
 target/
 *.class
@@ -5,6 +9,7 @@ target/
 
 # Node / React
 node_modules/
+dist/
 build/
 .env
 
@@ -12,4 +17,7 @@ build/
 .idea/
 .vscode/
 *.swp
+*.iml
+
+#OS
 .DS_Store
