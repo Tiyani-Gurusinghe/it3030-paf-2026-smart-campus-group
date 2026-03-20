@@ -1,15 +1,31 @@
-# Java / Maven
-target/
-*.class
-*.jar
+# OS
+.DS_Store
+Thumbs.db
 
-# Node / React
-node_modules/
-build/
-.env
-
-# IDEs
+# IDE
 .idea/
 .vscode/
-*.swp
-.DS_Store
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*
+
+# Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/target/
+backend/.idea/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Coverage
+coverage/
