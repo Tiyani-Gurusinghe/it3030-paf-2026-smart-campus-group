@@ -14,12 +14,13 @@ To keep the database consistent for all team members, the schema and seed data a
 #### 1. Create the database and tables
 
 ```bash
-mysql -u root -p < database/schema.sql
+mysql -u root -p < smartcampus/src/main/resources/db/migration/V1__init_schema.sql
+
 ```
 #### 2. Insert seed data
 
 ````
-mysql -u root -p < database/seed.sql
+mysql -u root -p < smartcampus/src/main/resources/db/seed/data.sql
 ````
 #### Environment Variables
 
