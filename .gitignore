@@ -1,23 +1,31 @@
-# Environment files
-.env
-.env.local
+# OS
+.DS_Store
+Thumbs.db
 
-# Java / Maven
-target/
-*.class
-*.jar
-
-# Node / React
-node_modules/
-dist/
-build/
-.env
-
-# IDEs
+# IDE
 .idea/
 .vscode/
-*.swp
-*.iml
 
-#OS
-.DS_Store
+# Logs
+*.log
+
+# Env
+.env
+.env.*
+
+# Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/target/
+backend/.idea/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Coverage
+coverage/
