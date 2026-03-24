@@ -4,12 +4,14 @@ import apiClient from '../../services/apiClient';
 const resourceApi = {
     // GET all resources (with optional filters)
     getAllResources: async (filters = {}) => {
-        const params = new URLSearchParams();
-        if (filters.type) params.append('type', filters.type);
-        if (filters.minCapacity) params.append('minCapacity', filters.minCapacity);
-        if (filters.location) params.append('location', filters.location);
+        // Only add filters that actually have a value
+        const validParams = {};
+        if (filters.type) validParams.type = filters.type;
+        if (filters.minCapacity) validParams.minCapacity = filters.minCapacity;
+        if (filters.location) validParams.location = filters.location;
         
-        const response = await apiClient.get(`/api/resources?${params.toString()}`);
+        // Axios will automatically handle the ? and formatting for us safely
+        const response = await apiClient.get('/api/resources', { params: validParams });
         return response.data;
     },
 
