@@ -1,7 +1,41 @@
-import apiClient from "../../../services/apiClient";
+import apiClient from '../../services/apiClient';
 
-export const resourceApi = {
-  getAll: () => apiClient.get("/resources"),
-  getById: (id) => apiClient.get(`/resources/${id}`),
-  create: (payload) => apiClient.post("/resources", payload),
+// We use the apiClient configured by your team leader (likely handles base URL and auth tokens)
+const resourceApi = {
+    // GET all resources (with optional filters)
+    getAllResources: async (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.type) params.append('type', filters.type);
+        if (filters.minCapacity) params.append('minCapacity', filters.minCapacity);
+        if (filters.location) params.append('location', filters.location);
+        
+        const response = await apiClient.get(`/api/resources?${params.toString()}`);
+        return response.data;
+    },
+
+    // GET a single resource by ID
+    getResourceById: async (id) => {
+        const response = await apiClient.get(`/api/resources/${id}`);
+        return response.data;
+    },
+
+    // POST a new resource
+    createResource: async (resourceData) => {
+        const response = await apiClient.post('/api/resources', resourceData);
+        return response.data;
+    },
+
+    // PUT to update a resource
+    updateResource: async (id, resourceData) => {
+        const response = await apiClient.put(`/api/resources/${id}`, resourceData);
+        return response.data;
+    },
+
+    // DELETE a resource
+    deleteResource: async (id) => {
+        const response = await apiClient.delete(`/api/resources/${id}`);
+        return response.data;
+    }
 };
+
+export default resourceApi;
