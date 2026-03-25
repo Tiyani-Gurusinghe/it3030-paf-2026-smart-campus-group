@@ -28,23 +28,23 @@ public class Ticket {
     @Column(nullable = false, length = 20)
     private TicketPriority priority;
 
-    @Column(nullable = false, length = 120)
+    @Column(name = "preferred_contact", nullable = false, length = 120)
     private String preferredContact;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketStatus status;
 
-    @Column(length = 120)
+    @Column(name = "assigned_to", length = 120)
     private String assignedTo;
 
-    @Column(length = 1000)
+    @Column(name = "resolution_notes", length = 1000)
     private String resolutionNotes;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

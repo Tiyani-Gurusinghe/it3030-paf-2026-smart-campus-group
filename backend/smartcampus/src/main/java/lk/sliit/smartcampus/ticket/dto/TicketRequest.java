@@ -13,6 +13,7 @@ public class TicketRequest {
     private String title;
 
     @NotBlank(message = "Location is required")
+    @Size(max = 120, message = "Location must be at most 120 characters")
     private String location;
 
     @NotNull(message = "Category is required")
@@ -26,32 +27,76 @@ public class TicketRequest {
     private TicketPriority priority;
 
     @NotBlank(message = "Preferred contact is required")
+    @Size(max = 120, message = "Preferred contact must be at most 120 characters")
     private String preferredContact;
 
+    @Size(max = 120, message = "Assigned to must be at most 120 characters")
     private String assignedTo;
+
+    @Size(max = 1000, message = "Resolution notes must be at most 1000 characters")
     private String resolutionNotes;
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public String getLocation() {
+        return location;
+    }
 
-    public TicketCategory getCategory() { return category; }
-    public void setCategory(TicketCategory category) { this.category = category; }
+    public TicketCategory getCategory() {
+        return category;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public TicketPriority getPriority() { return priority; }
-    public void setPriority(TicketPriority priority) { this.priority = priority; }
+    public TicketPriority getPriority() {
+        return priority;
+    }
 
-    public String getPreferredContact() { return preferredContact; }
-    public void setPreferredContact(String preferredContact) { this.preferredContact = preferredContact; }
+    public String getPreferredContact() {
+        return preferredContact;
+    }
 
-    public String getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
+    public String getAssignedTo() {
+        return assignedTo;
+    }
 
-    public String getResolutionNotes() { return resolutionNotes; }
-    public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setCategory(TicketCategory category) {
+        this.category = category;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPriority(TicketPriority priority) {
+        this.priority = priority;
+    }
+
+    public void setPreferredContact(String preferredContact) {
+        this.preferredContact = preferredContact;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
 }
