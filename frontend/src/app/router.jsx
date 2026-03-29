@@ -34,6 +34,7 @@ function AppRouter() {
         <Route path="resources" element={<ResourceListPage />} />
         <Route path="resources/:id" element={<ResourceDetailsPage />} />
         <Route path="resources/new" element={<ResourceFormPage />} />
+        <Route path="resources/edit/:id" element={<ResourceFormPage />} />
         <Route path="bookings" element={<BookingListPage />} />
         <Route path="bookings/:id" element={<BookingDetailsPage />} />
         <Route path="bookings/new" element={<BookingFormPage />} />
