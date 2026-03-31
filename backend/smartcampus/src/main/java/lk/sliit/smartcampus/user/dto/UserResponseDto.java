@@ -1,5 +1,6 @@
 package lk.sliit.smartcampus.user.dto;
 
+import lk.sliit.smartcampus.common.enums.RoleType;
 import java.time.LocalDateTime;
 
 public class UserResponseDto {
@@ -8,6 +9,7 @@ public class UserResponseDto {
     private String oauthId;
     private String fullName;
     private String email;
+    private RoleType role;
     private LocalDateTime createdAt;
 
     public Long getId() { return id; }
@@ -24,6 +26,9 @@ public class UserResponseDto {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public RoleType getRole() { return role; }
+    public void setRole(RoleType role) { this.role = role; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

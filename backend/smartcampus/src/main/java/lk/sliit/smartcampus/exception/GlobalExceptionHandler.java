@@ -27,6 +27,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException ex, HttpServletRequest request) {
+        ApiError error = new ApiError(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> validationErrors = new LinkedHashMap<>();

@@ -23,8 +23,10 @@ public class AuthController {
             throw new BadRequestException("Email is required");
         }
 
+        String email = request.getEmail().trim();
+
         return userRepository
-                .findByEmail(request.getEmail().trim())
+                .findByEmailIgnoreCase(email)
                 .map(user -> ResponseEntity.ok((Object) user))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found"));
     }

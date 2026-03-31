@@ -1,3 +1,5 @@
+import NotificationPanel from "../notifications/NotificationPanel";
+
 function Navbar() {
   return (
     <header className="navbar">
@@ -7,6 +9,7 @@ function Navbar() {
       </div>
       <div className="navbar-spacer" />
       <div className="navbar-actions">
+        <NotificationPanel />
         <div className="navbar-avatar" title="Profile">SC</div>
       </div>
     </header>

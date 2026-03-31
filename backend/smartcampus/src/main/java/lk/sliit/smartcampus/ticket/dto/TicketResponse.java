@@ -1,9 +1,11 @@
 package lk.sliit.smartcampus.ticket.dto;
 
-import java.time.LocalDateTime;
 import lk.sliit.smartcampus.ticket.entity.TicketCategory;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class TicketResponse {
     private Long id;
@@ -16,6 +18,9 @@ public class TicketResponse {
     private TicketStatus status;
     private String assignedTo;
     private String resolutionNotes;
+    private Long reportedBy;
+    private int commentCount;
+    private List<TicketAttachmentResponse> attachments;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -48,6 +53,15 @@ public class TicketResponse {
 
     public String getResolutionNotes() { return resolutionNotes; }
     public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+
+    public Long getReportedBy() { return reportedBy; }
+    public void setReportedBy(Long reportedBy) { this.reportedBy = reportedBy; }
+
+    public int getCommentCount() { return commentCount; }
+    public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
+
+    public List<TicketAttachmentResponse> getAttachments() { return attachments; }
+    public void setAttachments(List<TicketAttachmentResponse> attachments) { this.attachments = attachments; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

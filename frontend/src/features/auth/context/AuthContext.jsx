@@ -5,7 +5,6 @@ const AuthContext = createContext(null);
 function getStoredUser() {
   const rawUser = localStorage.getItem("authUser");
   if (!rawUser) return null;
-
   try {
     return JSON.parse(rawUser);
   } catch {
@@ -23,8 +22,8 @@ export function AuthProvider({ children }) {
       id: userData.id,
       fullName: userData.fullName,
       email: userData.email,
+      role: userData.role ?? "STUDENT", // include role from backend
     };
-
     localStorage.setItem("authUser", JSON.stringify(normalizedUser));
     localStorage.setItem("userId", String(userData.id));
     setUser(normalizedUser);
@@ -40,6 +39,8 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isAuthenticated: !!user,
+      isAdmin: user?.role === "ADMIN",
+      isStaff: user?.role === "STAFF" || user?.role === "ADMIN",
       login,
       logout,
     }),

@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.user.entity;
 
 import jakarta.persistence.*;
+import lk.sliit.smartcampus.common.enums.RoleType;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,6 +24,10 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private RoleType role = RoleType.STUDENT;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -43,13 +48,15 @@ public class User {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
+    public RoleType getRole() { return role; }
+    public void setRole(RoleType role) { this.role = role; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (role == null) role = RoleType.STUDENT;
     }
 }
