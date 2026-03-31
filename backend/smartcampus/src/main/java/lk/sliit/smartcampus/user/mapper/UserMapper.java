@@ -10,22 +10,21 @@ public class UserMapper {
 
     public static User toEntity(UserCreateRequestDto dto) {
         User user = new User();
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
+        user.setOauthProvider(dto.getOauthProvider());
+        user.setOauthId(dto.getOauthId());
+        user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
-        user.setRole(dto.getRole());
-        user.setStatus(dto.getStatus());
         return user;
     }
 
     public static UserResponseDto toDto(User user) {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
+        dto.setOauthProvider(user.getOauthProvider());
+        dto.setOauthId(user.getOauthId());
+        dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
-        dto.setStatus(user.getStatus());
+        dto.setCreatedAt(user.getCreatedAt());
         return dto;
     }
 }

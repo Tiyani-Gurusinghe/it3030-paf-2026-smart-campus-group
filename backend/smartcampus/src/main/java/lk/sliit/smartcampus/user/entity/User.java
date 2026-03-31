@@ -1,8 +1,7 @@
 package lk.sliit.smartcampus.user.entity;
 
 import jakarta.persistence.*;
-import lk.sliit.smartcampus.common.enums.RoleType;
-import lk.sliit.smartcampus.common.enums.StatusType;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -12,40 +11,45 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name", nullable = false)
-    private String firstName;
+    @Column(name = "oauth_provider", nullable = false)
+    private String oauthProvider;
 
-    @Column(name = "last_name", nullable = false)
-    private String lastName;
+    @Column(name = "oauth_id", nullable = false, unique = true)
+    private String oauthId;
+
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private RoleType role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusType status;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     public User() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getOauthProvider() { return oauthProvider; }
+    public void setOauthProvider(String oauthProvider) { this.oauthProvider = oauthProvider; }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getOauthId() { return oauthId; }
+    public void setOauthId(String oauthId) { this.oauthId = oauthId; }
+
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public RoleType getRole() { return role; }
-    public void setRole(RoleType role) { this.role = role; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public StatusType getStatus() { return status; }
-    public void setStatus(StatusType status) { this.status = status; }
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

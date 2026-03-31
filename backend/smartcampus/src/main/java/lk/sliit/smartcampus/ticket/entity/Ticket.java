@@ -46,6 +46,16 @@ public class Ticket {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+    
+    @Column(name = "reported_by")
+    private Long reportedBy;
+        public Long getReportedBy() {
+        return reportedBy;
+    }
+
+    public void setReportedBy(Long reportedBy) {
+        this.reportedBy = reportedBy;
+    }
 
     @PrePersist
     public void prePersist() {
@@ -134,6 +144,7 @@ public class Ticket {
     public void setPriority(TicketPriority priority) {
         this.priority = priority;
     }
+    
 
     public void setPreferredContact(String preferredContact) {
         this.preferredContact = preferredContact;

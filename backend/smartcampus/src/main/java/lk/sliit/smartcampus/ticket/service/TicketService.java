@@ -40,6 +40,7 @@ public class TicketService {
         ticket.setPreferredContact(request.getPreferredContact());
         ticket.setAssignedTo(request.getAssignedTo());
         ticket.setResolutionNotes(request.getResolutionNotes());
+        ticket.setReportedBy(request.getReportedBy());
         ticket.setStatus(TicketStatus.OPEN);
 
         return ticketRepository.save(ticket);

@@ -2,19 +2,46 @@ import { createContext, useContext, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);
 
+function getStoredUser() {
+  const rawUser = localStorage.getItem("authUser");
+  if (!rawUser) return null;
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("userId");
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState({
-    id: 1,
-    name: "Demo User",
-    role: "ADMIN",
-  });
+  const [user, setUser] = useState(getStoredUser);
+
+  function login(userData) {
+    const normalizedUser = {
+      id: userData.id,
+      fullName: userData.fullName,
+      email: userData.email,
+    };
+
+    localStorage.setItem("authUser", JSON.stringify(normalizedUser));
+    localStorage.setItem("userId", String(userData.id));
+    setUser(normalizedUser);
+  }
+
+  function logout() {
+    localStorage.removeItem("authUser");
+    localStorage.removeItem("userId");
+    setUser(null);
+  }
 
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: !!user,
-      login: (userData) => setUser(userData),
-      logout: () => setUser(null),
+      login,
+      logout,
     }),
     [user]
   );
