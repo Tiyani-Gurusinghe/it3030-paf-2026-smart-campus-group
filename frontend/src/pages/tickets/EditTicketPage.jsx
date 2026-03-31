@@ -18,7 +18,6 @@ export default function EditTicketPage() {
         setError(err.message || "Failed to load ticket");
       }
     }
-
     loadTicket();
   }, [id]);
 
@@ -30,7 +29,9 @@ export default function EditTicketPage() {
   if (error) {
     return (
       <div className="page">
-        <div className="error-box">{error}</div>
+        <div className="error-box">
+          <span>⚠️</span> {error}
+        </div>
       </div>
     );
   }
@@ -38,7 +39,9 @@ export default function EditTicketPage() {
   if (!ticket) {
     return (
       <div className="page">
-        <div className="card">Loading ticket...</div>
+        <div className="skeleton-grid">
+          <div className="skeleton-card" style={{ height: 500, gridColumn: "1 / -1" }} />
+        </div>
       </div>
     );
   }

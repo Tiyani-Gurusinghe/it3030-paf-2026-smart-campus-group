@@ -3,6 +3,16 @@ import { Link } from "react-router-dom";
 import { deleteTicket, getTickets } from "../../api/ticket/ticketApi";
 import TicketList from "../../components/ticket/TicketList";
 
+function SkeletonCards() {
+  return (
+    <div className="skeleton-grid">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="skeleton-card" />
+      ))}
+    </div>
+  );
+}
+
 export default function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +35,7 @@ export default function TicketsPage() {
   }, []);
 
   async function handleDelete(id) {
-    const confirmed = window.confirm("Delete this ticket?");
+    const confirmed = window.confirm("Are you sure you want to delete this ticket?");
     if (!confirmed) return;
 
     try {
@@ -40,15 +50,27 @@ export default function TicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Maintenance & Incident Tickets</h1>
-          <p className="subtext">Create, track, update, and manage campus maintenance issues.</p>
+          <h1 className="page-title">🎫 Tickets</h1>
+          <p className="page-subtitle">
+            Create, track, and manage campus maintenance & incident reports.
+          </p>
         </div>
-        <Link to="/tickets/new" className="btn">Create Ticket</Link>
+        <Link to="/tickets/new" className="btn">
+          + New Ticket
+        </Link>
       </div>
 
-      {loading && <div className="card">Loading tickets...</div>}
-      {error && <div className="error-box">{error}</div>}
-      {!loading && !error && <TicketList tickets={tickets} onDelete={handleDelete} />}
+      {error && (
+        <div className="error-box">
+          <span>⚠️</span> {error}
+        </div>
+      )}
+
+      {loading && <SkeletonCards />}
+
+      {!loading && !error && (
+        <TicketList tickets={tickets} onDelete={handleDelete} />
+      )}
     </div>
   );
 }
