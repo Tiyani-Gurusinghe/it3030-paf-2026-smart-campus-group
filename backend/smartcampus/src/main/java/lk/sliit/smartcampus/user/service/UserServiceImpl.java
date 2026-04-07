@@ -20,7 +20,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDto createUser(UserCreateRequestDto request) {
-        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+        userRepository.findByEmailIgnoreCase(request.getEmail().trim()).ifPresent(user -> {
             throw new ConflictException("Email already exists");
         });
 

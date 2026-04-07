@@ -31,9 +31,31 @@ INSERT INTO bookings (user_id, resource_id, booking_date, start_time, end_time, 
 (2, 3, '2026-03-16', '14:00:00', '15:00:00', 'Project meeting', 6, 'PENDING', NULL);
 
 -- Sample tickets
-INSERT INTO tickets (reported_by, resource_id, location, category, description, priority, preferred_contact, assigned_to, status, resolution_notes) VALUES
-(2, 4, 'Equipment Store', 'Projector Fault', 'Projector not powering on', 'HIGH', '0771234567', 3, 'IN_PROGRESS', NULL),
-(2, 2, 'Block B - Floor 2', 'PC Issue', 'Several PCs are slow and freezing', 'MEDIUM', 'user@smartcampus.com', 3, 'OPEN', NULL);
+INSERT INTO tickets (
+    title,
+    location,
+    category,
+    description,
+    priority,
+    preferred_contact,
+    status,
+    assigned_to,
+    resolution_notes,
+    created_at,
+    updated_at
+) VALUES (
+    'Projector not working',
+    'A401',
+    'PROJECTOR',
+    'Projector shows a black screen',
+    'HIGH',
+    '0771234567',
+    'OPEN',
+    NULL,
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
 
 -- Sample comments
 INSERT INTO ticket_comments (ticket_id, user_id, comment_text) VALUES
