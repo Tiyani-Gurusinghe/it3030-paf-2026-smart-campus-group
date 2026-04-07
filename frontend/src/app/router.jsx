@@ -1,50 +1,47 @@
-import { Routes, Route } from "react-router-dom";
-import AppLayout from "../components/layout/AppLayout";
+import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
-import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
-import DashboardPage from "../pages/dashboard/DashboardPage";
-import ResourceListPage from "../pages/resources/ResourceListPage";
-import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
-import ResourceFormPage from "../pages/resources/ResourceFormPage";
-import BookingListPage from "../pages/bookings/BookingListPage";
-import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
-import BookingFormPage from "../pages/bookings/BookingFormPage";
-import TicketListPage from "../pages/tickets/TicketListPage";
+import TicketsPage from "../pages/tickets/TicketsPage";
+import CreateTicketPage from "../pages/tickets/CreateTicketPage";
+import EditTicketPage from "../pages/tickets/EditTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
-import TicketFormPage from "../pages/tickets/TicketFormPage";
-import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
-import ProfilePage from "../pages/profile/ProfilePage";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
+import AppLayout from "../components/layout/AppLayout";
 
-function AppRouter() {
-  return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <TicketsPage />,
+      },
+      {
+        path: "tickets",
+        element: <TicketsPage />,
+      },
+      {
+        path: "tickets/new",
+        element: <CreateTicketPage />,
+      },
+      {
+        path: "tickets/:id",
+        element: <TicketDetailsPage />,
+      },
+      {
+        path: "tickets/:id/edit",
+        element: <EditTicketPage />,
+      },
+    ],
+  },
+]);
 
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="resources" element={<ResourceListPage />} />
-        <Route path="resources/:id" element={<ResourceDetailsPage />} />
-        <Route path="resources/new" element={<ResourceFormPage />} />
-        <Route path="bookings" element={<BookingListPage />} />
-        <Route path="bookings/:id" element={<BookingDetailsPage />} />
-        <Route path="bookings/new" element={<BookingFormPage />} />
-        <Route path="tickets" element={<TicketListPage />} />
-        <Route path="tickets/:id" element={<TicketDetailsPage />} />
-        <Route path="tickets/new" element={<TicketFormPage />} />
-        <Route path="notifications" element={<NotificationPanelPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-      </Route>
-    </Routes>
-  );
-}
-
-export default AppRouter;
+export default router;
