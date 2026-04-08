@@ -1,7 +1,6 @@
 package lk.sliit.smartcampus.ticket.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 
 public class TicketStatusUpdateRequest {
@@ -10,11 +9,7 @@ public class TicketStatusUpdateRequest {
     private TicketStatus status;
 
     private Long assignedTo;
-
-    @Size(max = 4000, message = "Resolution notes must be at most 4000 characters")
     private String resolutionNotes;
-
-    @Size(max = 4000, message = "Rejected reason must be at most 4000 characters")
     private String rejectedReason;
 
     public TicketStatus getStatus() {

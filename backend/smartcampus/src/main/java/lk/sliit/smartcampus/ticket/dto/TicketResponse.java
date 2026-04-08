@@ -11,17 +11,33 @@ public class TicketResponse {
     private Long id;
     private String title;
     private String description;
+
     private Long resourceId;
+    private String resourceName;
+    private String resourceType;
+
     private Long requiredSkillId;
+    private String requiredSkillName;
+
     private TicketPriority priority;
     private TicketStatus status;
+
     private Long reportedBy;
+    private String reportedByName;
+
     private Long assignedTo;
+    private String assignedToName;
+
     private String resolutionNotes;
     private String rejectedReason;
+    private String preferredContactDetails;
+
     private Long firstRespondedBy;
+    private String firstRespondedByName;
+
     private int commentCount;
     private List<TicketAttachmentResponse> attachments;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime firstResponseAt;
@@ -45,8 +61,20 @@ public class TicketResponse {
         return resourceId;
     }
 
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
     public Long getRequiredSkillId() {
         return requiredSkillId;
+    }
+
+    public String getRequiredSkillName() {
+        return requiredSkillName;
     }
 
     public TicketPriority getPriority() {
@@ -61,8 +89,16 @@ public class TicketResponse {
         return reportedBy;
     }
 
+    public String getReportedByName() {
+        return reportedByName;
+    }
+
     public Long getAssignedTo() {
         return assignedTo;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
     }
 
     public String getResolutionNotes() {
@@ -73,8 +109,16 @@ public class TicketResponse {
         return rejectedReason;
     }
 
+    public String getPreferredContactDetails() {
+        return preferredContactDetails;
+    }
+
     public Long getFirstRespondedBy() {
         return firstRespondedBy;
+    }
+
+    public String getFirstRespondedByName() {
+        return firstRespondedByName;
     }
 
     public int getCommentCount() {
@@ -125,8 +169,20 @@ public class TicketResponse {
         this.resourceId = resourceId;
     }
 
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
+    }
+
     public void setRequiredSkillId(Long requiredSkillId) {
         this.requiredSkillId = requiredSkillId;
+    }
+
+    public void setRequiredSkillName(String requiredSkillName) {
+        this.requiredSkillName = requiredSkillName;
     }
 
     public void setPriority(TicketPriority priority) {
@@ -141,8 +197,16 @@ public class TicketResponse {
         this.reportedBy = reportedBy;
     }
 
+    public void setReportedByName(String reportedByName) {
+        this.reportedByName = reportedByName;
+    }
+
     public void setAssignedTo(Long assignedTo) {
         this.assignedTo = assignedTo;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
     }
 
     public void setResolutionNotes(String resolutionNotes) {
@@ -153,8 +217,16 @@ public class TicketResponse {
         this.rejectedReason = rejectedReason;
     }
 
+    public void setPreferredContactDetails(String preferredContactDetails) {
+        this.preferredContactDetails = preferredContactDetails;
+    }
+
     public void setFirstRespondedBy(Long firstRespondedBy) {
         this.firstRespondedBy = firstRespondedBy;
+    }
+
+    public void setFirstRespondedByName(String firstRespondedByName) {
+        this.firstRespondedByName = firstRespondedByName;
     }
 
     public void setCommentCount(int commentCount) {

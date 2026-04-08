@@ -27,6 +27,10 @@ public class TicketRequest {
     @NotNull(message = "Reported by is required")
     private Long reportedBy;
 
+    // Optional - keep only if you still want it in API layer
+    @Size(max = 120, message = "Preferred contact details must be at most 120 characters")
+    private String preferredContactDetails;
+
     public String getTitle() {
         return title;
     }
@@ -51,6 +55,10 @@ public class TicketRequest {
         return reportedBy;
     }
 
+    public String getPreferredContactDetails() {
+        return preferredContactDetails;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -73,5 +81,9 @@ public class TicketRequest {
 
     public void setReportedBy(Long reportedBy) {
         this.reportedBy = reportedBy;
+    }
+
+    public void setPreferredContactDetails(String preferredContactDetails) {
+        this.preferredContactDetails = preferredContactDetails;
     }
 }

@@ -52,7 +52,7 @@ public class TicketService {
 
     public TicketResponse createTicket(TicketRequest request) {
         Ticket ticket = new Ticket();
-        applyRequest(ticket, request);
+        applyCreateRequest(ticket, request);
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setDueAt(calculateDueDate(request.getPriority()));
         return toResponse(ticketRepository.save(ticket));
@@ -60,7 +60,11 @@ public class TicketService {
 
     public TicketResponse updateTicket(Long id, TicketRequest request) {
         Ticket ticket = findByIdOrThrow(id);
-        applyRequest(ticket, request);
+
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setPriority(request.getPriority());
+
         return toResponse(ticketRepository.save(ticket));
     }
 
@@ -118,7 +122,7 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + id));
     }
 
-    private void applyRequest(Ticket ticket, TicketRequest request) {
+    private void applyCreateRequest(Ticket ticket, TicketRequest request) {
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
         ticket.setResourceId(request.getResourceId());

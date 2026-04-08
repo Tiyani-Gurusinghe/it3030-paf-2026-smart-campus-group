@@ -42,8 +42,6 @@ public class TicketController {
         this.userRepository = userRepository;
     }
 
-    // ---------------- Tickets ----------------
-
     @GetMapping
     public ResponseEntity<List<TicketResponse>> getAllTickets(
             @RequestParam(required = false) TicketStatus status,
@@ -83,8 +81,6 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------- Comments ----------------
-
     @GetMapping("/{ticketId}/comments")
     public ResponseEntity<List<TicketCommentResponse>> getComments(@PathVariable Long ticketId) {
         return ResponseEntity.ok(commentService.getComments(ticketId));
@@ -118,8 +114,6 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------- Attachments ----------------
-
     @GetMapping("/{ticketId}/attachments")
     public ResponseEntity<List<TicketAttachmentResponse>> getAttachments(@PathVariable Long ticketId) {
         return ResponseEntity.ok(attachmentService.getAttachments(ticketId));
@@ -142,10 +136,8 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------- Helper ----------------
-
     private boolean isAdminUser(Long userId) {
-    Optional<User> user = userRepository.findById(userId);
-    return user.map(u -> u.hasRole(RoleType.ADMIN)).orElse(false);
-}
+        Optional<User> user = userRepository.findById(userId);
+        return user.map(u -> u.hasRole(RoleType.ADMIN)).orElse(false);
+    }
 }
