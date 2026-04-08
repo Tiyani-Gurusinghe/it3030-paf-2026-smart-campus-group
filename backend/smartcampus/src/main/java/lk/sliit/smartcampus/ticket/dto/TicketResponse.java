@@ -1,6 +1,5 @@
 package lk.sliit.smartcampus.ticket.dto;
 
-import lk.sliit.smartcampus.ticket.entity.TicketCategory;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 
@@ -8,64 +7,185 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class TicketResponse {
+
     private Long id;
     private String title;
-    private String location;
-    private TicketCategory category;
     private String description;
+    private Long resourceId;
+    private Long requiredSkillId;
     private TicketPriority priority;
-    private String preferredContact;
     private TicketStatus status;
-    private String assignedTo;
-    private String resolutionNotes;
     private Long reportedBy;
+    private Long assignedTo;
+    private String resolutionNotes;
+    private String rejectedReason;
+    private Long firstRespondedBy;
     private int commentCount;
     private List<TicketAttachmentResponse> attachments;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime firstResponseAt;
+    private LocalDateTime dueAt;
+    private LocalDateTime resolvedAt;
+    private LocalDateTime closedAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public String getDescription() {
+        return description;
+    }
 
-    public TicketCategory getCategory() { return category; }
-    public void setCategory(TicketCategory category) { this.category = category; }
+    public Long getResourceId() {
+        return resourceId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public Long getRequiredSkillId() {
+        return requiredSkillId;
+    }
 
-    public TicketPriority getPriority() { return priority; }
-    public void setPriority(TicketPriority priority) { this.priority = priority; }
+    public TicketPriority getPriority() {
+        return priority;
+    }
 
-    public String getPreferredContact() { return preferredContact; }
-    public void setPreferredContact(String preferredContact) { this.preferredContact = preferredContact; }
+    public TicketStatus getStatus() {
+        return status;
+    }
 
-    public TicketStatus getStatus() { return status; }
-    public void setStatus(TicketStatus status) { this.status = status; }
+    public Long getReportedBy() {
+        return reportedBy;
+    }
 
-    public String getAssignedTo() { return assignedTo; }
-    public void setAssignedTo(String assignedTo) { this.assignedTo = assignedTo; }
+    public Long getAssignedTo() {
+        return assignedTo;
+    }
 
-    public String getResolutionNotes() { return resolutionNotes; }
-    public void setResolutionNotes(String resolutionNotes) { this.resolutionNotes = resolutionNotes; }
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
 
-    public Long getReportedBy() { return reportedBy; }
-    public void setReportedBy(Long reportedBy) { this.reportedBy = reportedBy; }
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
 
-    public int getCommentCount() { return commentCount; }
-    public void setCommentCount(int commentCount) { this.commentCount = commentCount; }
+    public Long getFirstRespondedBy() {
+        return firstRespondedBy;
+    }
 
-    public List<TicketAttachmentResponse> getAttachments() { return attachments; }
-    public void setAttachments(List<TicketAttachmentResponse> attachments) { this.attachments = attachments; }
+    public int getCommentCount() {
+        return commentCount;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public List<TicketAttachmentResponse> getAttachments() {
+        return attachments;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public LocalDateTime getFirstResponseAt() {
+        return firstResponseAt;
+    }
+
+    public LocalDateTime getDueAt() {
+        return dueAt;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public LocalDateTime getClosedAt() {
+        return closedAt;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
+
+    public void setRequiredSkillId(Long requiredSkillId) {
+        this.requiredSkillId = requiredSkillId;
+    }
+
+    public void setPriority(TicketPriority priority) {
+        this.priority = priority;
+    }
+
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
+
+    public void setReportedBy(Long reportedBy) {
+        this.reportedBy = reportedBy;
+    }
+
+    public void setAssignedTo(Long assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+
+    public void setFirstRespondedBy(Long firstRespondedBy) {
+        this.firstRespondedBy = firstRespondedBy;
+    }
+
+    public void setCommentCount(int commentCount) {
+        this.commentCount = commentCount;
+    }
+
+    public void setAttachments(List<TicketAttachmentResponse> attachments) {
+        this.attachments = attachments;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setFirstResponseAt(LocalDateTime firstResponseAt) {
+        this.firstResponseAt = firstResponseAt;
+    }
+
+    public void setDueAt(LocalDateTime dueAt) {
+        this.dueAt = dueAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+    public void setClosedAt(LocalDateTime closedAt) {
+        this.closedAt = closedAt;
+    }
 }
