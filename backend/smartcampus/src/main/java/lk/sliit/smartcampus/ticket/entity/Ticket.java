@@ -14,53 +14,65 @@ public class Ticket {
     @Column(nullable = false, length = 120)
     private String title;
 
-    @Column(nullable = false, length = 120)
-    private String location;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private TicketCategory category;
-
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = false, length = 2000)
     private String description;
+
+    @Column(name = "resource_id", nullable = false)
+    private Long resourceId;
+
+    @Column(name = "required_skill_id", nullable = false)
+    private Long requiredSkillId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketPriority priority;
 
-    @Column(name = "preferred_contact", nullable = false, length = 120)
-    private String preferredContact;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketStatus status;
 
-    @Column(name = "assigned_to", length = 120)
-    private String assignedTo;
+    @Column(name = "reported_by", nullable = false)
+    private Long reportedBy;
 
-    @Column(name = "resolution_notes", length = 1000)
+    @Column(name = "assigned_to")
+    private Long assignedTo;
+
+    @Column(name = "resolution_notes", length = 4000)
     private String resolutionNotes;
+
+    @Column(name = "rejected_reason", length = 4000)
+    private String rejectedReason;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "first_response_at")
+    private LocalDateTime firstResponseAt;
+
+    @Column(name = "first_responded_by")
+    private Long firstRespondedBy;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+
+    @Column(name = "due_at")
+    private LocalDateTime dueAt;
+
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
-    @Column(name = "reported_by")
-    private Long reportedBy;
-        public Long getReportedBy() {
-        return reportedBy;
-    }
 
-    public void setReportedBy(Long reportedBy) {
-        this.reportedBy = reportedBy;
+    public Ticket() {
     }
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+
         if (this.status == null) {
             this.status = TicketStatus.OPEN;
         }
@@ -71,8 +83,6 @@ public class Ticket {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Ticket() {}
-
     public Long getId() {
         return id;
     }
@@ -81,31 +91,31 @@ public class Ticket {
         return title;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public TicketCategory getCategory() {
-        return category;
-    }
-
     public String getDescription() {
         return description;
+    }
+
+    public Long getResourceId() {
+        return resourceId;
+    }
+
+    public Long getRequiredSkillId() {
+        return requiredSkillId;
     }
 
     public TicketPriority getPriority() {
         return priority;
     }
 
-    public String getPreferredContact() {
-        return preferredContact;
-    }
-
     public TicketStatus getStatus() {
         return status;
     }
 
-    public String getAssignedTo() {
+    public Long getReportedBy() {
+        return reportedBy;
+    }
+
+    public Long getAssignedTo() {
         return assignedTo;
     }
 
@@ -113,8 +123,32 @@ public class Ticket {
         return resolutionNotes;
     }
 
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getFirstResponseAt() {
+        return firstResponseAt;
+    }
+
+    public Long getFirstRespondedBy() {
+        return firstRespondedBy;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public LocalDateTime getClosedAt() {
+        return closedAt;
+    }
+
+    public LocalDateTime getDueAt() {
+        return dueAt;
     }
 
     public LocalDateTime getUpdatedAt() {
@@ -129,32 +163,31 @@ public class Ticket {
         this.title = title;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public void setCategory(TicketCategory category) {
-        this.category = category;
-    }
-
     public void setDescription(String description) {
         this.description = description;
     }
 
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
+
+    public void setRequiredSkillId(Long requiredSkillId) {
+        this.requiredSkillId = requiredSkillId;
+    }
+
     public void setPriority(TicketPriority priority) {
         this.priority = priority;
-    }
-    
-
-    public void setPreferredContact(String preferredContact) {
-        this.preferredContact = preferredContact;
     }
 
     public void setStatus(TicketStatus status) {
         this.status = status;
     }
 
-    public void setAssignedTo(String assignedTo) {
+    public void setReportedBy(Long reportedBy) {
+        this.reportedBy = reportedBy;
+    }
+
+    public void setAssignedTo(Long assignedTo) {
         this.assignedTo = assignedTo;
     }
 
@@ -162,8 +195,32 @@ public class Ticket {
         this.resolutionNotes = resolutionNotes;
     }
 
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setFirstResponseAt(LocalDateTime firstResponseAt) {
+        this.firstResponseAt = firstResponseAt;
+    }
+
+    public void setFirstRespondedBy(Long firstRespondedBy) {
+        this.firstRespondedBy = firstRespondedBy;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+    public void setClosedAt(LocalDateTime closedAt) {
+        this.closedAt = closedAt;
+    }
+
+    public void setDueAt(LocalDateTime dueAt) {
+        this.dueAt = dueAt;
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {

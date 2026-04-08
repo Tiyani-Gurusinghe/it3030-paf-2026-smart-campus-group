@@ -1,14 +1,18 @@
 package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
-import lk.sliit.smartcampus.ticket.dto.*;
-import lk.sliit.smartcampus.ticket.entity.TicketCategory;
+import lk.sliit.smartcampus.common.enums.RoleType;
+import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.service.TicketAttachmentService;
 import lk.sliit.smartcampus.ticket.service.TicketCommentService;
 import lk.sliit.smartcampus.ticket.service.TicketService;
-import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -38,16 +42,13 @@ public class TicketController {
         this.userRepository = userRepository;
     }
 
-    // ─── Tickets ────────────────────────────────────────────────
-
     @GetMapping
     public ResponseEntity<List<TicketResponse>> getAllTickets(
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) TicketPriority priority,
-            @RequestParam(required = false) TicketCategory category,
             @RequestParam(required = false) Long reportedBy
     ) {
-        return ResponseEntity.ok(ticketService.getAllTickets(status, priority, category, reportedBy));
+        return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy));
     }
 
     @GetMapping("/{id}")
@@ -62,15 +63,16 @@ public class TicketController {
 
     @PutMapping("/{id}")
     public ResponseEntity<TicketResponse> updateTicket(@PathVariable Long id,
-                                                        @Valid @RequestBody TicketRequest request) {
+                                                       @Valid @RequestBody TicketRequest request) {
         return ResponseEntity.ok(ticketService.updateTicket(id, request));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateTicketStatus(
             @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long performedBy,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
-        return ResponseEntity.ok(ticketService.updateTicketStatus(id, request));
+        return ResponseEntity.ok(ticketService.updateTicketStatus(id, performedBy, request));
     }
 
     @DeleteMapping("/{id}")
@@ -78,8 +80,6 @@ public class TicketController {
         ticketService.deleteTicket(id);
         return ResponseEntity.noContent().build();
     }
-
-    // ─── Comments ───────────────────────────────────────────────
 
     @GetMapping("/{ticketId}/comments")
     public ResponseEntity<List<TicketCommentResponse>> getComments(@PathVariable Long ticketId) {
@@ -114,8 +114,6 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─── Attachments ────────────────────────────────────────────
-
     @GetMapping("/{ticketId}/attachments")
     public ResponseEntity<List<TicketAttachmentResponse>> getAttachments(@PathVariable Long ticketId) {
         return ResponseEntity.ok(attachmentService.getAttachments(ticketId));
@@ -124,9 +122,10 @@ public class TicketController {
     @PostMapping("/{ticketId}/attachments")
     public ResponseEntity<List<TicketAttachmentResponse>> uploadAttachments(
             @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long uploadedBy,
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attachmentService.uploadAttachments(ticketId, files));
+                .body(attachmentService.uploadAttachments(ticketId, uploadedBy, files));
     }
 
     @DeleteMapping("/{ticketId}/attachments/{attachmentId}")
@@ -137,10 +136,8 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─── Helpers ────────────────────────────────────────────────
-
     private boolean isAdminUser(Long userId) {
         Optional<User> user = userRepository.findById(userId);
-        return user.map(u -> u.getRole() == RoleType.ADMIN).orElse(false);
+        return user.map(u -> u.hasRole(RoleType.ADMIN)).orElse(false);
     }
 }

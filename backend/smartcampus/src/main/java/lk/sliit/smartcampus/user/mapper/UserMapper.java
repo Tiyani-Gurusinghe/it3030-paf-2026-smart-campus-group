@@ -24,8 +24,11 @@ public class UserMapper {
         dto.setOauthId(user.getOauthId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
         dto.setCreatedAt(user.getCreatedAt());
+
+        // ⚠️ TEMP: role removed until user_roles mapping is implemented
+        dto.setRole(null);
+
         return dto;
     }
 }

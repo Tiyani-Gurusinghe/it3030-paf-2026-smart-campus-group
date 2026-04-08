@@ -9,6 +9,11 @@ public class TicketCommentRequest {
     @Size(max = 2000, message = "Comment must be at most 2000 characters")
     private String content;
 
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 }

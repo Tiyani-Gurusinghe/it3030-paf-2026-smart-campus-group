@@ -1,7 +1,6 @@
 package lk.sliit.smartcampus.ticket.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 
 public class TicketStatusUpdateRequest {
@@ -9,17 +8,15 @@ public class TicketStatusUpdateRequest {
     @NotNull(message = "Status is required")
     private TicketStatus status;
 
-    @Size(max = 120, message = "Assigned to must be at most 120 characters")
-    private String assignedTo;
-
-    @Size(max = 1000, message = "Resolution notes must be at most 1000 characters")
+    private Long assignedTo;
     private String resolutionNotes;
+    private String rejectedReason;
 
     public TicketStatus getStatus() {
         return status;
     }
 
-    public String getAssignedTo() {
+    public Long getAssignedTo() {
         return assignedTo;
     }
 
@@ -27,15 +24,23 @@ public class TicketStatusUpdateRequest {
         return resolutionNotes;
     }
 
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
     public void setStatus(TicketStatus status) {
         this.status = status;
     }
 
-    public void setAssignedTo(String assignedTo) {
+    public void setAssignedTo(Long assignedTo) {
         this.assignedTo = assignedTo;
     }
 
     public void setResolutionNotes(String resolutionNotes) {
         this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 }
