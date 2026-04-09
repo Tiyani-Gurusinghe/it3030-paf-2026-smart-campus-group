@@ -10,14 +10,19 @@ import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
+import lk.sliit.smartcampus.ticket.entity.TicketAssignmentHistory;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
+import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketAssignmentHistoryRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,17 +32,23 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketCommentRepository commentRepository;
     private final TicketAttachmentRepository attachmentRepository;
+    private final TicketAssignmentHistoryRepository ticketAssignmentHistoryRepository;
+    private final TechnicianSkillRepository technicianSkillRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
 
     public TicketService(TicketRepository ticketRepository,
                          TicketCommentRepository commentRepository,
                          TicketAttachmentRepository attachmentRepository,
+                         TicketAssignmentHistoryRepository ticketAssignmentHistoryRepository,
+                         TechnicianSkillRepository technicianSkillRepository,
                          NotificationService notificationService,
                          TicketValidationService ticketValidationService) {
         this.ticketRepository = ticketRepository;
         this.commentRepository = commentRepository;
         this.attachmentRepository = attachmentRepository;
+        this.ticketAssignmentHistoryRepository = ticketAssignmentHistoryRepository;
+        this.technicianSkillRepository = technicianSkillRepository;
         this.notificationService = notificationService;
         this.ticketValidationService = ticketValidationService;
     }
@@ -55,15 +66,49 @@ public class TicketService {
         return toResponse(findByIdOrThrow(id));
     }
 
+    @Transactional
     public TicketResponse createTicket(TicketRequest request) {
         ticketValidationService.validateCreateRequest(request);
 
+        Long currentUserId = request.getReportedBy();
+        if (currentUserId == null) {
+            throw new BadRequestException("Reported by is required");
+        }
+
         Ticket ticket = new Ticket();
-        applyCreateRequest(ticket, request);
+        ticket.setTitle(request.getTitle());
+        ticket.setDescription(request.getDescription());
+        ticket.setResourceId(request.getResourceId());
+        ticket.setRequiredSkillId(request.getRequiredSkillId());
+        ticket.setPriority(request.getPriority());
+        ticket.setReportedBy(currentUserId);
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setDueAt(calculateDueDate(request.getPriority()));
 
-        return toResponse(ticketRepository.save(ticket));
+        Long assignedTechnicianId = findLeastBusyTechnician(request.getRequiredSkillId());
+        if (assignedTechnicianId != null) {
+            ticket.setAssignedTo(assignedTechnicianId);
+        }
+
+        Ticket saved = ticketRepository.save(ticket);
+
+        if (assignedTechnicianId != null) {
+            TicketAssignmentHistory history = new TicketAssignmentHistory();
+            history.setTicketId(saved.getId());
+            history.setFromUserId(null);
+            history.setToUserId(assignedTechnicianId);
+            history.setChangedBy(currentUserId);
+            ticketAssignmentHistoryRepository.save(history);
+
+            notificationService.createNotification(
+                    currentUserId,
+                    NotificationType.TICKET_ASSIGNED,
+                    "Your ticket \"" + saved.getTitle() + "\" has been assigned automatically.",
+                    saved.getId()
+            );
+        }
+
+        return toResponse(saved);
     }
 
     public TicketResponse updateTicket(Long id, TicketRequest request) {
@@ -78,6 +123,7 @@ public class TicketService {
         return toResponse(ticketRepository.save(ticket));
     }
 
+    @Transactional
     public TicketResponse updateTicketStatus(Long id, Long performedBy, TicketStatusUpdateRequest request) {
         Ticket ticket = findByIdOrThrow(id);
 
@@ -89,7 +135,18 @@ public class TicketService {
 
         if (request.getAssignedTo() != null) {
             ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
+
+            Long oldAssignedTo = ticket.getAssignedTo();
             ticket.setAssignedTo(request.getAssignedTo());
+
+            if (oldAssignedTo == null || !oldAssignedTo.equals(request.getAssignedTo())) {
+                TicketAssignmentHistory history = new TicketAssignmentHistory();
+                history.setTicketId(ticket.getId());
+                history.setFromUserId(oldAssignedTo);
+                history.setToUserId(request.getAssignedTo());
+                history.setChangedBy(performedBy);
+                ticketAssignmentHistoryRepository.save(history);
+            }
         }
 
         if (request.getStatus() == TicketStatus.REJECTED &&
@@ -141,15 +198,6 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + id));
     }
 
-    private void applyCreateRequest(Ticket ticket, TicketRequest request) {
-        ticket.setTitle(request.getTitle());
-        ticket.setDescription(request.getDescription());
-        ticket.setResourceId(request.getResourceId());
-        ticket.setRequiredSkillId(request.getRequiredSkillId());
-        ticket.setPriority(request.getPriority());
-        ticket.setReportedBy(request.getReportedBy());
-    }
-
     private LocalDateTime calculateDueDate(TicketPriority priority) {
         LocalDateTime now = LocalDateTime.now();
         return switch (priority) {
@@ -157,6 +205,23 @@ public class TicketService {
             case MEDIUM -> now.plusDays(1);
             case LOW -> now.plusDays(3);
         };
+    }
+
+    private Long findLeastBusyTechnician(Long requiredSkillId) {
+        List<Long> technicianIds = technicianSkillRepository.findTechnicianIdsBySkillId(requiredSkillId);
+
+        if (technicianIds == null || technicianIds.isEmpty()) {
+            return null;
+        }
+
+        List<TicketStatus> activeStatuses = List.of(TicketStatus.OPEN, TicketStatus.IN_PROGRESS);
+
+        return technicianIds.stream()
+                .min(Comparator
+                        .comparingLong((Long technicianId) ->
+                                ticketRepository.countByAssignedToAndStatusIn(technicianId, activeStatuses))
+                        .thenComparingLong(Long::longValue))
+                .orElse(null);
     }
 
     private RoleType resolveRoleForStatusChange(Ticket ticket, Long performedBy, TicketStatusUpdateRequest request) {

@@ -24,8 +24,8 @@ public class Notification {
     @Column(name = "reference_id")
     private Long referenceId;
 
-    @Column(nullable = false)
-    private boolean read = false;
+    @Column(name = "is_read")
+    private Boolean read;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
