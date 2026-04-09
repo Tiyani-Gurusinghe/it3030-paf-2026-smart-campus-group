@@ -1,6 +1,5 @@
 package lk.sliit.smartcampus.ticket.service;
 
-import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.entity.TicketAttachment;
@@ -24,6 +23,7 @@ public class TicketAttachmentService {
 
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
+    private final TicketValidationService ticketValidationService;
 
     @Value("${app.uploads.dir:uploads}")
     private String uploadsDir;
@@ -32,36 +32,23 @@ public class TicketAttachmentService {
     private String baseUrl;
 
     public TicketAttachmentService(TicketAttachmentRepository attachmentRepository,
-                                   TicketRepository ticketRepository) {
+                                   TicketRepository ticketRepository,
+                                   TicketValidationService ticketValidationService) {
         this.attachmentRepository = attachmentRepository;
         this.ticketRepository = ticketRepository;
+        this.ticketValidationService = ticketValidationService;
     }
 
     public List<TicketAttachmentResponse> uploadAttachments(Long ticketId,
                                                             Long uploadedBy,
                                                             List<MultipartFile> files) {
-        ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-
-        if (files == null || files.isEmpty()) {
-            throw new BadRequestException("No files provided");
-        }
-
-        long existing = attachmentRepository.countByTicketId(ticketId);
-        if (existing + files.size() > 3) {
-            throw new BadRequestException("A ticket can have at most 3 attachments");
-        }
+        ticketValidationService.validateAttachmentUpload(ticketId, files);
 
         List<TicketAttachmentResponse> results = new ArrayList<>();
 
         for (MultipartFile file : files) {
             if (file.isEmpty()) {
                 continue;
-            }
-
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                throw new BadRequestException("Only image files are allowed. Got: " + contentType);
             }
 
             try {

@@ -1,5 +1,7 @@
 package lk.sliit.smartcampus.ticket.service;
 
+import lk.sliit.smartcampus.common.enums.RoleType;
+import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.notification.entity.NotificationType;
 import lk.sliit.smartcampus.notification.service.NotificationService;
@@ -26,15 +28,18 @@ public class TicketService {
     private final TicketCommentRepository commentRepository;
     private final TicketAttachmentRepository attachmentRepository;
     private final NotificationService notificationService;
+    private final TicketValidationService ticketValidationService;
 
     public TicketService(TicketRepository ticketRepository,
                          TicketCommentRepository commentRepository,
                          TicketAttachmentRepository attachmentRepository,
-                         NotificationService notificationService) {
+                         NotificationService notificationService,
+                         TicketValidationService ticketValidationService) {
         this.ticketRepository = ticketRepository;
         this.commentRepository = commentRepository;
         this.attachmentRepository = attachmentRepository;
         this.notificationService = notificationService;
+        this.ticketValidationService = ticketValidationService;
     }
 
     public List<TicketResponse> getAllTickets(TicketStatus status,
@@ -51,15 +56,20 @@ public class TicketService {
     }
 
     public TicketResponse createTicket(TicketRequest request) {
+        ticketValidationService.validateCreateRequest(request);
+
         Ticket ticket = new Ticket();
         applyCreateRequest(ticket, request);
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setDueAt(calculateDueDate(request.getPriority()));
+
         return toResponse(ticketRepository.save(ticket));
     }
 
     public TicketResponse updateTicket(Long id, TicketRequest request) {
         Ticket ticket = findByIdOrThrow(id);
+
+        ticketValidationService.validateTitleAndDescription(request.getTitle(), request.getDescription());
 
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
@@ -71,11 +81,20 @@ public class TicketService {
     public TicketResponse updateTicketStatus(Long id, Long performedBy, TicketStatusUpdateRequest request) {
         Ticket ticket = findByIdOrThrow(id);
 
+        RoleType roleType = resolveRoleForStatusChange(ticket, performedBy, request);
+        ticketValidationService.validateStatusTransition(ticket, request.getStatus(), roleType);
+
         TicketStatus oldStatus = ticket.getStatus();
         ticket.setStatus(request.getStatus());
 
         if (request.getAssignedTo() != null) {
+            ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
             ticket.setAssignedTo(request.getAssignedTo());
+        }
+
+        if (request.getStatus() == TicketStatus.REJECTED &&
+                (request.getRejectedReason() == null || request.getRejectedReason().isBlank())) {
+            throw new BadRequestException("Rejected reason is required when rejecting a ticket");
         }
 
         if (request.getResolutionNotes() != null) {
@@ -138,6 +157,22 @@ public class TicketService {
             case MEDIUM -> now.plusDays(1);
             case LOW -> now.plusDays(3);
         };
+    }
+
+    private RoleType resolveRoleForStatusChange(Ticket ticket, Long performedBy, TicketStatusUpdateRequest request) {
+        if (request.getStatus() == TicketStatus.CLOSED || request.getStatus() == TicketStatus.REJECTED) {
+            return RoleType.ADMIN;
+        }
+
+        if (ticket.getAssignedTo() != null && ticket.getAssignedTo().equals(performedBy)) {
+            return RoleType.TECHNICIAN;
+        }
+
+        if (request.getAssignedTo() != null) {
+            return RoleType.ADMIN;
+        }
+
+        return RoleType.TECHNICIAN;
     }
 
     private TicketResponse toResponse(Ticket ticket) {
