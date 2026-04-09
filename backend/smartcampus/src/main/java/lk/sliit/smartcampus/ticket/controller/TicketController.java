@@ -1,7 +1,6 @@
 package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
-import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
@@ -13,15 +12,12 @@ import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.service.TicketAttachmentService;
 import lk.sliit.smartcampus.ticket.service.TicketCommentService;
 import lk.sliit.smartcampus.ticket.service.TicketService;
-import lk.sliit.smartcampus.user.entity.User;
-import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
@@ -30,16 +26,13 @@ public class TicketController {
     private final TicketService ticketService;
     private final TicketCommentService commentService;
     private final TicketAttachmentService attachmentService;
-    private final UserRepository userRepository;
 
     public TicketController(TicketService ticketService,
                             TicketCommentService commentService,
-                            TicketAttachmentService attachmentService,
-                            UserRepository userRepository) {
+                            TicketAttachmentService attachmentService) {
         this.ticketService = ticketService;
         this.commentService = commentService;
         this.attachmentService = attachmentService;
-        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -51,9 +44,17 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<TicketResponse>> getMyTickets(
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponse> getTicketById(@PathVariable Long id) {
-        return ResponseEntity.ok(ticketService.getTicketById(id));
+    public ResponseEntity<TicketResponse> getTicketById(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.getTicketByIdVisibleToUser(id, currentUserId));
     }
 
     @PostMapping
@@ -109,7 +110,7 @@ public class TicketController {
             @PathVariable Long ticketId,
             @PathVariable Long commentId,
             @RequestHeader("X-User-Id") Long userId) {
-        boolean isAdmin = isAdminUser(userId);
+        boolean isAdmin = ticketService.isAdmin(userId);
         commentService.deleteComment(ticketId, commentId, userId, isAdmin);
         return ResponseEntity.noContent().build();
     }
@@ -134,10 +135,5 @@ public class TicketController {
             @PathVariable Long attachmentId) {
         attachmentService.deleteAttachment(ticketId, attachmentId);
         return ResponseEntity.noContent().build();
-    }
-
-    private boolean isAdminUser(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-        return user.map(u -> u.hasRole(RoleType.ADMIN)).orElse(false);
     }
 }

@@ -3,6 +3,7 @@ package lk.sliit.smartcampus.ticket.service;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.entity.NotificationType;
 import lk.sliit.smartcampus.notification.service.NotificationService;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
@@ -18,6 +19,8 @@ import lk.sliit.smartcampus.ticket.repository.TicketAssignmentHistoryRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
+import lk.sliit.smartcampus.user.entity.User;
+import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,7 @@ public class TicketService {
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketAssignmentHistoryRepository ticketAssignmentHistoryRepository;
     private final TechnicianSkillRepository technicianSkillRepository;
+    private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
 
@@ -42,6 +46,7 @@ public class TicketService {
                          TicketAttachmentRepository attachmentRepository,
                          TicketAssignmentHistoryRepository ticketAssignmentHistoryRepository,
                          TechnicianSkillRepository technicianSkillRepository,
+                         UserRepository userRepository,
                          NotificationService notificationService,
                          TicketValidationService ticketValidationService) {
         this.ticketRepository = ticketRepository;
@@ -49,8 +54,13 @@ public class TicketService {
         this.attachmentRepository = attachmentRepository;
         this.ticketAssignmentHistoryRepository = ticketAssignmentHistoryRepository;
         this.technicianSkillRepository = technicianSkillRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.ticketValidationService = ticketValidationService;
+    }
+
+    public boolean isAdmin(Long userId) {
+        return findUserByIdOrThrow(userId).hasRole(RoleType.ADMIN);
     }
 
     public List<TicketResponse> getAllTickets(TicketStatus status,
@@ -60,6 +70,50 @@ public class TicketService {
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public List<TicketResponse> getMyVisibleTickets(Long currentUserId) {
+        User user = findUserByIdOrThrow(currentUserId);
+
+        if (user.hasRole(RoleType.ADMIN)) {
+            return ticketRepository.findAll()
+                    .stream()
+                    .sorted(Comparator.comparing(Ticket::getCreatedAt).reversed())
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        if (user.hasRole(RoleType.TECHNICIAN)) {
+            return ticketRepository.findByAssignedToOrderByCreatedAtDesc(currentUserId)
+                    .stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
+        return ticketRepository.findByReportedByOrderByCreatedAtDesc(currentUserId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User user = findUserByIdOrThrow(currentUserId);
+
+        if (user.hasRole(RoleType.ADMIN)) {
+            return toResponse(ticket);
+        }
+
+        if (user.hasRole(RoleType.TECHNICIAN) && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUserId)) {
+            return toResponse(ticket);
+        }
+
+        if (ticket.getReportedBy().equals(currentUserId)) {
+            return toResponse(ticket);
+        }
+
+        throw new UnauthorizedException("You do not have permission to view this ticket");
     }
 
     public TicketResponse getTicketById(Long id) {
@@ -196,6 +250,11 @@ public class TicketService {
     private Ticket findByIdOrThrow(Long id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + id));
+    }
+
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
     }
 
     private LocalDateTime calculateDueDate(TicketPriority priority) {
