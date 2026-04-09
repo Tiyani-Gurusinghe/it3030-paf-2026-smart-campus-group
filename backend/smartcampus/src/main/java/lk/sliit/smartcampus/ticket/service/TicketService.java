@@ -96,6 +96,51 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
+    public List<TicketResponse> getTechnicianTickets(Long technicianUserId,
+                                                     TicketStatus status,
+                                                     boolean overdue,
+                                                     boolean dueSoon) {
+        User user = findUserByIdOrThrow(technicianUserId);
+
+        if (!user.hasRole(RoleType.TECHNICIAN)) {
+            throw new UnauthorizedException("Only technicians can access technician tickets");
+        }
+
+        List<Ticket> tickets = ticketRepository.findByAssignedToOrderByCreatedAtDesc(technicianUserId);
+
+        if (status != null) {
+            tickets = tickets.stream()
+                    .filter(ticket -> ticket.getStatus() == status)
+                    .collect(Collectors.toList());
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (overdue) {
+            tickets = tickets.stream()
+                    .filter(ticket ->
+                            ticket.getDueAt() != null &&
+                            ticket.getDueAt().isBefore(now) &&
+                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                    .collect(Collectors.toList());
+        }
+
+        if (dueSoon) {
+            LocalDateTime dueSoonLimit = now.plusHours(24);
+            tickets = tickets.stream()
+                    .filter(ticket ->
+                            ticket.getDueAt() != null &&
+                            !ticket.getDueAt().isBefore(now) &&
+                            !ticket.getDueAt().isAfter(dueSoonLimit) &&
+                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                    .collect(Collectors.toList());
+        }
+
+        return tickets.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(ticketId);
         User user = findUserByIdOrThrow(currentUserId);
@@ -104,7 +149,8 @@ public class TicketService {
             return toResponse(ticket);
         }
 
-        if (user.hasRole(RoleType.TECHNICIAN) && ticket.getAssignedTo() != null
+        if (user.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUserId)) {
             return toResponse(ticket);
         }
