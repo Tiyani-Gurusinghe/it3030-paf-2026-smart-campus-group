@@ -37,19 +37,23 @@ public class TicketController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getAllTickets(
-            @RequestParam(required = false) TicketStatus status,
-            @RequestParam(required = false) TicketPriority priority,
-            @RequestParam(required = false) Long reportedBy
-    ) {
-        return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy));
-    }
+public ResponseEntity<List<TicketResponse>> getAllTickets(
+        @RequestParam(required = false) TicketStatus status,
+        @RequestParam(required = false) TicketPriority priority,
+        @RequestParam(required = false) Long reportedBy,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+) {
+    return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy, page, size));
+}
 
     @GetMapping("/my")
-    public ResponseEntity<List<TicketResponse>> getMyTickets(
-            @RequestHeader("X-User-Id") Long currentUserId) {
-        return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId));
-    }
+public ResponseEntity<List<TicketResponse>> getMyTickets(
+        @RequestHeader("X-User-Id") Long currentUserId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId, page, size));
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<TicketResponse> getTicketById(

@@ -23,6 +23,9 @@ import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +46,11 @@ public class TicketService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
+    private List<TicketResponse> mapPage(Page<Ticket> page) {
+    return page.getContent().stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
 
     public TicketService(TicketRepository ticketRepository,
                          TicketCommentRepository commentRepository,
@@ -71,82 +79,76 @@ public class TicketService {
     }
 
     public List<TicketResponse> getAllTickets(TicketStatus status,
-                                              TicketPriority priority,
-                                              Long reportedBy) {
-        return ticketRepository.findWithFilters(status, priority, reportedBy)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+                                          TicketPriority priority,
+                                          Long reportedBy,
+                                          int page,
+                                          int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return mapPage(ticketRepository.findWithFilters(status, priority, reportedBy, pageable));
+}
+
+    public List<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
+    User user = findUserByIdOrThrow(currentUserId);
+    Pageable pageable = PageRequest.of(page, size);
+
+    if (user.hasRole(RoleType.ADMIN)) {
+        return mapPage(ticketRepository.findAll(pageable));
     }
 
-    public List<TicketResponse> getMyVisibleTickets(Long currentUserId) {
-        User user = findUserByIdOrThrow(currentUserId);
-
-        if (user.hasRole(RoleType.ADMIN)) {
-            return ticketRepository.findAll()
-                    .stream()
-                    .sorted(Comparator.comparing(Ticket::getCreatedAt).reversed())
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        }
-
-        if (user.hasRole(RoleType.TECHNICIAN)) {
-            return ticketRepository.findByAssignedToOrderByCreatedAtDesc(currentUserId)
-                    .stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        }
-
-        return ticketRepository.findByReportedByOrderByCreatedAtDesc(currentUserId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    if (user.hasRole(RoleType.TECHNICIAN)) {
+        return mapPage(ticketRepository.findByAssignedTo(currentUserId, pageable));
     }
+
+    return mapPage(ticketRepository.findByReportedBy(currentUserId, pageable));
+}
 
     public List<TicketResponse> getTechnicianTickets(Long technicianUserId,
-                                                     TicketStatus status,
-                                                     boolean overdue,
-                                                     boolean dueSoon) {
-        User user = findUserByIdOrThrow(technicianUserId);
+                                                 TicketStatus status,
+                                                 boolean overdue,
+                                                 boolean dueSoon,
+                                                 int page,
+                                                 int size) {
+    User user = findUserByIdOrThrow(technicianUserId);
 
-        if (!user.hasRole(RoleType.TECHNICIAN)) {
-            throw new UnauthorizedException("Only technicians can access technician tickets");
-        }
+    if (!user.hasRole(RoleType.TECHNICIAN)) {
+        throw new UnauthorizedException("Only technicians can access technician tickets");
+    }
 
-        List<Ticket> tickets = ticketRepository.findByAssignedToOrderByCreatedAtDesc(technicianUserId);
+    Pageable pageable = PageRequest.of(page, size);
+    List<Ticket> tickets = ticketRepository.findByAssignedTo(technicianUserId, pageable).getContent();
 
-        if (status != null) {
-            tickets = tickets.stream()
-                    .filter(ticket -> ticket.getStatus() == status)
-                    .collect(Collectors.toList());
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-
-        if (overdue) {
-            tickets = tickets.stream()
-                    .filter(ticket ->
-                            ticket.getDueAt() != null &&
-                            ticket.getDueAt().isBefore(now) &&
-                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
-                    .collect(Collectors.toList());
-        }
-
-        if (dueSoon) {
-            LocalDateTime dueSoonLimit = now.plusHours(24);
-            tickets = tickets.stream()
-                    .filter(ticket ->
-                            ticket.getDueAt() != null &&
-                            !ticket.getDueAt().isBefore(now) &&
-                            !ticket.getDueAt().isAfter(dueSoonLimit) &&
-                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
-                    .collect(Collectors.toList());
-        }
-
-        return tickets.stream()
-                .map(this::toResponse)
+    if (status != null) {
+        tickets = tickets.stream()
+                .filter(ticket -> ticket.getStatus() == status)
                 .collect(Collectors.toList());
     }
+
+    LocalDateTime now = LocalDateTime.now();
+
+    if (overdue) {
+        tickets = tickets.stream()
+                .filter(ticket ->
+                        ticket.getDueAt() != null &&
+                        ticket.getDueAt().isBefore(now) &&
+                        (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                .collect(Collectors.toList());
+    }
+
+    if (dueSoon) {
+        LocalDateTime dueSoonLimit = now.plusHours(24);
+        tickets = tickets.stream()
+                .filter(ticket ->
+                        ticket.getDueAt() != null &&
+                        !ticket.getDueAt().isBefore(now) &&
+                        !ticket.getDueAt().isAfter(dueSoonLimit) &&
+                        (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                .collect(Collectors.toList());
+    }
+
+    return tickets.stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
 
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(ticketId);

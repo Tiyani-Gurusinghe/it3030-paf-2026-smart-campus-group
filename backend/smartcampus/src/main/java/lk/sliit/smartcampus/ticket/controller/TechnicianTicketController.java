@@ -23,10 +23,12 @@ public class TechnicianTicketController {
             @RequestHeader("X-User-Id") Long technicianUserId,
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false, defaultValue = "false") boolean overdue,
-            @RequestParam(required = false, defaultValue = "false") boolean dueSoon) {
+            @RequestParam(required = false, defaultValue = "false") boolean dueSoon,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ticketService.getTechnicianTickets(technicianUserId, status, overdue, dueSoon)
+                ticketService.getTechnicianTickets(technicianUserId, status, overdue, dueSoon, page, size)
         );
     }
 }
