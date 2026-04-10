@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
+import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.service.TicketService;
@@ -15,6 +16,14 @@ public class AdminTicketController {
 
     public AdminTicketController(TicketService ticketService) {
         this.ticketService = ticketService;
+    }
+
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<TicketResponse> assignTicket(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketAssignRequest request) {
+        return ResponseEntity.ok(ticketService.assignTicket(id, currentUserId, request));
     }
 
     @PatchMapping("/{id}/reject")

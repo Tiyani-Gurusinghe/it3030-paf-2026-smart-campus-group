@@ -25,21 +25,25 @@ public class TicketCommentService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final TicketService ticketService;
 
-    public TicketCommentService(
-            TicketCommentRepository commentRepository,
-            TicketRepository ticketRepository,
-            UserRepository userRepository,
-            NotificationService notificationService) {
+    public TicketCommentService(TicketCommentRepository commentRepository,
+                                TicketRepository ticketRepository,
+                                UserRepository userRepository,
+                                NotificationService notificationService,
+                                TicketService ticketService) {
         this.commentRepository = commentRepository;
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.ticketService = ticketService;
     }
 
-    public List<TicketCommentResponse> getComments(Long ticketId) {
-        ticketRepository.findById(ticketId)
+    public List<TicketCommentResponse> getComments(Long ticketId, Long currentUserId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
+        ticketService.validateTicketVisibility(ticket, currentUserId);
 
         return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
                 .stream()
@@ -51,6 +55,8 @@ public class TicketCommentService {
     public TicketCommentResponse addComment(Long ticketId, Long userId, TicketCommentRequest request) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
+        ticketService.validateTicketVisibility(ticket, userId);
 
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -75,6 +81,11 @@ public class TicketCommentService {
     }
 
     public TicketCommentResponse updateComment(Long ticketId, Long commentId, Long requesterId, TicketCommentRequest request) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
+        ticketService.validateTicketVisibility(ticket, requesterId);
+
         TicketComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
@@ -82,7 +93,9 @@ public class TicketCommentService {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
 
-        if (!comment.getUserId().equals(requesterId)) {
+        boolean isAdmin = ticketService.isAdmin(requesterId);
+
+        if (!isAdmin && !comment.getUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only edit your own comments");
         }
 
@@ -90,13 +103,20 @@ public class TicketCommentService {
         return toResponse(commentRepository.save(comment), resolveUserName(comment.getUserId()));
     }
 
-    public void deleteComment(Long ticketId, Long commentId, Long requesterId, boolean isAdmin) {
+    public void deleteComment(Long ticketId, Long commentId, Long requesterId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
+        ticketService.validateTicketVisibility(ticket, requesterId);
+
         TicketComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
         if (!comment.getTicketId().equals(ticketId) || comment.getDeletedAt() != null) {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
+
+        boolean isAdmin = ticketService.isAdmin(requesterId);
 
         if (!isAdmin && !comment.getUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only delete your own comments");

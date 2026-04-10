@@ -5,6 +5,7 @@ import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
@@ -76,6 +77,14 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
     }
 
+    @PatchMapping("/{id}/resolution")
+    public ResponseEntity<TicketResponse> updateResolution(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketResolutionUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.updateResolution(id, currentUserId, request));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
         ticketService.deleteTicket(id);
@@ -83,8 +92,10 @@ public class TicketController {
     }
 
     @GetMapping("/{ticketId}/comments")
-    public ResponseEntity<List<TicketCommentResponse>> getComments(@PathVariable Long ticketId) {
-        return ResponseEntity.ok(commentService.getComments(ticketId));
+    public ResponseEntity<List<TicketCommentResponse>> getComments(
+            @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(commentService.getComments(ticketId, currentUserId));
     }
 
     @PostMapping("/{ticketId}/comments")
@@ -110,8 +121,7 @@ public class TicketController {
             @PathVariable Long ticketId,
             @PathVariable Long commentId,
             @RequestHeader("X-User-Id") Long userId) {
-        boolean isAdmin = ticketService.isAdmin(userId);
-        commentService.deleteComment(ticketId, commentId, userId, isAdmin);
+        commentService.deleteComment(ticketId, commentId, userId);
         return ResponseEntity.noContent().build();
     }
 

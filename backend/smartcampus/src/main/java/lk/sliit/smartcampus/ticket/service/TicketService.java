@@ -6,9 +6,11 @@ import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.entity.NotificationType;
 import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
@@ -62,6 +64,10 @@ public class TicketService {
 
     public boolean isAdmin(Long userId) {
         return findUserByIdOrThrow(userId).hasRole(RoleType.ADMIN);
+    }
+
+    public boolean isTechnician(Long userId) {
+        return findUserByIdOrThrow(userId).hasRole(RoleType.TECHNICIAN);
     }
 
     public List<TicketResponse> getAllTickets(TicketStatus status,
@@ -144,27 +150,28 @@ public class TicketService {
 
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(ticketId);
+        validateTicketVisibility(ticket, currentUserId);
+        return toResponse(ticket);
+    }
+
+    public void validateTicketVisibility(Ticket ticket, Long currentUserId) {
         User user = findUserByIdOrThrow(currentUserId);
 
         if (user.hasRole(RoleType.ADMIN)) {
-            return toResponse(ticket);
+            return;
         }
 
         if (user.hasRole(RoleType.TECHNICIAN)
                 && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUserId)) {
-            return toResponse(ticket);
+            return;
         }
 
         if (ticket.getReportedBy().equals(currentUserId)) {
-            return toResponse(ticket);
+            return;
         }
 
-        throw new UnauthorizedException("You do not have permission to view this ticket");
-    }
-
-    public TicketResponse getTicketById(Long id) {
-        return toResponse(findByIdOrThrow(id));
+        throw new UnauthorizedException("You do not have permission to access this ticket");
     }
 
     @Transactional
@@ -194,12 +201,7 @@ public class TicketService {
         Ticket saved = ticketRepository.save(ticket);
 
         if (assignedTechnicianId != null) {
-            TicketAssignmentHistory history = new TicketAssignmentHistory();
-            history.setTicketId(saved.getId());
-            history.setFromUserId(null);
-            history.setToUserId(assignedTechnicianId);
-            history.setChangedBy(currentUserId);
-            ticketAssignmentHistoryRepository.save(history);
+            saveAssignmentHistory(saved.getId(), null, assignedTechnicianId, currentUserId);
 
             notificationService.createNotification(
                     currentUserId,
@@ -225,6 +227,52 @@ public class TicketService {
     }
 
     @Transactional
+    public TicketResponse assignTicket(Long ticketId, Long currentUserId, TicketAssignRequest request) {
+        User currentUser = findUserByIdOrThrow(currentUserId);
+        if (!currentUser.hasRole(RoleType.ADMIN)) {
+            throw new UnauthorizedException("Only admin can assign or reassign tickets");
+        }
+
+        Ticket ticket = findByIdOrThrow(ticketId);
+
+        ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
+
+        Long oldAssignedTo = ticket.getAssignedTo();
+        Long newAssignedTo = request.getAssignedTo();
+
+        ticket.setAssignedTo(newAssignedTo);
+        Ticket saved = ticketRepository.save(ticket);
+
+        if (oldAssignedTo == null || !oldAssignedTo.equals(newAssignedTo)) {
+            saveAssignmentHistory(ticketId, oldAssignedTo, newAssignedTo, currentUserId);
+        }
+
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public TicketResponse updateResolution(Long ticketId,
+                                           Long currentUserId,
+                                           TicketResolutionUpdateRequest request) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User currentUser = findUserByIdOrThrow(currentUserId);
+
+        boolean isAdmin = currentUser.hasRole(RoleType.ADMIN);
+        boolean isAssignedTechnician = currentUser.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUserId);
+
+        if (!isAdmin && !isAssignedTechnician) {
+            throw new UnauthorizedException("Only assigned technician or admin can update resolution notes");
+        }
+
+        ticket.setResolutionNotes(request.getResolutionNotes());
+
+        Ticket saved = ticketRepository.save(ticket);
+        return toResponse(saved);
+    }
+
+    @Transactional
     public TicketResponse updateStatus(Long ticketId,
                                        TicketStatusUpdateRequest request,
                                        Long currentUserId) {
@@ -243,12 +291,7 @@ public class TicketService {
             ticket.setAssignedTo(request.getAssignedTo());
 
             if (oldAssignedTo == null || !oldAssignedTo.equals(request.getAssignedTo())) {
-                TicketAssignmentHistory history = new TicketAssignmentHistory();
-                history.setTicketId(ticket.getId());
-                history.setFromUserId(oldAssignedTo);
-                history.setToUserId(request.getAssignedTo());
-                history.setChangedBy(currentUserId);
-                ticketAssignmentHistoryRepository.save(history);
+                saveAssignmentHistory(ticket.getId(), oldAssignedTo, request.getAssignedTo(), currentUserId);
             }
         }
 
@@ -378,6 +421,15 @@ public class TicketService {
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+    }
+
+    private void saveAssignmentHistory(Long ticketId, Long fromUserId, Long toUserId, Long changedBy) {
+        TicketAssignmentHistory history = new TicketAssignmentHistory();
+        history.setTicketId(ticketId);
+        history.setFromUserId(fromUserId);
+        history.setToUserId(toUserId);
+        history.setChangedBy(changedBy);
+        ticketAssignmentHistoryRepository.save(history);
     }
 
     private LocalDateTime calculateDueDate(TicketPriority priority) {
