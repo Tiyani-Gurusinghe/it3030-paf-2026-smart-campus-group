@@ -71,9 +71,9 @@ public class TicketController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateTicketStatus(
             @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long performedBy,
+            @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
-        return ResponseEntity.ok(ticketService.updateTicketStatus(id, performedBy, request));
+        return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
     }
 
     @DeleteMapping("/{id}")
