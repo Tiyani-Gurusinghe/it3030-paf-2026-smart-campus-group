@@ -1,17 +1,43 @@
-import { createBrowserRouter } from "react-router-dom";
-import LoginPage from "../pages/auth/LoginPage";
-import TicketsPage from "../pages/tickets/TicketsPage";
-import CreateTicketPage from "../pages/tickets/CreateTicketPage";
-import EditTicketPage from "../pages/tickets/EditTicketPage";
-import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
-import ProtectedRoute from "../features/auth/components/ProtectedRoute";
+/* eslint-disable react-refresh/only-export-components */
+import { createBrowserRouter, Navigate } from "react-router-dom";
+
+// Layout & Guards
 import AppLayout from "../components/layout/AppLayout";
+import ProtectedRoute from "../features/auth/components/ProtectedRoute";
+import RoleGuard from "../features/auth/components/RoleGuard";
+import useAuth from "../features/auth/hooks/useAuth";
+
+// Auth pages
+import LoginPage from "../pages/auth/LoginPage";
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
+import DashboardPage from "../pages/dashboard/DashboardPage";
+import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
+import ProfilePage from "../pages/profile/ProfilePage";
+
+// USER pages
+import MyTicketsPage from "../pages/tickets/MyTicketsPage";
+import CreateTicketPage from "../pages/tickets/CreateTicketPage";
+import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
+
+// TECHNICIAN pages
+import TechnicianTicketsPage from "../pages/technician/TechnicianTicketsPage";
+import TechnicianTicketDetailPage from "../pages/technician/TechnicianTicketDetailPage";
+
+// ADMIN pages
+import AdminTicketsPage from "../pages/admin/AdminTicketsPage";
+import AdminTicketDetailPage from "../pages/admin/AdminTicketDetailPage";
+
+function RoleHomeRedirect() {
+  const { getLandingRoute } = useAuth();
+  return <Navigate to={getLandingRoute()} replace />;
+}
 
 const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+  // Public
+  { path: "/login", element: <LoginPage /> },
+  { path: "/unauthorized", element: <UnauthorizedPage /> },
+
+  // Protected shell
   {
     path: "/",
     element: (
@@ -20,25 +46,88 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      // Root redirect to role-specific landing handled by ProtectedRoute / LoginPage
       {
         index: true,
-        element: <TicketsPage />,
+        element: <RoleHomeRedirect />,
       },
       {
-        path: "tickets",
-        element: <TicketsPage />,
+        path: "dashboard",
+        element: (
+          <RoleGuard allowedRoles={["ADMIN"]}>
+            <DashboardPage />
+          </RoleGuard>
+        ),
       },
       {
-        path: "tickets/new",
-        element: <CreateTicketPage />,
+        path: "notifications",
+        element: <NotificationPanelPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+
+      // ─── USER routes ────────────────────────────────────────
+      {
+        path: "tickets/my",
+        element: (
+          <RoleGuard allowedRoles={["USER", "ADMIN", "TECHNICIAN"]}>
+            <MyTicketsPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "tickets/create",
+        element: (
+          <RoleGuard allowedRoles={["USER", "ADMIN"]}>
+            <CreateTicketPage />
+          </RoleGuard>
+        ),
       },
       {
         path: "tickets/:id",
-        element: <TicketDetailsPage />,
+        element: (
+          <RoleGuard allowedRoles={["USER", "ADMIN", "TECHNICIAN"]}>
+            <TicketDetailsPage />
+          </RoleGuard>
+        ),
+      },
+
+      // ─── TECHNICIAN routes ──────────────────────────────────
+      {
+        path: "technician/tickets",
+        element: (
+          <RoleGuard allowedRoles={["TECHNICIAN", "ADMIN"]}>
+            <TechnicianTicketsPage />
+          </RoleGuard>
+        ),
       },
       {
-        path: "tickets/:id/edit",
-        element: <EditTicketPage />,
+        path: "technician/tickets/:id",
+        element: (
+          <RoleGuard allowedRoles={["TECHNICIAN", "ADMIN"]}>
+            <TechnicianTicketDetailPage />
+          </RoleGuard>
+        ),
+      },
+
+      // ─── ADMIN routes ───────────────────────────────────────
+      {
+        path: "admin/tickets",
+        element: (
+          <RoleGuard allowedRoles={["ADMIN"]}>
+            <AdminTicketsPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "admin/tickets/:id",
+        element: (
+          <RoleGuard allowedRoles={["ADMIN"]}>
+            <AdminTicketDetailPage />
+          </RoleGuard>
+        ),
       },
     ],
   },

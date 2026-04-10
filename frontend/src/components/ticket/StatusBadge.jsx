@@ -1,16 +1,16 @@
-const STATUS_LABELS = {
-  OPEN: "Open",
-  IN_PROGRESS: "In Progress",
-  RESOLVED: "Resolved",
-  CLOSED: "Closed",
-  REJECTED: "Rejected",
+const STATUS_META = {
+  OPEN:        { label: "Open",        cls: "open" },
+  IN_PROGRESS: { label: "In Progress", cls: "in_progress" },
+  RESOLVED:    { label: "Resolved",    cls: "resolved" },
+  CLOSED:      { label: "Closed",      cls: "closed" },
+  REJECTED:    { label: "Rejected",    cls: "rejected" },
 };
 
 export default function StatusBadge({ status }) {
-  const label = STATUS_LABELS[status] ?? status;
+  const meta = STATUS_META[status] ?? { label: status ?? "Unknown", cls: "open" };
   return (
-    <span className={`status-badge status-${status?.toLowerCase()}`}>
-      {label}
+    <span className={`status-badge status-${meta.cls}`}>
+      {meta.label}
     </span>
   );
 }
