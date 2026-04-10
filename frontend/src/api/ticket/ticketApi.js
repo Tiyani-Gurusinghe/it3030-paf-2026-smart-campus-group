@@ -185,6 +185,14 @@ export async function closeTicket(id) {
   return handleResponse(res);
 }
 
+export async function deleteTicket(id) {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
 // ─── Comments ─────────────────────────────────────────────────────────────────
 
 export async function getComments(ticketId) {

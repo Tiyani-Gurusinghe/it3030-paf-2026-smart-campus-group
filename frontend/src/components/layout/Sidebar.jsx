@@ -4,12 +4,16 @@ import useAuth from "../../features/auth/hooks/useAuth";
 const USER_NAV = [
   { to: "/tickets/my", icon: "🎫", label: "My Tickets" },
   { to: "/tickets/create", icon: "➕", label: "Create Ticket" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
   { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
 const TECHNICIAN_NAV = [
   { to: "/technician/tickets", icon: "🔧", label: "Assigned Tickets" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
   { to: "/profile", icon: "👤", label: "Profile" },
 ];
@@ -17,6 +21,8 @@ const TECHNICIAN_NAV = [
 const ADMIN_NAV = [
   { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
   { to: "/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
   { to: "/profile", icon: "👤", label: "Profile" },
 ];

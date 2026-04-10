@@ -13,11 +13,18 @@ import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+import ResourceListPage from "../pages/resources/ResourceListPage";
+import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
+import ResourceFormPage from "../pages/resources/ResourceFormPage";
+import BookingListPage from "../pages/bookings/BookingListPage";
+import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
+import BookingFormPage from "../pages/bookings/BookingFormPage";
 
 // USER pages
 import MyTicketsPage from "../pages/tickets/MyTicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
+import TicketsPage from "../pages/tickets/TicketsPage";
 
 // TECHNICIAN pages
 import TechnicianTicketsPage from "../pages/technician/TechnicianTicketsPage";
@@ -67,8 +74,48 @@ const router = createBrowserRouter([
         path: "profile",
         element: <ProfilePage />,
       },
+      {
+        path: "resources",
+        element: <ResourceListPage />,
+      },
+      {
+        path: "resources/new",
+        element: <ResourceFormPage />,
+      },
+      {
+        path: "resources/:id",
+        element: <ResourceDetailsPage />,
+      },
+      {
+        path: "resources/:id/edit",
+        element: <ResourceFormPage />,
+      },
+      {
+        path: "bookings",
+        element: <BookingListPage />,
+      },
+      {
+        path: "bookings/new",
+        element: <BookingFormPage />,
+      },
+      {
+        path: "bookings/:id",
+        element: <BookingDetailsPage />,
+      },
+      {
+        path: "bookings/:id/edit",
+        element: <BookingFormPage />,
+      },
 
       // ─── USER routes ────────────────────────────────────────
+      {
+        path: "tickets",
+        element: (
+          <RoleGuard allowedRoles={["USER", "ADMIN", "TECHNICIAN"]}>
+            <TicketsPage />
+          </RoleGuard>
+        ),
+      },
       {
         path: "tickets/my",
         element: (
@@ -79,6 +126,14 @@ const router = createBrowserRouter([
       },
       {
         path: "tickets/create",
+        element: (
+          <RoleGuard allowedRoles={["USER", "ADMIN"]}>
+            <CreateTicketPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "tickets/new",
         element: (
           <RoleGuard allowedRoles={["USER", "ADMIN"]}>
             <CreateTicketPage />
