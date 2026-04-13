@@ -6,8 +6,11 @@ import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.entity.NotificationType;
 import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
@@ -20,6 +23,9 @@ import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +46,11 @@ public class TicketService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
+    private List<TicketResponse> mapPage(Page<Ticket> page) {
+    return page.getContent().stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
 
     public TicketService(TicketRepository ticketRepository,
                          TicketCommentRepository commentRepository,
@@ -63,107 +74,106 @@ public class TicketService {
         return findUserByIdOrThrow(userId).hasRole(RoleType.ADMIN);
     }
 
+    public boolean isTechnician(Long userId) {
+        return findUserByIdOrThrow(userId).hasRole(RoleType.TECHNICIAN);
+    }
+
     public List<TicketResponse> getAllTickets(TicketStatus status,
-                                              TicketPriority priority,
-                                              Long reportedBy) {
-        return ticketRepository.findWithFilters(status, priority, reportedBy)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+                                          TicketPriority priority,
+                                          Long reportedBy,
+                                          int page,
+                                          int size) {
+    Pageable pageable = PageRequest.of(page, size);
+    return mapPage(ticketRepository.findWithFilters(status, priority, reportedBy, pageable));
+}
+
+    public List<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
+    User user = findUserByIdOrThrow(currentUserId);
+    Pageable pageable = PageRequest.of(page, size);
+
+    if (user.hasRole(RoleType.ADMIN)) {
+        return mapPage(ticketRepository.findAll(pageable));
     }
 
-    public List<TicketResponse> getMyVisibleTickets(Long currentUserId) {
-        User user = findUserByIdOrThrow(currentUserId);
-
-        if (user.hasRole(RoleType.ADMIN)) {
-            return ticketRepository.findAll()
-                    .stream()
-                    .sorted(Comparator.comparing(Ticket::getCreatedAt).reversed())
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        }
-
-        if (user.hasRole(RoleType.TECHNICIAN)) {
-            return ticketRepository.findByAssignedToOrderByCreatedAtDesc(currentUserId)
-                    .stream()
-                    .map(this::toResponse)
-                    .collect(Collectors.toList());
-        }
-
-        return ticketRepository.findByReportedByOrderByCreatedAtDesc(currentUserId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    if (user.hasRole(RoleType.TECHNICIAN)) {
+        return mapPage(ticketRepository.findByAssignedTo(currentUserId, pageable));
     }
+
+    return mapPage(ticketRepository.findByReportedBy(currentUserId, pageable));
+}
 
     public List<TicketResponse> getTechnicianTickets(Long technicianUserId,
-                                                     TicketStatus status,
-                                                     boolean overdue,
-                                                     boolean dueSoon) {
-        User user = findUserByIdOrThrow(technicianUserId);
+                                                 TicketStatus status,
+                                                 boolean overdue,
+                                                 boolean dueSoon,
+                                                 int page,
+                                                 int size) {
+    User user = findUserByIdOrThrow(technicianUserId);
 
-        if (!user.hasRole(RoleType.TECHNICIAN)) {
-            throw new UnauthorizedException("Only technicians can access technician tickets");
-        }
+    if (!user.hasRole(RoleType.TECHNICIAN)) {
+        throw new UnauthorizedException("Only technicians can access technician tickets");
+    }
 
-        List<Ticket> tickets = ticketRepository.findByAssignedToOrderByCreatedAtDesc(technicianUserId);
+    Pageable pageable = PageRequest.of(page, size);
+    List<Ticket> tickets = ticketRepository.findByAssignedTo(technicianUserId, pageable).getContent();
 
-        if (status != null) {
-            tickets = tickets.stream()
-                    .filter(ticket -> ticket.getStatus() == status)
-                    .collect(Collectors.toList());
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-
-        if (overdue) {
-            tickets = tickets.stream()
-                    .filter(ticket ->
-                            ticket.getDueAt() != null &&
-                            ticket.getDueAt().isBefore(now) &&
-                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
-                    .collect(Collectors.toList());
-        }
-
-        if (dueSoon) {
-            LocalDateTime dueSoonLimit = now.plusHours(24);
-            tickets = tickets.stream()
-                    .filter(ticket ->
-                            ticket.getDueAt() != null &&
-                            !ticket.getDueAt().isBefore(now) &&
-                            !ticket.getDueAt().isAfter(dueSoonLimit) &&
-                            (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
-                    .collect(Collectors.toList());
-        }
-
-        return tickets.stream()
-                .map(this::toResponse)
+    if (status != null) {
+        tickets = tickets.stream()
+                .filter(ticket -> ticket.getStatus() == status)
                 .collect(Collectors.toList());
     }
+
+    LocalDateTime now = LocalDateTime.now();
+
+    if (overdue) {
+        tickets = tickets.stream()
+                .filter(ticket ->
+                        ticket.getDueAt() != null &&
+                        ticket.getDueAt().isBefore(now) &&
+                        (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                .collect(Collectors.toList());
+    }
+
+    if (dueSoon) {
+        LocalDateTime dueSoonLimit = now.plusHours(24);
+        tickets = tickets.stream()
+                .filter(ticket ->
+                        ticket.getDueAt() != null &&
+                        !ticket.getDueAt().isBefore(now) &&
+                        !ticket.getDueAt().isAfter(dueSoonLimit) &&
+                        (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS))
+                .collect(Collectors.toList());
+    }
+
+    return tickets.stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+}
 
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(ticketId);
+        validateTicketVisibility(ticket, currentUserId);
+        return toResponse(ticket);
+    }
+
+    public void validateTicketVisibility(Ticket ticket, Long currentUserId) {
         User user = findUserByIdOrThrow(currentUserId);
 
         if (user.hasRole(RoleType.ADMIN)) {
-            return toResponse(ticket);
+            return;
         }
 
         if (user.hasRole(RoleType.TECHNICIAN)
                 && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUserId)) {
-            return toResponse(ticket);
+            return;
         }
 
         if (ticket.getReportedBy().equals(currentUserId)) {
-            return toResponse(ticket);
+            return;
         }
 
-        throw new UnauthorizedException("You do not have permission to view this ticket");
-    }
-
-    public TicketResponse getTicketById(Long id) {
-        return toResponse(findByIdOrThrow(id));
+        throw new UnauthorizedException("You do not have permission to access this ticket");
     }
 
     @Transactional
@@ -193,12 +203,7 @@ public class TicketService {
         Ticket saved = ticketRepository.save(ticket);
 
         if (assignedTechnicianId != null) {
-            TicketAssignmentHistory history = new TicketAssignmentHistory();
-            history.setTicketId(saved.getId());
-            history.setFromUserId(null);
-            history.setToUserId(assignedTechnicianId);
-            history.setChangedBy(currentUserId);
-            ticketAssignmentHistoryRepository.save(history);
+            saveAssignmentHistory(saved.getId(), null, assignedTechnicianId, currentUserId);
 
             notificationService.createNotification(
                     currentUserId,
@@ -224,14 +229,62 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketResponse updateTicketStatus(Long id, Long performedBy, TicketStatusUpdateRequest request) {
-        Ticket ticket = findByIdOrThrow(id);
+    public TicketResponse assignTicket(Long ticketId, Long currentUserId, TicketAssignRequest request) {
+        User currentUser = findUserByIdOrThrow(currentUserId);
+        if (!currentUser.hasRole(RoleType.ADMIN)) {
+            throw new UnauthorizedException("Only admin can assign or reassign tickets");
+        }
 
-        RoleType roleType = resolveRoleForStatusChange(ticket, performedBy, request);
-        ticketValidationService.validateStatusTransition(ticket, request.getStatus(), roleType);
+        Ticket ticket = findByIdOrThrow(ticketId);
 
-        TicketStatus oldStatus = ticket.getStatus();
-        ticket.setStatus(request.getStatus());
+        ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
+
+        Long oldAssignedTo = ticket.getAssignedTo();
+        Long newAssignedTo = request.getAssignedTo();
+
+        ticket.setAssignedTo(newAssignedTo);
+        Ticket saved = ticketRepository.save(ticket);
+
+        if (oldAssignedTo == null || !oldAssignedTo.equals(newAssignedTo)) {
+            saveAssignmentHistory(ticketId, oldAssignedTo, newAssignedTo, currentUserId);
+        }
+
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public TicketResponse updateResolution(Long ticketId,
+                                           Long currentUserId,
+                                           TicketResolutionUpdateRequest request) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User currentUser = findUserByIdOrThrow(currentUserId);
+
+        boolean isAdmin = currentUser.hasRole(RoleType.ADMIN);
+        boolean isAssignedTechnician = currentUser.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUserId);
+
+        if (!isAdmin && !isAssignedTechnician) {
+            throw new UnauthorizedException("Only assigned technician or admin can update resolution notes");
+        }
+
+        ticket.setResolutionNotes(request.getResolutionNotes());
+
+        Ticket saved = ticketRepository.save(ticket);
+        return toResponse(saved);
+    }
+
+    @Transactional
+    public TicketResponse updateStatus(Long ticketId,
+                                       TicketStatusUpdateRequest request,
+                                       Long currentUserId) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User currentUser = findUserByIdOrThrow(currentUserId);
+
+        TicketStatus currentStatus = ticket.getStatus();
+        TicketStatus nextStatus = request.getStatus();
+
+        enforceStatusTransition(ticket, currentUser, request);
 
         if (request.getAssignedTo() != null) {
             ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
@@ -240,57 +293,126 @@ public class TicketService {
             ticket.setAssignedTo(request.getAssignedTo());
 
             if (oldAssignedTo == null || !oldAssignedTo.equals(request.getAssignedTo())) {
-                TicketAssignmentHistory history = new TicketAssignmentHistory();
-                history.setTicketId(ticket.getId());
-                history.setFromUserId(oldAssignedTo);
-                history.setToUserId(request.getAssignedTo());
-                history.setChangedBy(performedBy);
-                ticketAssignmentHistoryRepository.save(history);
+                saveAssignmentHistory(ticket.getId(), oldAssignedTo, request.getAssignedTo(), currentUserId);
             }
         }
 
-        if (request.getStatus() == TicketStatus.REJECTED &&
-                (request.getRejectedReason() == null || request.getRejectedReason().isBlank())) {
-            throw new BadRequestException("Rejected reason is required when rejecting a ticket");
-        }
+        ticket.setStatus(nextStatus);
 
-        if (request.getResolutionNotes() != null) {
+        if (request.getResolutionNotes() != null && !request.getResolutionNotes().isBlank()) {
             ticket.setResolutionNotes(request.getResolutionNotes());
         }
 
-        if (ticket.getFirstResponseAt() == null) {
+        if (ticket.getFirstResponseAt() == null
+                && (currentUser.hasRole(RoleType.ADMIN) || currentUser.hasRole(RoleType.TECHNICIAN))) {
             ticket.setFirstResponseAt(LocalDateTime.now());
-            ticket.setFirstRespondedBy(performedBy);
+            ticket.setFirstRespondedBy(currentUserId);
         }
 
-        if (request.getStatus() == TicketStatus.RESOLVED) {
+        if (nextStatus == TicketStatus.RESOLVED) {
             ticket.setResolvedAt(LocalDateTime.now());
         }
 
-        if (request.getStatus() == TicketStatus.CLOSED) {
+        if (nextStatus == TicketStatus.CLOSED) {
             ticket.setClosedAt(LocalDateTime.now());
         }
 
-        if (request.getStatus() == TicketStatus.REJECTED) {
+        if (nextStatus == TicketStatus.REJECTED) {
             ticket.setRejectedReason(request.getRejectedReason());
         }
 
         Ticket saved = ticketRepository.save(ticket);
 
-        if (!oldStatus.equals(request.getStatus())) {
+        if (currentStatus != nextStatus) {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.TICKET_STATUS_CHANGED,
-                    "Ticket \"" + ticket.getTitle() + "\" changed to " + request.getStatus(),
-                    id
+                    "Ticket \"" + ticket.getTitle() + "\" changed to " + nextStatus,
+                    ticketId
             );
         }
 
         return toResponse(saved);
     }
 
+    @Transactional
+    public TicketResponse rejectTicket(Long ticketId, Long currentUserId, TicketRejectRequest request) {
+        TicketStatusUpdateRequest statusRequest = new TicketStatusUpdateRequest();
+        statusRequest.setStatus(TicketStatus.REJECTED);
+        statusRequest.setRejectedReason(request.getRejectedReason());
+        return updateStatus(ticketId, statusRequest, currentUserId);
+    }
+
+    @Transactional
+    public TicketResponse closeTicket(Long ticketId, Long currentUserId) {
+        TicketStatusUpdateRequest statusRequest = new TicketStatusUpdateRequest();
+        statusRequest.setStatus(TicketStatus.CLOSED);
+        return updateStatus(ticketId, statusRequest, currentUserId);
+    }
+
     public void deleteTicket(Long id) {
         ticketRepository.delete(findByIdOrThrow(id));
+    }
+
+    private void enforceStatusTransition(Ticket ticket,
+                                         User currentUser,
+                                         TicketStatusUpdateRequest request) {
+        TicketStatus current = ticket.getStatus();
+        TicketStatus next = request.getStatus();
+
+        boolean isAdmin = currentUser.hasRole(RoleType.ADMIN);
+        boolean isTechnician = currentUser.hasRole(RoleType.TECHNICIAN);
+
+        if (next == null) {
+            throw new BadRequestException("Status is required");
+        }
+
+        if (current == next) {
+            throw new BadRequestException("Ticket is already in status " + next);
+        }
+
+        if (current == TicketStatus.OPEN && next == TicketStatus.IN_PROGRESS) {
+            if (!isAdmin && !isTechnician) {
+                throw new UnauthorizedException("Only technician or admin can move OPEN to IN_PROGRESS");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.IN_PROGRESS && next == TicketStatus.RESOLVED) {
+            if (!isAdmin && !isTechnician) {
+                throw new UnauthorizedException("Only technician or admin can move IN_PROGRESS to RESOLVED");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.RESOLVED && next == TicketStatus.CLOSED) {
+            if (!isAdmin) {
+                throw new UnauthorizedException("Only admin can move RESOLVED to CLOSED");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.OPEN && next == TicketStatus.REJECTED) {
+            if (!isAdmin) {
+                throw new UnauthorizedException("Only admin can reject an OPEN ticket");
+            }
+            if (request.getRejectedReason() == null || request.getRejectedReason().isBlank()) {
+                throw new BadRequestException("Rejected reason is required");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.IN_PROGRESS && next == TicketStatus.REJECTED) {
+            if (!isAdmin) {
+                throw new UnauthorizedException("Only admin can reject an IN_PROGRESS ticket");
+            }
+            if (request.getRejectedReason() == null || request.getRejectedReason().isBlank()) {
+                throw new BadRequestException("Rejected reason is required");
+            }
+            return;
+        }
+
+        throw new BadRequestException("Invalid status transition: " + current + " -> " + next);
     }
 
     private Ticket findByIdOrThrow(Long id) {
@@ -301,6 +423,15 @@ public class TicketService {
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+    }
+
+    private void saveAssignmentHistory(Long ticketId, Long fromUserId, Long toUserId, Long changedBy) {
+        TicketAssignmentHistory history = new TicketAssignmentHistory();
+        history.setTicketId(ticketId);
+        history.setFromUserId(fromUserId);
+        history.setToUserId(toUserId);
+        history.setChangedBy(changedBy);
+        ticketAssignmentHistoryRepository.save(history);
     }
 
     private LocalDateTime calculateDueDate(TicketPriority priority) {
@@ -327,22 +458,6 @@ public class TicketService {
                                 ticketRepository.countByAssignedToAndStatusIn(technicianId, activeStatuses))
                         .thenComparingLong(Long::longValue))
                 .orElse(null);
-    }
-
-    private RoleType resolveRoleForStatusChange(Ticket ticket, Long performedBy, TicketStatusUpdateRequest request) {
-        if (request.getStatus() == TicketStatus.CLOSED || request.getStatus() == TicketStatus.REJECTED) {
-            return RoleType.ADMIN;
-        }
-
-        if (ticket.getAssignedTo() != null && ticket.getAssignedTo().equals(performedBy)) {
-            return RoleType.TECHNICIAN;
-        }
-
-        if (request.getAssignedTo() != null) {
-            return RoleType.ADMIN;
-        }
-
-        return RoleType.TECHNICIAN;
     }
 
     private TicketResponse toResponse(Ticket ticket) {

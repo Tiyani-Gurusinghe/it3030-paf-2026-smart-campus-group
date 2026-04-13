@@ -1,15 +1,42 @@
 import { NavLink } from "react-router-dom";
+import useAuth from "../../features/auth/hooks/useAuth";
 
-const navItems = [
-  { to: "/", icon: "⊞", label: "Dashboard" },
-  { to: "/resources", icon: "📦", label: "Resources" },
+const USER_NAV = [
+  { to: "/tickets/my", icon: "🎫", label: "My Tickets" },
+  { to: "/tickets/create", icon: "➕", label: "Create Ticket" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
   { to: "/bookings", icon: "📅", label: "Bookings" },
-  { to: "/tickets", icon: "🎫", label: "Tickets" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
   { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
+const TECHNICIAN_NAV = [
+  { to: "/technician/tickets", icon: "🔧", label: "Assigned Tickets" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
+  { to: "/notifications", icon: "🔔", label: "Notifications" },
+  { to: "/profile", icon: "👤", label: "Profile" },
+];
+
+const ADMIN_NAV = [
+  { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
+  { to: "/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
+  { to: "/notifications", icon: "🔔", label: "Notifications" },
+  { to: "/profile", icon: "👤", label: "Profile" },
+];
+
+function getNav(primaryRole) {
+  if (primaryRole === "ADMIN") return ADMIN_NAV;
+  if (primaryRole === "TECHNICIAN") return TECHNICIAN_NAV;
+  return USER_NAV;
+}
+
 function Sidebar() {
+  const { primaryRole } = useAuth();
+  const navItems = getNav(primaryRole);
+
   return (
     <aside className="sidebar">
       <div className="sidebar-section-label">Menu</div>

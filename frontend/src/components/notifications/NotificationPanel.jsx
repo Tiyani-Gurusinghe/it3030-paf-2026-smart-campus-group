@@ -24,8 +24,13 @@ export default function NotificationPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef();
 
+  const refreshUnreadCount = async () => {
+    const count = await getUnreadCount();
+    setUnreadCount(count);
+  };
+
   useEffect(() => {
-    refreshUnreadCount();
+    void getUnreadCount().then(setUnreadCount);
     const interval = setInterval(refreshUnreadCount, 30000); // poll every 30s
     return () => clearInterval(interval);
   }, []);
@@ -39,11 +44,6 @@ export default function NotificationPanel() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  async function refreshUnreadCount() {
-    const count = await getUnreadCount();
-    setUnreadCount(count);
-  }
 
   async function handleOpen() {
     if (!open) {
@@ -88,7 +88,7 @@ export default function NotificationPanel() {
               notifications.map((n) => (
                 <Link
                   key={n.id}
-                  to={n.referenceId ? `/tickets/${n.referenceId}` : "/tickets"}
+                  to={n.referenceId ? `/tickets/${n.referenceId}` : "/notifications"}
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => setOpen(false)}
                 >

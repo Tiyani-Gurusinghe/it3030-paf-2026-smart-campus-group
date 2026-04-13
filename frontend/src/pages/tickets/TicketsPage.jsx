@@ -24,26 +24,28 @@ export default function TicketsPage() {
   const [myTickets, setMyTickets] = useState(false);
   const [filters, setFilters] = useState({ status: "", priority: "", category: "" });
 
-  async function loadTickets() {
-    try {
-      setLoading(true);
-      setError("");
-      const activeFilters = {
-        ...(filters.status   ? { status: filters.status }     : {}),
-        ...(filters.priority ? { priority: filters.priority } : {}),
-        ...(filters.category ? { category: filters.category } : {}),
-        ...(myTickets && user?.id ? { reportedBy: user.id } : {}),
-      };
-      const data = await getTickets(activeFilters);
-      setTickets(data);
-    } catch (err) {
-      setError(err.message || "Failed to load tickets");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function loadTickets() {
+      try {
+        setLoading(true);
+        setError("");
+        const activeFilters = {
+          ...(filters.status ? { status: filters.status } : {}),
+          ...(filters.priority ? { priority: filters.priority } : {}),
+          ...(filters.category ? { category: filters.category } : {}),
+          ...(myTickets && user?.id ? { reportedBy: user.id } : {}),
+        };
+        const data = await getTickets(activeFilters);
+        setTickets(data);
+      } catch (err) {
+        setError(err.message || "Failed to load tickets");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  useEffect(() => { loadTickets(); }, [filters, myTickets]);
+    loadTickets();
+  }, [filters, myTickets, user?.id]);
 
   async function handleDelete(id) {
     const confirmed = window.confirm("Are you sure you want to delete this ticket?");
