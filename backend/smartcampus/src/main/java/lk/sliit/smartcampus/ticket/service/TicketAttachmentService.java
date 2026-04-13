@@ -1,6 +1,5 @@
 package lk.sliit.smartcampus.ticket.service;
 
-import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.entity.TicketAttachment;
@@ -24,6 +23,7 @@ public class TicketAttachmentService {
 
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
+    private final TicketValidationService ticketValidationService;
 
     @Value("${app.uploads.dir:uploads}")
     private String uploadsDir;
@@ -32,26 +32,23 @@ public class TicketAttachmentService {
     private String baseUrl;
 
     public TicketAttachmentService(TicketAttachmentRepository attachmentRepository,
-                                    TicketRepository ticketRepository) {
+                                   TicketRepository ticketRepository,
+                                   TicketValidationService ticketValidationService) {
         this.attachmentRepository = attachmentRepository;
         this.ticketRepository = ticketRepository;
+        this.ticketValidationService = ticketValidationService;
     }
 
-    public List<TicketAttachmentResponse> uploadAttachments(Long ticketId, List<MultipartFile> files) {
-        ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-
-        long existing = attachmentRepository.countByTicketId(ticketId);
-        if (existing + files.size() > 3) {
-            throw new BadRequestException("A ticket can have at most 3 attachments. Currently has: " + existing);
-        }
+    public List<TicketAttachmentResponse> uploadAttachments(Long ticketId,
+                                                            Long uploadedBy,
+                                                            List<MultipartFile> files) {
+        ticketValidationService.validateAttachmentUpload(ticketId, files);
 
         List<TicketAttachmentResponse> results = new ArrayList<>();
+
         for (MultipartFile file : files) {
-            if (file.isEmpty()) continue;
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                throw new BadRequestException("Only image files are allowed. Got: " + contentType);
+            if (file.isEmpty()) {
+                continue;
             }
 
             try {
@@ -65,36 +62,49 @@ public class TicketAttachmentService {
 
                 TicketAttachment attachment = new TicketAttachment();
                 attachment.setTicketId(ticketId);
-                attachment.setFileName(file.getOriginalFilename());
+                attachment.setUploadedBy(uploadedBy);
                 attachment.setFileUrl(baseUrl + "/uploads/tickets/" + ticketId + "/" + storedName);
+
                 TicketAttachment saved = attachmentRepository.save(attachment);
                 results.add(toResponse(saved));
+
             } catch (IOException e) {
                 throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
             }
         }
+
         return results;
     }
 
     public List<TicketAttachmentResponse> getAttachments(Long ticketId) {
         ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
+
         return attachmentRepository.findByTicketId(ticketId)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
     public void deleteAttachment(Long ticketId, Long attachmentId) {
         TicketAttachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Attachment not found: " + attachmentId));
+
         if (!attachment.getTicketId().equals(ticketId)) {
             throw new ResourceNotFoundException("Attachment does not belong to this ticket");
         }
-        // Delete physical file
+
         try {
-            String urlPath = attachment.getFileUrl().replace(baseUrl + "/", "");
-            Path filePath = Paths.get(urlPath);
+            String prefix = baseUrl + "/";
+            String relativePath = attachment.getFileUrl().startsWith(prefix)
+                    ? attachment.getFileUrl().substring(prefix.length())
+                    : attachment.getFileUrl();
+
+            Path filePath = Paths.get(relativePath);
             Files.deleteIfExists(filePath);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
+
         attachmentRepository.delete(attachment);
     }
 
@@ -102,14 +112,16 @@ public class TicketAttachmentService {
         TicketAttachmentResponse r = new TicketAttachmentResponse();
         r.setId(a.getId());
         r.setTicketId(a.getTicketId());
-        r.setFileName(a.getFileName());
         r.setFileUrl(a.getFileUrl());
-        r.setUploadedAt(a.getUploadedAt());
+        r.setUploadedBy(a.getUploadedBy());
+        r.setCreatedAt(a.getCreatedAt());
         return r;
     }
 
     private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return ".jpg";
+        if (filename == null || !filename.contains(".")) {
+            return ".jpg";
+        }
         return filename.substring(filename.lastIndexOf('.'));
     }
 }

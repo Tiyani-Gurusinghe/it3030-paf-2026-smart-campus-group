@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# Local config (contains DB creds, secrets)
+src/main/resources/application.properties
+src/main/resources/application.properties-dev.properties
+
+../../.metals/
+.metals/

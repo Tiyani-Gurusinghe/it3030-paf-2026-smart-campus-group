@@ -1,56 +1,147 @@
--- Step 1: Seed users WITHOUT the role column (safe fallback if column is still being added)
-INSERT IGNORE INTO users (oauth_provider, oauth_id, full_name, email, created_at)
-VALUES
-  ('local', 'u1', 'Normal User', 'user@test.com',  CURRENT_TIMESTAMP),
-  ('local', 'u2', 'Admin User',  'admin@test.com', CURRENT_TIMESTAMP),
-  ('local', 'u3', 'Tech Staff',  'tech@test.com',  CURRENT_TIMESTAMP);
+-- =========================
+-- ROLES
+-- =========================
+INSERT IGNORE INTO roles (id, name) VALUES
+(1, 'ADMIN'),
+(2, 'USER'),
+(3, 'TECHNICIAN');
 
--- Step 2: Set roles (UPDATE is safe if the role column exists — no-op if not)
-UPDATE users SET role = 'STUDENT' WHERE email = 'user@test.com';
-UPDATE users SET role = 'ADMIN'   WHERE email = 'admin@test.com';
-UPDATE users SET role = 'STAFF'   WHERE email = 'tech@test.com';
+-- =========================
+-- USERS
+-- =========================
+INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, created_at) VALUES
+(10, 'google', 'admin1', 'Admin User', 'admin2@test.com', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user2@test.com', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', CURRENT_TIMESTAMP);
 
--- Step 3: Seed dummy tickets (using INSERT IGNORE to prevent duplicates)
-INSERT IGNORE INTO tickets (title, location, category, description, priority, preferred_contact, status, assigned_to, resolution_notes, reported_by, created_at, updated_at)
-VALUES
-  ('Projector not working', 'Block A Room 101', 'PROJECTOR',
-   'The projector fails to connect via HDMI. Tried multiple cables with no luck.',
-   'HIGH', 'user@test.com', 'OPEN', NULL, NULL, 1,
-   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+-- =========================
+-- USER ROLES
+-- =========================
+INSERT IGNORE INTO user_roles (user_id, role_id) VALUES
+(10, 1),
+(20, 2),
+(30, 3),
+(40, 3);
 
-  ('WiFi outage on 2nd Floor', 'Library 2nd Floor', 'NETWORK',
-   'Complete WiFi outage on the library second floor since 9am. Students cannot access online resources.',
-   'HIGH', 'user@test.com', 'IN_PROGRESS', 'Tech Staff', NULL, 1,
-   DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -1 DAY), CURRENT_TIMESTAMP),
+-- =========================
+-- SKILLS
+-- =========================
+INSERT IGNORE INTO skills (id, name) VALUES
+(1, 'GENERAL_MAINTENANCE'),
+(2, 'IT_SUPPORT'),
+(3, 'HVAC_SYSTEM'),
+(4, 'ELECTRICAL');
 
-  ('Broken chairs in lecture hall', 'Block B Room 204', 'FURNITURE',
-   'Several chairs are broken and students cannot sit. Creating a safety hazard.',
-   'LOW', 'user@test.com', 'RESOLVED', 'Tech Staff',
-   'Chairs replaced with new ones from storage room. Area cleared.', 1,
-   DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -3 DAY), DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -1 DAY)),
+-- =========================
+-- RESOURCE TYPE SKILLS
+-- =========================
+INSERT IGNORE INTO resource_type_skills (resource_type, skill_id) VALUES
+('LECTURE_HALL',1),('LECTURE_HALL',2),('LECTURE_HALL',3),('LECTURE_HALL',4),
+('LAB',1),('LAB',2),('LAB',3),('LAB',4),
+('MEETING_ROOM',1),('MEETING_ROOM',2),('MEETING_ROOM',3),('MEETING_ROOM',4),
+('EQUIPMENT',2),('EQUIPMENT',4);
 
-  ('AC not cooling in staff room', 'Staff Room 3', 'ELECTRICAL',
-   'The AC unit is running but not producing cool air. Temperature is very uncomfortable.',
-   'MEDIUM', 'admin@test.com', 'OPEN', NULL, NULL, 2,
-   DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -2 DAY), CURRENT_TIMESTAMP),
+-- =========================
+-- TECHNICIAN SKILLS
+-- =========================
+INSERT IGNORE INTO technician_skills (user_id, skill_id) VALUES
+(30, 2),
+(30, 1),
+(40, 4);
 
-  ('Cleaning required urgently', 'Canteen', 'CLEANING',
-   'Large spillage near the canteen entrance. Slip hazard for students.',
-   'HIGH', 'admin@test.com', 'CLOSED', 'Tech Staff',
-   'Area cleaned and wet floor signs placed. Hazard resolved.', 2,
-   DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -5 DAY), DATE_ADD(CURRENT_TIMESTAMP, INTERVAL -4 DAY));
-
--- Step 4: Seed hierarchical Resources
+-- =========================
+-- RESOURCES (Hierarchical)
+-- =========================
 INSERT IGNORE INTO resources (id, resource_name, resource_type, resource_category, capacity, location, status, parent_id, created_at)
 VALUES
-  -- Buildings (Roots)
   (1, 'Computing Building', 'ACADEMIC', 'BUILDING', 5000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
   (2, 'Central Library', 'LIBRARY', 'BUILDING', 2000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
-
-  -- Spaces (Children of Buildings)
   (3, 'Main Auditorium', 'LECTURE_HALL', 'SPACE', 300, 'Computing Building Floor 1', 'ACTIVE', 1, CURRENT_TIMESTAMP),
   (4, 'Software Lab', 'LAB', 'SPACE', 60, 'Computing Building Floor 2', 'ACTIVE', 1, CURRENT_TIMESTAMP),
-
-  -- Equipment (Children of Spaces)
   (5, '4K Laser Projector', 'PROJECTOR', 'EQUIPMENT', 1, 'Above stage', 'ACTIVE', 3, CURRENT_TIMESTAMP),
   (6, 'Dell Workstations', 'COMPUTER', 'EQUIPMENT', 60, 'Lab Desks', 'ACTIVE', 4, CURRENT_TIMESTAMP);
+
+-- =========================
+-- TICKETS
+-- =========================
+INSERT IGNORE INTO tickets (
+    id,
+    title,
+    description,
+    resource_id,
+    required_skill_id,
+    priority,
+    status,
+    reported_by,
+    assigned_to,
+    resolution_notes,
+    rejected_reason,
+    created_at,
+    first_response_at,
+    first_responded_by,
+    resolved_at,
+    closed_at,
+    due_at,
+    updated_at
+) VALUES
+(
+    1,
+    'Projector not working',
+    'The projector fails to connect via HDMI. Tried multiple cables with no luck.',
+    5,
+    2,
+    'HIGH',
+    'OPEN',
+    20,
+    30,
+    NULL,
+    NULL,
+    CURRENT_TIMESTAMP,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 4 HOUR),
+    CURRENT_TIMESTAMP
+),
+(
+    2,
+    'WiFi outage in lab',
+    'Complete network outage in the lab since morning.',
+    4,
+    2,
+    'HIGH',
+    'IN_PROGRESS',
+    20,
+    30,
+    NULL,
+    NULL,
+    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
+    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 23 HOUR),
+    30,
+    NULL,
+    NULL,
+    DATE_ADD(DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY), INTERVAL 4 HOUR),
+    CURRENT_TIMESTAMP
+),
+(
+    3,
+    'Power issue in auditorium',
+    'Power sockets are not working properly.',
+    3,
+    4,
+    'MEDIUM',
+    'RESOLVED',
+    10,
+    40,
+    'Checked wiring and restored power connection.',
+    NULL,
+    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
+    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
+    40,
+    DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY),
+    NULL,
+    DATE_ADD(DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY), INTERVAL 1 DAY),
+    CURRENT_TIMESTAMP
+);

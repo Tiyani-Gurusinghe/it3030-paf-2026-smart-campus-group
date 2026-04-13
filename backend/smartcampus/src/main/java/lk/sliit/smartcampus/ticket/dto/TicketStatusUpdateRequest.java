@@ -9,17 +9,19 @@ public class TicketStatusUpdateRequest {
     @NotNull(message = "Status is required")
     private TicketStatus status;
 
-    @Size(max = 120, message = "Assigned to must be at most 120 characters")
-    private String assignedTo;
+    private Long assignedTo;
 
-    @Size(max = 1000, message = "Resolution notes must be at most 1000 characters")
+    @Size(max = 4000, message = "Resolution notes must be at most 4000 characters")
     private String resolutionNotes;
+
+    @Size(max = 4000, message = "Rejected reason must be at most 4000 characters")
+    private String rejectedReason;
 
     public TicketStatus getStatus() {
         return status;
     }
 
-    public String getAssignedTo() {
+    public Long getAssignedTo() {
         return assignedTo;
     }
 
@@ -27,15 +29,23 @@ public class TicketStatusUpdateRequest {
         return resolutionNotes;
     }
 
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
     public void setStatus(TicketStatus status) {
         this.status = status;
     }
 
-    public void setAssignedTo(String assignedTo) {
+    public void setAssignedTo(Long assignedTo) {
         this.assignedTo = assignedTo;
     }
 
     public void setResolutionNotes(String resolutionNotes) {
         this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 }
