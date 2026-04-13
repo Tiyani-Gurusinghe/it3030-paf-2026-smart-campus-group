@@ -10,9 +10,9 @@ INSERT IGNORE INTO roles (id, name) VALUES
 -- USERS
 -- =========================
 INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, created_at) VALUES
-(10, 'google', 'admin1', 'Admin User', 'admin2@test.com', CURRENT_TIMESTAMP),
-(20, 'google', 'user1', 'Normal User', 'user2@test.com', CURRENT_TIMESTAMP),
-(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', CURRENT_TIMESTAMP),
+(10, 'google', 'admin1', 'Admin User', 'admin@test.com', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user@test.com', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'tech@test.com', CURRENT_TIMESTAMP),
 (40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', CURRENT_TIMESTAMP);
 
 -- =========================
