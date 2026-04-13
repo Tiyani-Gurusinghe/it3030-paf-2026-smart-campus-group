@@ -6,9 +6,10 @@ const resourceApi = {
     getAllResources: async (filters = {}) => {
         // Only add filters that actually have a value
         const validParams = {};
-        if (filters.type) validParams.type = filters.type;
+        if (filters.category && filters.category.trim() !== '') validParams.category = filters.category;
+        if (filters.type && filters.type.trim() !== '') validParams.type = filters.type;
         if (filters.minCapacity) validParams.minCapacity = filters.minCapacity;
-        if (filters.location) validParams.location = filters.location;
+        if (filters.location && filters.location.trim() !== '') validParams.location = filters.location;
         
         // Axios will automatically handle the ? and formatting for us safely
         const response = await apiClient.get('/api/resources', { params: validParams });
