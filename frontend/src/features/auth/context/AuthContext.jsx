@@ -36,14 +36,17 @@ export function AuthProvider({ children }) {
   }
 
   const value = useMemo(
-    () => ({
-      user,
-      isAuthenticated: !!user,
-      isAdmin: user?.role === "ADMIN",
-      isStaff: user?.role === "STAFF" || user?.role === "ADMIN",
-      login,
-      logout,
-    }),
+    () => {
+      const roleStr = user?.role?.toUpperCase() || "STUDENT";
+      return {
+        user,
+        isAuthenticated: !!user,
+        isAdmin: roleStr === "ADMIN",
+        isStaff: !!user && roleStr !== "USER" && roleStr !== "STUDENT",
+        login,
+        logout,
+      };
+    },
     [user]
   );
 
