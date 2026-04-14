@@ -28,7 +28,7 @@ public class AuthController {
 
         return userRepository
                 .findByEmailIgnoreCase(email)
-                .map(user -> ResponseEntity.ok((Object) user))
+                .map(user -> ResponseEntity.ok((Object) lk.sliit.smartcampus.user.mapper.UserMapper.toDto(user)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found"));
     }
 }
