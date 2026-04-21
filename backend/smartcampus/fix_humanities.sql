@@ -1,0 +1,1 @@
+UPDATE resources SET faculty = 'HUMANITIES_AND_SCIENCES' WHERE faculty = 'HUMANITIES';
