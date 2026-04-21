@@ -1,0 +1,115 @@
+package lk.sliit.smartcampus.ticket.service;
+
+import lk.sliit.smartcampus.common.enums.RoleType;
+import lk.sliit.smartcampus.exception.UnauthorizedException;
+import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
+import lk.sliit.smartcampus.ticket.entity.Ticket;
+import lk.sliit.smartcampus.ticket.entity.TicketPriority;
+import lk.sliit.smartcampus.ticket.entity.TicketStatus;
+import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketAssignmentHistoryRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketRepository;
+import lk.sliit.smartcampus.user.entity.User;
+import lk.sliit.smartcampus.user.repository.UserRepository;
+import lk.sliit.smartcampus.notification.service.NotificationService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+class TicketServiceTest {
+
+    private TicketRepository ticketRepository;
+    private TicketCommentRepository commentRepository;
+    private TicketAttachmentRepository attachmentRepository;
+    private TicketAssignmentHistoryRepository assignmentHistoryRepository;
+    private TechnicianSkillRepository technicianSkillRepository;
+    private UserRepository userRepository;
+    private NotificationService notificationService;
+    private TicketValidationService validationService;
+    private TicketService service;
+
+    @BeforeEach
+    void setUp() {
+        ticketRepository = mock(TicketRepository.class);
+        commentRepository = mock(TicketCommentRepository.class);
+        attachmentRepository = mock(TicketAttachmentRepository.class);
+        assignmentHistoryRepository = mock(TicketAssignmentHistoryRepository.class);
+        technicianSkillRepository = mock(TechnicianSkillRepository.class);
+        userRepository = mock(UserRepository.class);
+        notificationService = mock(NotificationService.class);
+        validationService = mock(TicketValidationService.class);
+
+        service = new TicketService(
+                ticketRepository,
+                commentRepository,
+                attachmentRepository,
+                assignmentHistoryRepository,
+                technicianSkillRepository,
+                userRepository,
+                notificationService,
+                validationService
+        );
+    }
+
+    @Test
+    void autoAssignmentChoosesLeastBusyTechnician() {
+        User reporter = new User();
+        reporter.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(reporter));
+        when(technicianSkillRepository.findTechnicianIdsBySkillId(2L)).thenReturn(List.of(3L, 4L));
+        when(ticketRepository.countByAssignedToAndStatusIn(eq(3L), anyList())).thenReturn(5L);
+        when(ticketRepository.countByAssignedToAndStatusIn(eq(4L), anyList())).thenReturn(1L);
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> {
+            Ticket t = i.getArgument(0);
+            t.setId(10L);
+            return t;
+        });
+
+        TicketRequest request = new TicketRequest();
+        request.setTitle("AC issue");
+        request.setDescription("Broken");
+        request.setResourceId(1L);
+        request.setRequiredSkillId(2L);
+        request.setPriority(TicketPriority.HIGH);
+        request.setReportedBy(1L);
+
+        var response = service.createTicket(request);
+
+        assertEquals(4L, response.getAssignedTo());
+    }
+
+    @Test
+    void unauthorizedUserCannotUpdateStatus() {
+        Ticket ticket = new Ticket();
+        ticket.setId(1L);
+        ticket.setStatus(TicketStatus.OPEN);
+        ticket.setReportedBy(2L);
+
+        User normalUser = mock(User.class);
+when(normalUser.hasRole(RoleType.ADMIN)).thenReturn(false);
+when(normalUser.hasRole(RoleType.TECHNICIAN)).thenReturn(false); // adjust if needed in your entity
+
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(5L)).thenReturn(Optional.of(normalUser));
+
+        TicketStatusUpdateRequest request = new TicketStatusUpdateRequest();
+        request.setStatus(TicketStatus.IN_PROGRESS);
+
+        assertThrows(UnauthorizedException.class,
+                () -> service.updateStatus(1L, request, 5L));
+    }
+}

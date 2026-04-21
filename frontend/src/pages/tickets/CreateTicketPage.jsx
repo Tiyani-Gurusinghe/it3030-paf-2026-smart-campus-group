@@ -12,7 +12,7 @@ export default function CreateTicketPage() {
 
   return (
     <div className="page">
-      <TicketForm onSubmit={handleCreate} submitText="Create Ticket" />
+      <TicketForm onSubmit={handleCreate} submitText="🎫 Create Ticket" />
     </div>
   );
 }

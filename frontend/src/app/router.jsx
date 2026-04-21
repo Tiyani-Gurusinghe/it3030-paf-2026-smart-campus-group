@@ -15,16 +15,16 @@ import BookingFormPage from "../pages/bookings/BookingFormPage";
 import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
 import TicketsPage from "../pages/tickets/TicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
-import EditTicketPage from "../pages/tickets/EditTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
 
 const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+  // Public
+  { path: "/login", element: <LoginPage /> },
+  { path: "/unauthorized", element: <UnauthorizedPage /> },
+
+  // Protected shell
   {
     path: "/",
     element: (

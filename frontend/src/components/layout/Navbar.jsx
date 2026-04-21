@@ -1,5 +1,13 @@
+import { useNavigate } from "react-router-dom";
+import useAuth from "../../features/auth/hooks/useAuth";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
+
+const ROLE_STYLES = {
+  ADMIN: "role-badge-admin",
+  TECHNICIAN: "role-badge-technician",
+  USER: "role-badge-user",
+};
 
 function Navbar() {
   const { user, logout } = useAuthContext();
