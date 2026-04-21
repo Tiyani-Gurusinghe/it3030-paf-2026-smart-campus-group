@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lk.sliit.smartcampus.resource.entity.Resource;
 import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.resource.enums.ResourceCategory;
+import lk.sliit.smartcampus.resource.enums.FacultyType;
 import lk.sliit.smartcampus.resource.service.ResourceService;
 
 import java.util.List;
@@ -33,10 +34,24 @@ public class ResourceController {
     public ResponseEntity<List<Resource>> getAllResources(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String faculty,
+            @RequestParam(required = false) String floor,
             @RequestParam(required = false) Integer minCapacity,
             @RequestParam(required = false) String location) {
-        List<Resource> resources = resourceService.getFilteredResources(category, type, minCapacity, location);
+        List<Resource> resources = resourceService.getFilteredResources(category, type, faculty, floor, minCapacity, location);
         return ResponseEntity.ok(resources);
+    }
+
+    // GET faculties in a building
+    @GetMapping("/building/{buildingId}/faculties")
+    public ResponseEntity<List<FacultyType>> getFacultiesByBuilding(@PathVariable Long buildingId) {
+        return ResponseEntity.ok(resourceService.getFacultiesByBuilding(buildingId));
+    }
+
+    // GET floors of a faculty
+    @GetMapping("/faculty/{faculty}/floors")
+    public ResponseEntity<List<String>> getFloorsByFaculty(@PathVariable String faculty) {
+        return ResponseEntity.ok(resourceService.getFloorsByFaculty(faculty));
     }
 
     // GET by ID (Returns 200 OK)
