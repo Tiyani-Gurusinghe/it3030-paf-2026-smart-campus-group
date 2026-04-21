@@ -53,14 +53,42 @@ INSERT IGNORE INTO technician_skills (user_id, skill_id) VALUES
 -- =========================
 -- RESOURCES (Hierarchical)
 -- =========================
-INSERT IGNORE INTO resources (id, resource_name, resource_type, resource_category, capacity, location, status, parent_id, created_at)
+INSERT IGNORE INTO resources (id, resource_name, resource_type, resource_category, config_type, floor, capacity, location, status, parent_id, created_at)
 VALUES
-  (1, 'Computing Building', 'ACADEMIC', 'BUILDING', 5000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
-  (2, 'Central Library', 'LIBRARY', 'BUILDING', 2000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
-  (3, 'Main Auditorium', 'LECTURE_HALL', 'SPACE', 300, 'Computing Building Floor 1', 'ACTIVE', 1, CURRENT_TIMESTAMP),
-  (4, 'Software Lab', 'LAB', 'SPACE', 60, 'Computing Building Floor 2', 'ACTIVE', 1, CURRENT_TIMESTAMP),
-  (5, '4K Laser Projector', 'PROJECTOR', 'EQUIPMENT', 1, 'Above stage', 'ACTIVE', 3, CURRENT_TIMESTAMP),
-  (6, 'Dell Workstations', 'COMPUTER', 'EQUIPMENT', 60, 'Lab Desks', 'ACTIVE', 4, CURRENT_TIMESTAMP);
+  (1, 'Main Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 5000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (2, 'New Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 3000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (3, 'Business Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 4000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (4, 'Engineering Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 6000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (5, 'Main Auditorium', 'LECTURE_HALL', 'SPACE', 'FLEXIBLE', 'Floor 1', 300, 'Main Building', 'ACTIVE', 1, CURRENT_TIMESTAMP),
+  (6, 'Software Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 60, 'Main Building', 'ACTIVE', 1, CURRENT_TIMESTAMP),
+  (7, '4K Laser Projector', 'PROJECTOR', 'EQUIPMENT', 'NONE', NULL, 1, 'Above stage', 'ACTIVE', 5, CURRENT_TIMESTAMP),
+  (8, 'Dell Workstations', 'PC', 'EQUIPMENT', 'NONE', NULL, 60, 'Lab Desks', 'ACTIVE', 6, CURRENT_TIMESTAMP),
+  (9, 'Interactive Display', 'SMART_BOARD', 'EQUIPMENT', 'NONE', NULL, 2, 'Main Desk', 'ACTIVE', 6, CURRENT_TIMESTAMP),
+  (10, 'Folding Chairs', 'CHAIR', 'EQUIPMENT', 'NONE', NULL, 50, 'Store Room B', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (11, 'Network Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 1', 40, 'New Building', 'ACTIVE', 2, CURRENT_TIMESTAMP),
+  (12, 'Architecture Studio', 'LAB', 'SPACE', 'FIXED', 'Floor 3', 30, 'New Building', 'ACTIVE', 2, CURRENT_TIMESTAMP),
+  (13, 'Business Hall A', 'LECTURE_HALL', 'SPACE', 'FIXED', 'Ground Floor', 150, 'Business Building', 'ACTIVE', 3, CURRENT_TIMESTAMP),
+  (14, 'Mechanical Workshop', 'LAB', 'SPACE', 'FIXED', 'Lower Ground', 80, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP),
+  (15, 'Electrical Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 45, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP);
+
+-- =========================
+-- RESOURCE FACULTIES
+-- =========================
+INSERT IGNORE INTO resource_faculties (resource_id, faculty) VALUES
+(1, 'COMPUTING'),
+(1, 'GRADUATE_STUDIES'),
+(1, 'INTERNATIONAL_PROGRAMMES'),
+(2, 'COMPUTING'),
+(2, 'ARCHITECTURE'),
+(3, 'BUSINESS'),
+(4, 'ENGINEERING'),
+(5, 'COMPUTING'),
+(6, 'COMPUTING'),
+(11, 'COMPUTING'),
+(12, 'ARCHITECTURE'),
+(13, 'BUSINESS'),
+(14, 'ENGINEERING'),
+(15, 'ENGINEERING');
 
 -- =========================
 -- TICKETS
@@ -89,7 +117,7 @@ INSERT IGNORE INTO tickets (
     1,
     'Projector not working',
     'The projector fails to connect via HDMI. Tried multiple cables with no luck.',
-    5,
+    7,
     2,
     'HIGH',
     'OPEN',
@@ -109,7 +137,7 @@ INSERT IGNORE INTO tickets (
     2,
     'WiFi outage in lab',
     'Complete network outage in the lab since morning.',
-    4,
+    6,
     2,
     'HIGH',
     'IN_PROGRESS',
@@ -129,7 +157,7 @@ INSERT IGNORE INTO tickets (
     3,
     'Power issue in auditorium',
     'Power sockets are not working properly.',
-    3,
+    5,
     4,
     'MEDIUM',
     'RESOLVED',
