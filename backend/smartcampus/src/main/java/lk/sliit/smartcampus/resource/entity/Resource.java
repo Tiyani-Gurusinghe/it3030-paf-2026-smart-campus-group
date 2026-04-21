@@ -10,8 +10,12 @@ import lk.sliit.smartcampus.resource.enums.ResourceCategory;
 import lk.sliit.smartcampus.resource.enums.ResourceStatus;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lk.sliit.smartcampus.resource.enums.ConfigurationType;
+import lk.sliit.smartcampus.resource.enums.FacultyType;
 
 @Entity
 @Table(name = "resources")
@@ -45,6 +49,19 @@ public class Resource {
     @OneToMany(mappedBy = "parentResource", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("parentResource")
     private List<Resource> subResources = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "config_type")
+    private ConfigurationType configType = ConfigurationType.NONE;
+
+    @ElementCollection(targetClass = FacultyType.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "resource_faculties", joinColumns = @JoinColumn(name = "resource_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "faculty")
+    private Set<FacultyType> faculties = new HashSet<>();
+
+    @Column(name = "floor")
+    private String floor;
 
     @Min(value = 1, message = "Capacity must be at least 1")
     private Integer capacity; 
@@ -107,4 +124,13 @@ public class Resource {
 
     public List<Resource> getSubResources() { return subResources; }
     public void setSubResources(List<Resource> subResources) { this.subResources = subResources; }
+
+    public ConfigurationType getConfigType() { return configType; }
+    public void setConfigType(ConfigurationType configType) { this.configType = configType; }
+
+    public Set<FacultyType> getFaculties() { return faculties; }
+    public void setFaculties(Set<FacultyType> faculties) { this.faculties = faculties; }
+
+    public String getFloor() { return floor; }
+    public void setFloor(String floor) { this.floor = floor; }
 }
