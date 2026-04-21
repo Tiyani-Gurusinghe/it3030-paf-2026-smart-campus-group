@@ -3,24 +3,50 @@ package lk.sliit.smartcampus.ticket.dto;
 import java.time.LocalDateTime;
 
 public class TicketAttachmentResponse {
+
     private Long id;
     private Long ticketId;
-    private String fileName;
     private String fileUrl;
-    private LocalDateTime uploadedAt;
+    private Long uploadedBy;
+    private LocalDateTime createdAt;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getTicketId() { return ticketId; }
-    public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+    public Long getTicketId() {
+        return ticketId;
+    }
 
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
+    public String getFileUrl() {
+        return fileUrl;
+    }
 
-    public String getFileUrl() { return fileUrl; }
-    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public Long getUploadedBy() {
+        return uploadedBy;
+    }
 
-    public LocalDateTime getUploadedAt() { return uploadedAt; }
-    public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTicketId(Long ticketId) {
+        this.ticketId = ticketId;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public void setUploadedBy(Long uploadedBy) {
+        this.uploadedBy = uploadedBy;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

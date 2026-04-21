@@ -1,23 +1,24 @@
 package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
-import lk.sliit.smartcampus.ticket.dto.*;
-import lk.sliit.smartcampus.ticket.entity.TicketCategory;
+import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.service.TicketAttachmentService;
 import lk.sliit.smartcampus.ticket.service.TicketCommentService;
 import lk.sliit.smartcampus.ticket.service.TicketService;
-import lk.sliit.smartcampus.common.enums.RoleType;
-import lk.sliit.smartcampus.user.entity.User;
-import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
@@ -26,33 +27,39 @@ public class TicketController {
     private final TicketService ticketService;
     private final TicketCommentService commentService;
     private final TicketAttachmentService attachmentService;
-    private final UserRepository userRepository;
 
     public TicketController(TicketService ticketService,
                             TicketCommentService commentService,
-                            TicketAttachmentService attachmentService,
-                            UserRepository userRepository) {
+                            TicketAttachmentService attachmentService) {
         this.ticketService = ticketService;
         this.commentService = commentService;
         this.attachmentService = attachmentService;
-        this.userRepository = userRepository;
     }
-
-    // ─── Tickets ────────────────────────────────────────────────
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getAllTickets(
-            @RequestParam(required = false) TicketStatus status,
-            @RequestParam(required = false) TicketPriority priority,
-            @RequestParam(required = false) TicketCategory category,
-            @RequestParam(required = false) Long reportedBy
-    ) {
-        return ResponseEntity.ok(ticketService.getAllTickets(status, priority, category, reportedBy));
-    }
+public ResponseEntity<List<TicketResponse>> getAllTickets(
+        @RequestParam(required = false) TicketStatus status,
+        @RequestParam(required = false) TicketPriority priority,
+        @RequestParam(required = false) Long reportedBy,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+) {
+    return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy, page, size));
+}
+
+    @GetMapping("/my")
+public ResponseEntity<List<TicketResponse>> getMyTickets(
+        @RequestHeader("X-User-Id") Long currentUserId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId, page, size));
+}
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponse> getTicketById(@PathVariable Long id) {
-        return ResponseEntity.ok(ticketService.getTicketById(id));
+    public ResponseEntity<TicketResponse> getTicketById(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.getTicketByIdVisibleToUser(id, currentUserId));
     }
 
     @PostMapping
@@ -62,15 +69,24 @@ public class TicketController {
 
     @PutMapping("/{id}")
     public ResponseEntity<TicketResponse> updateTicket(@PathVariable Long id,
-                                                        @Valid @RequestBody TicketRequest request) {
+                                                       @Valid @RequestBody TicketRequest request) {
         return ResponseEntity.ok(ticketService.updateTicket(id, request));
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateTicketStatus(
             @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
-        return ResponseEntity.ok(ticketService.updateTicketStatus(id, request));
+        return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
+    }
+
+    @PatchMapping("/{id}/resolution")
+    public ResponseEntity<TicketResponse> updateResolution(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketResolutionUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.updateResolution(id, currentUserId, request));
     }
 
     @DeleteMapping("/{id}")
@@ -79,11 +95,11 @@ public class TicketController {
         return ResponseEntity.noContent().build();
     }
 
-    // ─── Comments ───────────────────────────────────────────────
-
     @GetMapping("/{ticketId}/comments")
-    public ResponseEntity<List<TicketCommentResponse>> getComments(@PathVariable Long ticketId) {
-        return ResponseEntity.ok(commentService.getComments(ticketId));
+    public ResponseEntity<List<TicketCommentResponse>> getComments(
+            @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(commentService.getComments(ticketId, currentUserId));
     }
 
     @PostMapping("/{ticketId}/comments")
@@ -109,12 +125,9 @@ public class TicketController {
             @PathVariable Long ticketId,
             @PathVariable Long commentId,
             @RequestHeader("X-User-Id") Long userId) {
-        boolean isAdmin = isAdminUser(userId);
-        commentService.deleteComment(ticketId, commentId, userId, isAdmin);
+        commentService.deleteComment(ticketId, commentId, userId);
         return ResponseEntity.noContent().build();
     }
-
-    // ─── Attachments ────────────────────────────────────────────
 
     @GetMapping("/{ticketId}/attachments")
     public ResponseEntity<List<TicketAttachmentResponse>> getAttachments(@PathVariable Long ticketId) {
@@ -124,9 +137,10 @@ public class TicketController {
     @PostMapping("/{ticketId}/attachments")
     public ResponseEntity<List<TicketAttachmentResponse>> uploadAttachments(
             @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long uploadedBy,
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attachmentService.uploadAttachments(ticketId, files));
+                .body(attachmentService.uploadAttachments(ticketId, uploadedBy, files));
     }
 
     @DeleteMapping("/{ticketId}/attachments/{attachmentId}")
@@ -135,12 +149,5 @@ public class TicketController {
             @PathVariable Long attachmentId) {
         attachmentService.deleteAttachment(ticketId, attachmentId);
         return ResponseEntity.noContent().build();
-    }
-
-    // ─── Helpers ────────────────────────────────────────────────
-
-    private boolean isAdminUser(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
-        return user.map(u -> u.getRole() == RoleType.ADMIN).orElse(false);
     }
 }

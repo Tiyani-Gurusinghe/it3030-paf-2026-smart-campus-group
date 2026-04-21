@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ticket_attachments")
+@Table(name = "attachments")
 public class TicketAttachment {
 
     @Id
@@ -14,34 +14,60 @@ public class TicketAttachment {
     @Column(name = "ticket_id", nullable = false)
     private Long ticketId;
 
-    @Column(name = "file_name", nullable = false, length = 255)
-    private String fileName;
-
-    @Column(name = "file_url", nullable = false, length = 500)
+    @Column(name = "file_url", nullable = false, length = 255)
     private String fileUrl;
 
-    @Column(name = "uploaded_at", nullable = false, updatable = false)
-    private LocalDateTime uploadedAt;
+    @Column(name = "uploaded_by", nullable = false)
+    private Long uploadedBy;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public TicketAttachment() {
+    }
 
     @PrePersist
     public void prePersist() {
-        this.uploadedAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
-    public TicketAttachment() {}
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getTicketId() {
+        return ticketId;
+    }
 
-    public Long getTicketId() { return ticketId; }
-    public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+    public String getFileUrl() {
+        return fileUrl;
+    }
 
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
+    public Long getUploadedBy() {
+        return uploadedBy;
+    }
 
-    public String getFileUrl() { return fileUrl; }
-    public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public LocalDateTime getUploadedAt() { return uploadedAt; }
-    public void setUploadedAt(LocalDateTime uploadedAt) { this.uploadedAt = uploadedAt; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTicketId(Long ticketId) {
+        this.ticketId = ticketId;
+    }
+
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public void setUploadedBy(Long uploadedBy) {
+        this.uploadedBy = uploadedBy;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

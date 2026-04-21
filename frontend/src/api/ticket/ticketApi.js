@@ -1,139 +1,273 @@
-const BASE_URL = "http://localhost:8080/api/v1/tickets";
+const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8080";
+const TICKET_BASE = `${BASE}/api/v1/tickets`;
+const TECH_BASE = `${BASE}/api/technician/tickets`;
+const ADMIN_BASE = `${BASE}/api/admin/tickets`;
 
-function getHeaders(includeUserId = false) {
-  const headers = { "Content-Type": "application/json" };
-  if (includeUserId) {
-    const userId = localStorage.getItem("userId");
-    if (userId) headers["X-User-Id"] = userId;
-  }
-  return headers;
+// ─── Headers ──────────────────────────────────────────────────────────────────
+
+function getUserId() {
+  return localStorage.getItem("userId");
 }
+
+function getHeaders(extra = {}) {
+  const userId = getUserId();
+  const headers = { "Content-Type": "application/json" };
+  if (userId) headers["X-User-Id"] = userId;
+  return { ...headers, ...extra };
+}
+
+// ─── Error Handling ───────────────────────────────────────────────────────────
 
 async function parseError(res) {
   let data = null;
-  try { data = await res.json(); } catch { throw new Error("Something went wrong"); }
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Something went wrong");
+  }
   if (data?.validationErrors) {
     const messages = Object.values(data.validationErrors).join(", ");
     throw new Error(messages);
   }
-  throw new Error(data?.message || "Request failed");
+  throw new Error(data?.message || `Request failed (${res.status})`);
 }
 
-// ─── Tickets ─────────────────────────────────────────────────
+async function handleResponse(res) {
+  if (!res.ok) await parseError(res);
+  // 204 No Content
+  if (res.status === 204) return null;
+  return res.json();
+}
 
-export async function getTickets(filters = {}) {
+// ─── Ticket APIs ──────────────────────────────────────────────────────────────
+
+/**
+ * Get all tickets (ADMIN).
+ * Filters: { status, priority, reportedBy, page, size }
+ */
+export async function getAllTickets(filters = {}) {
   const params = new URLSearchParams();
-  if (filters.status)     params.set("status",     filters.status);
-  if (filters.priority)   params.set("priority",   filters.priority);
-  if (filters.category)   params.set("category",   filters.category);
-  if (filters.reportedBy) params.set("reportedBy", filters.reportedBy);
-  const query = params.toString() ? `?${params}` : "";
-  const res = await fetch(`${BASE_URL}${query}`);
-  if (!res.ok) await parseError(res);
-  return res.json();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.priority) params.set("priority", filters.priority);
+  if (filters.reportedBy) params.set("reportedBy", String(filters.reportedBy));
+  params.set("page", String(filters.page ?? 0));
+  params.set("size", String(filters.size ?? 10));
+  const res = await fetch(`${TICKET_BASE}?${params}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
 }
 
-export async function getTicket(id) {
-  const res = await fetch(`${BASE_URL}/${id}`);
-  if (!res.ok) await parseError(res);
-  return res.json();
-}
-
+/**
+ * Create a new ticket (USER).
+ * reportedBy is injected from localStorage userId.
+ */
 export async function createTicket(payload) {
-  const userId = localStorage.getItem("userId");
-  const res = await fetch(BASE_URL, {
+  const userId = getUserId();
+  const res = await fetch(TICKET_BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, reportedBy: userId ? Number(userId) : null }),
+    headers: getHeaders(),
+    body: JSON.stringify({
+      ...payload,
+      reportedBy: userId ? Number(userId) : null,
+    }),
   });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  return handleResponse(res);
 }
 
-export async function updateTicket(id, payload) {
-  const res = await fetch(`${BASE_URL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+/**
+ * Get current user's own tickets (USER).
+ * Filters: { status, page, size }
+ */
+export async function getMyTickets(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  params.set("page", String(filters.page ?? 0));
+  params.set("size", String(filters.size ?? 10));
+  const res = await fetch(`${TICKET_BASE}/my?${params}`, {
+    headers: getHeaders(),
   });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  return handleResponse(res);
 }
 
+/**
+ * Get single ticket by ID (visible to the requesting user).
+ */
+export async function getTicketById(id) {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Update ticket status (TECHNICIAN / ADMIN).
+ * payload: { status, resolutionNotes? }
+ */
 export async function updateTicketStatus(id, payload) {
-  const res = await fetch(`${BASE_URL}/${id}/status`, {
+  const res = await fetch(`${TICKET_BASE}/${id}/status`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  return handleResponse(res);
+}
+
+/**
+ * Update resolution notes only (TECHNICIAN).
+ * payload: { resolutionNotes }
+ */
+export async function updateTicketResolution(id, payload) {
+  const res = await fetch(`${TICKET_BASE}/${id}/resolution`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+// ─── Technician APIs ──────────────────────────────────────────────────────────
+
+/**
+ * Get tickets assigned to the authenticated technician.
+ * filters: { status?, overdue?, dueSoon?, page, size }
+ */
+export async function getTechnicianTickets(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.set("status", filters.status);
+  if (filters.overdue) params.set("overdue", "true");
+  if (filters.dueSoon) params.set("dueSoon", "true");
+  params.set("page", String(filters.page ?? 0));
+  params.set("size", String(filters.size ?? 10));
+  const res = await fetch(`${TECH_BASE}?${params}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
+// ─── Admin APIs ───────────────────────────────────────────────────────────────
+
+/**
+ * Assign / reassign technician (ADMIN).
+ * payload: { assignedTo: userId }
+ */
+export async function assignTicket(id, payload) {
+  const res = await fetch(`${ADMIN_BASE}/${id}/assign`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Reject a ticket (ADMIN).
+ * payload: { rejectedReason }
+ */
+export async function rejectTicket(id, payload) {
+  const res = await fetch(`${ADMIN_BASE}/${id}/reject`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Close a resolved ticket (ADMIN).
+ */
+export async function closeTicket(id) {
+  const res = await fetch(`${ADMIN_BASE}/${id}/close`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify({}),
+  });
+  return handleResponse(res);
 }
 
 export async function deleteTicket(id) {
-  const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
-  if (!res.ok) await parseError(res);
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
 }
 
-// ─── Comments ────────────────────────────────────────────────
+// ─── Comments ─────────────────────────────────────────────────────────────────
 
 export async function getComments(ticketId) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/comments`);
-  if (!res.ok) await parseError(res);
-  return res.json();
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/comments`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
 }
 
 export async function addComment(ticketId, content) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/comments`, {
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/comments`, {
     method: "POST",
-    headers: getHeaders(true),
+    headers: getHeaders(),
     body: JSON.stringify({ content }),
   });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function updateComment(ticketId, commentId, content) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/comments/${commentId}`, {
-    method: "PUT",
-    headers: getHeaders(true),
-    body: JSON.stringify({ content }),
-  });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  const res = await fetch(
+    `${TICKET_BASE}/${ticketId}/comments/${commentId}`,
+    {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify({ content }),
+    }
+  );
+  return handleResponse(res);
 }
 
 export async function deleteComment(ticketId, commentId) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/comments/${commentId}`, {
-    method: "DELETE",
-    headers: getHeaders(true),
-  });
-  if (!res.ok) await parseError(res);
+  const res = await fetch(
+    `${TICKET_BASE}/${ticketId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      headers: getHeaders(),
+    }
+  );
+  return handleResponse(res);
 }
 
-// ─── Attachments ─────────────────────────────────────────────
+// ─── Attachments ──────────────────────────────────────────────────────────────
 
 export async function getAttachments(ticketId) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/attachments`);
-  if (!res.ok) await parseError(res);
-  return res.json();
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
 }
 
 export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
-  const res = await fetch(`${BASE_URL}/${ticketId}/attachments`, {
+  const userId = getUserId();
+  const headers = {};
+  if (userId) headers["X-User-Id"] = userId;
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",
+    headers, // No Content-Type: let browser set multipart boundary
     body: formData,
-    // Do NOT set Content-Type — browser sets multipart boundary automatically
   });
-  if (!res.ok) await parseError(res);
-  return res.json();
+  return handleResponse(res);
 }
 
 export async function deleteAttachment(ticketId, attachmentId) {
-  const res = await fetch(`${BASE_URL}/${ticketId}/attachments/${attachmentId}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) await parseError(res);
+  const res = await fetch(
+    `${TICKET_BASE}/${ticketId}/attachments/${attachmentId}`,
+    {
+      method: "DELETE",
+      headers: getHeaders(),
+    }
+  );
+  return handleResponse(res);
 }
+
+// ─── Legacy aliases (kept for backward compat during migration) ───────────────
+export const getTicket = getTicketById;
+export const getTickets = getAllTickets;

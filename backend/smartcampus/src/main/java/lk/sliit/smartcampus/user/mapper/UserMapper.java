@@ -3,6 +3,7 @@ package lk.sliit.smartcampus.user.mapper;
 import lk.sliit.smartcampus.user.dto.UserCreateRequestDto;
 import lk.sliit.smartcampus.user.dto.UserResponseDto;
 import lk.sliit.smartcampus.user.entity.User;
+import lk.sliit.smartcampus.common.enums.RoleType;
 
 public class UserMapper {
 
@@ -24,8 +25,14 @@ public class UserMapper {
         dto.setOauthId(user.getOauthId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole());
         dto.setCreatedAt(user.getCreatedAt());
+
+        if (user.getUserRoles() != null && !user.getUserRoles().isEmpty()) {
+            dto.setRole(user.getUserRoles().iterator().next().getRole().getName());
+        } else {
+            dto.setRole(RoleType.USER);
+        }
+
         return dto;
     }
 }

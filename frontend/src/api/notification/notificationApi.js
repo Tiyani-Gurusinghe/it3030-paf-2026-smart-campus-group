@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api/v1/notifications";
+const BASE_URL = "http://localhost:8081/api/v1/notifications";
 
 async function parseError(res) {
   let data = null;
