@@ -85,24 +85,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
-  const value = useMemo(() => {
-    const roles = user?.roles ?? [];
-    const primaryRole = getPrimaryRole(roles);
-    return {
-      user,
-      isAuthenticated: !!user,
-      roles,
-      primaryRole,
-      isAdmin: roles.includes("ADMIN"),
-      isTechnician: roles.includes("TECHNICIAN"),
-      isUser: !roles.includes("ADMIN") && !roles.includes("TECHNICIAN"),
-      // Legacy aliases
-      isStaff: roles.includes("TECHNICIAN") || roles.includes("ADMIN"),
-      login,
-      logout,
-      getLandingRoute: () => getLandingRoute(roles),
-    };
-  }, [user]);
+  const value = useMemo(
+    () => {
+      const roleStr = user?.role?.toUpperCase() || "STUDENT";
+      return {
+        user,
+        isAuthenticated: !!user,
+        isAdmin: roleStr === "ADMIN",
+        isStaff: !!user && roleStr !== "USER" && roleStr !== "STUDENT",
+        login,
+        logout,
+      };
+    },
+    [user]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

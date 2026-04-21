@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../features/auth/hooks/useAuth";
 import NotificationPanel from "../notifications/NotificationPanel";
+import { useAuthContext } from "../../features/auth/context/AuthContext";
 
 const ROLE_STYLES = {
   ADMIN: "role-badge-admin",
@@ -9,21 +10,14 @@ const ROLE_STYLES = {
 };
 
 function Navbar() {
-  const navigate = useNavigate();
-  const { user, primaryRole, logout } = useAuth();
-
-  function handleLogout() {
+  const { user, logout } = useAuthContext();
+  
+  const handleLogout = () => {
     logout();
-    navigate("/login", { replace: true });
-  }
+  };
 
   const initials = user?.fullName
-    ? user.fullName
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+    ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
     : "SC";
 
   return (
@@ -33,30 +27,11 @@ function Navbar() {
         Smart Campus
       </div>
       <div className="navbar-spacer" />
-      <div className="navbar-actions">
+      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <NotificationPanel />
-
-        {user && (
-          <span className={`role-badge ${ROLE_STYLES[primaryRole] ?? "role-badge-user"}`}>
-            {primaryRole}
-          </span>
-        )}
-
-        {user && (
-          <div className="navbar-user-info">
-            <div className="navbar-avatar" title={user.fullName}>
-              {initials}
-            </div>
-            <span className="navbar-username">{user.fullName}</span>
-          </div>
-        )}
-
-        <button
-          className="btn secondary navbar-logout-btn"
-          onClick={handleLogout}
-          title="Sign out"
-        >
-          Sign Out
+        <div className="navbar-avatar" title={user?.fullName || "Profile"}>{initials}</div>
+        <button onClick={handleLogout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '12px', height: 'fit-content' }}>
+          Logout
         </button>
       </div>
     </header>

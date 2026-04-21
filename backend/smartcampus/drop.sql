@@ -1,0 +1,4 @@
+use smartcampusdb;
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS resources;
+SET FOREIGN_KEY_CHECKS = 1;
