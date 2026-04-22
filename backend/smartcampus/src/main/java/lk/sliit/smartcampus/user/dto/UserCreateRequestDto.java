@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class UserCreateRequestDto {
 
-    @NotBlank
+   @NotBlank
     private String oauthProvider;
 
     @NotBlank
@@ -18,6 +18,11 @@ public class UserCreateRequestDto {
     @NotBlank
     private String email;
 
+    @NotBlank
+    private String password;
+
+    private String campusId;
+
     public String getOauthProvider() { return oauthProvider; }
     public void setOauthProvider(String oauthProvider) { this.oauthProvider = oauthProvider; }
 
@@ -29,4 +34,10 @@ public class UserCreateRequestDto {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getCampusId() { return campusId; }
+    public void setCampusId(String campusId) { this.campusId = campusId; }
 }

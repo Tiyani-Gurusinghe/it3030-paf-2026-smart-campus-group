@@ -15,6 +15,8 @@ public class UserMapper {
         user.setOauthId(dto.getOauthId());
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword());
+        user.setCampusId(dto.getCampusId());
         return user;
     }
 
