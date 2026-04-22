@@ -39,9 +39,12 @@ export function getPrimaryRole(roles = []) {
 
 export function getLandingRoute(roles = []) {
   const primary = getPrimaryRole(roles);
-  if (primary === "ADMIN") return "/admin/tickets";
-  if (primary === "TECHNICIAN") return "/technician/tickets";
-  return "/tickets/my";
+  
+  // These MUST match the paths in your router.jsx
+  if (primary === "ADMIN") return "/dashboard"; 
+  if (primary === "TECHNICIAN") return "/dashboard";
+  
+  return "/"; 
 }
 
 function getStoredUser() {
@@ -87,19 +90,25 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => {
-      const roleStr = user?.role?.toUpperCase() || "STUDENT";
+      // 1. Get the roles array from the user object
+      const roles = user?.roles || [];
+      
+      // 2. Use your existing helper to find the highest role (ADMIN > TECHNICIAN > USER)
+      const primaryRole = getPrimaryRole(roles);
+
       return {
         user,
         isAuthenticated: !!user,
-        isAdmin: roleStr === "ADMIN",
-        isStaff: !!user && roleStr !== "USER" && roleStr !== "STUDENT",
+        primaryRole, // 🚨 Added this so ResourceListPage stops getting 'undefined'
+        isAdmin: primaryRole === "ADMIN",
+        // 🚨 Staff is anyone who isn't just a basic USER
+        isStaff: primaryRole === "ADMIN" || primaryRole === "TECHNICIAN",
         login,
         logout,
       };
     },
     [user]
   );
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
