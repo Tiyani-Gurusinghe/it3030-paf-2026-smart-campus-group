@@ -118,8 +118,6 @@ const BookingListPage = () => {
                 updatedBooking = updatedBooking?.data?.data || updatedBooking?.data || updatedBooking;
             } else {
                 const token = localStorage.getItem('token');
-                console.log("update payload:", payload);
-                console.log("booking object:", booking);
                 const response = await fetch(`/api/bookings/${booking.id}`, {
                     method: 'PUT',
                     headers: {
