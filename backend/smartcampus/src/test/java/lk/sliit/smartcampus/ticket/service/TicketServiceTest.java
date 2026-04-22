@@ -2,6 +2,7 @@ package lk.sliit.smartcampus.ticket.service;
 
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
+import lk.sliit.smartcampus.notification.service.NotificationService;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
@@ -14,20 +15,19 @@ import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
-import lk.sliit.smartcampus.notification.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 
-
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TicketServiceTest {
 
@@ -73,8 +73,8 @@ class TicketServiceTest {
         when(technicianSkillRepository.findTechnicianIdsBySkillId(2L)).thenReturn(List.of(3L, 4L));
         when(ticketRepository.countByAssignedToAndStatusIn(eq(3L), anyList())).thenReturn(5L);
         when(ticketRepository.countByAssignedToAndStatusIn(eq(4L), anyList())).thenReturn(1L);
-        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> {
-            Ticket t = i.getArgument(0);
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> {
+            Ticket t = invocation.getArgument(0);
             t.setId(10L);
             return t;
         });
@@ -85,11 +85,11 @@ class TicketServiceTest {
         request.setResourceId(1L);
         request.setRequiredSkillId(2L);
         request.setPriority(TicketPriority.HIGH);
-        request.setReportedBy(1L);
 
-        var response = service.createTicket(request);
+        var response = service.createTicket(1L, request);
 
         assertEquals(4L, response.getAssignedTo());
+        assertEquals(1L, response.getReportedBy());
     }
 
     @Test
@@ -100,8 +100,9 @@ class TicketServiceTest {
         ticket.setReportedBy(2L);
 
         User normalUser = mock(User.class);
-when(normalUser.hasRole(RoleType.ADMIN)).thenReturn(false);
-when(normalUser.hasRole(RoleType.TECHNICIAN)).thenReturn(false); // adjust if needed in your entity
+        when(normalUser.getId()).thenReturn(5L);
+        when(normalUser.hasRole(RoleType.ADMIN)).thenReturn(false);
+        when(normalUser.hasRole(RoleType.TECHNICIAN)).thenReturn(false);
 
         when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
         when(userRepository.findById(5L)).thenReturn(Optional.of(normalUser));
