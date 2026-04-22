@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8080";
+const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
 const TECH_BASE = `${BASE}/api/technician/tickets`;
 const ADMIN_BASE = `${BASE}/api/admin/tickets`;

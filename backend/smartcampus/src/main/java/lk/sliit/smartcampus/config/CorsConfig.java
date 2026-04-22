@@ -14,19 +14,29 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow both Vite default ports and any additional origins
+        
+        // Allow the origins where your frontend might be running
         config.setAllowedOrigins(List.of(
             "http://localhost:5173",
             "http://localhost:5174",
             "http://localhost:5175",
             "http://localhost:3000"
         ));
+        
+        // Allow all standard headers
         config.addAllowedHeader("*");
+        
+        // Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
         config.addAllowedMethod("*");
+        
+        // Allow cookies/auth headers to be sent
         config.setAllowCredentials(true);
-        config.setExposedHeaders(List.of("X-User-Id"));
+        
+        // Expose custom headers used by your application
+        config.setExposedHeaders(List.of("X-User-Id", "Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Apply this configuration to all paths
         source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);

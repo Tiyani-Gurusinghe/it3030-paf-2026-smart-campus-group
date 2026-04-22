@@ -10,7 +10,18 @@ const ResourceListPage = () => {
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [resourceToDelete, setResourceToDelete] = useState(null);
-    const { isStaff } = useAuthContext();
+    //const { isStaff } = useAuthContext();
+    const { isStaff, user, primaryRole } = useAuthContext();
+    // // Create a combined permission check
+    // const canManage = isStaff || primaryRole === 'ADMIN' || user?.primaryRole === 'ADMIN';
+    
+    // Since we fixed AuthContext, isStaff now means (Admin OR Technician)
+const canManage = isStaff; 
+
+//console.log("Can Manage Resources:", canManage);
+
+//console.log("Can Manage Resources:", canManage);
+    
     const [activeTab, setActiveTab] = useState('infrastructure');
     const [activeInventoryTab, setActiveInventoryTab] = useState('ALL');
     const [selectedSpaceId, setSelectedSpaceId] = useState(null);
@@ -177,7 +188,7 @@ const ResourceListPage = () => {
                     <h2 className="page-title">Facilities & Assets</h2>
                     <p className="page-subtitle">Manage campus lecture halls, labs, meeting rooms, and equipment.</p>
                 </div>
-                {isStaff && (
+                {canManage && (
                     <button onClick={() => navigate('/resources/new')} className="btn primary">
                         + Add Resource
                     </button>
