@@ -9,13 +9,17 @@ const BookingListPage = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    console.log("user:", user, "isStaff:", isStaff);
 
     useEffect(() => {
         loadBookings();
     }, [user]);
 
     const loadBookings = async () => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
         try {
             setLoading(true);
             let data;
@@ -24,10 +28,12 @@ const BookingListPage = () => {
             } else {
                 data = await bookingApi.getByUserId(user.id);
             }
+            console.log("raw response:", data);
+            console.log("bookingsList:", data?.data?.data || data?.data || data || []);
             // data inside ApiSuccessResponse is usually returned as data.data if interceptor unpacks response.data
             // If the backend returns { success: true, data: [...] }, we need to handle it.
             // Our axios interceptor usually returns response.data directly. So data is { success: true, data: [...] }
-            const bookingsList = data.data || data; 
+            const bookingsList = data?.data?.data || data?.data || data || [];
             
             // Sort by createdAt descending
             const sorted = Array.isArray(bookingsList) ? bookingsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) : [];
