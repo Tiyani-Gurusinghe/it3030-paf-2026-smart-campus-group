@@ -11,8 +11,16 @@ public class TicketRequest {
     @Size(max = 120, message = "Title must be at most 120 characters")
     private String title;
 
+    @NotBlank(message = "Location is required")
+    @Size(max = 120, message = "Location must be at most 120 characters")
+    private String location;
+
+    @NotBlank(message = "Category is required")
+    @Size(max = 30, message = "Category must be at most 30 characters")
+    private String category;
+
     @NotBlank(message = "Description is required")
-    @Size(max = 2000, message = "Description must be at most 2000 characters")
+    @Size(max = 1000, message = "Description must be at most 1000 characters")
     private String description;
 
     @NotNull(message = "Resource id is required")
@@ -24,15 +32,20 @@ public class TicketRequest {
     @NotNull(message = "Priority is required")
     private TicketPriority priority;
 
-    @NotNull(message = "Reported by is required")
-    private Long reportedBy;
-
-    // Optional - keep only if you still want it in API layer
-    @Size(max = 120, message = "Preferred contact details must be at most 120 characters")
-    private String preferredContactDetails;
+    @NotBlank(message = "Preferred contact is required")
+    @Size(max = 120, message = "Preferred contact must be at most 120 characters")
+    private String preferredContact;
 
     public String getTitle() {
         return title;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getDescription() {
@@ -51,16 +64,20 @@ public class TicketRequest {
         return priority;
     }
 
-    public Long getReportedBy() {
-        return reportedBy;
-    }
-
-    public String getPreferredContactDetails() {
-        return preferredContactDetails;
+    public String getPreferredContact() {
+        return preferredContact;
     }
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public void setDescription(String description) {
@@ -79,11 +96,7 @@ public class TicketRequest {
         this.priority = priority;
     }
 
-    public void setReportedBy(Long reportedBy) {
-        this.reportedBy = reportedBy;
-    }
-
-    public void setPreferredContactDetails(String preferredContactDetails) {
-        this.preferredContactDetails = preferredContactDetails;
+    public void setPreferredContact(String preferredContact) {
+        this.preferredContact = preferredContact;
     }
 }

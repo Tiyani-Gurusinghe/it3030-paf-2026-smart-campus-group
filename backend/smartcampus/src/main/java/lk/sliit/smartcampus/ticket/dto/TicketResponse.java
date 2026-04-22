@@ -10,6 +10,8 @@ public class TicketResponse {
 
     private Long id;
     private String title;
+    private String location;
+    private String category;
     private String description;
 
     private Long resourceId;
@@ -28,21 +30,14 @@ public class TicketResponse {
     private Long assignedTo;
     private String assignedToName;
 
-    private String resolutionNotes;
-    private String rejectedReason;
-    private String preferredContactDetails;
-
-    private Long firstRespondedBy;
-    private String firstRespondedByName;
+    private String preferredContact;
 
     private int commentCount;
     private List<TicketAttachmentResponse> attachments;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime firstResponseAt;
     private LocalDateTime dueAt;
-    private LocalDateTime resolvedAt;
     private LocalDateTime closedAt;
 
     public Long getId() {
@@ -51,6 +46,14 @@ public class TicketResponse {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getDescription() {
@@ -101,24 +104,8 @@ public class TicketResponse {
         return assignedToName;
     }
 
-    public String getResolutionNotes() {
-        return resolutionNotes;
-    }
-
-    public String getRejectedReason() {
-        return rejectedReason;
-    }
-
-    public String getPreferredContactDetails() {
-        return preferredContactDetails;
-    }
-
-    public Long getFirstRespondedBy() {
-        return firstRespondedBy;
-    }
-
-    public String getFirstRespondedByName() {
-        return firstRespondedByName;
+    public String getPreferredContact() {
+        return preferredContact;
     }
 
     public int getCommentCount() {
@@ -137,16 +124,8 @@ public class TicketResponse {
         return updatedAt;
     }
 
-    public LocalDateTime getFirstResponseAt() {
-        return firstResponseAt;
-    }
-
     public LocalDateTime getDueAt() {
         return dueAt;
-    }
-
-    public LocalDateTime getResolvedAt() {
-        return resolvedAt;
     }
 
     public LocalDateTime getClosedAt() {
@@ -159,6 +138,14 @@ public class TicketResponse {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public void setDescription(String description) {
@@ -209,24 +196,8 @@ public class TicketResponse {
         this.assignedToName = assignedToName;
     }
 
-    public void setResolutionNotes(String resolutionNotes) {
-        this.resolutionNotes = resolutionNotes;
-    }
-
-    public void setRejectedReason(String rejectedReason) {
-        this.rejectedReason = rejectedReason;
-    }
-
-    public void setPreferredContactDetails(String preferredContactDetails) {
-        this.preferredContactDetails = preferredContactDetails;
-    }
-
-    public void setFirstRespondedBy(Long firstRespondedBy) {
-        this.firstRespondedBy = firstRespondedBy;
-    }
-
-    public void setFirstRespondedByName(String firstRespondedByName) {
-        this.firstRespondedByName = firstRespondedByName;
+    public void setPreferredContact(String preferredContact) {
+        this.preferredContact = preferredContact;
     }
 
     public void setCommentCount(int commentCount) {
@@ -245,16 +216,8 @@ public class TicketResponse {
         this.updatedAt = updatedAt;
     }
 
-    public void setFirstResponseAt(LocalDateTime firstResponseAt) {
-        this.firstResponseAt = firstResponseAt;
-    }
-
     public void setDueAt(LocalDateTime dueAt) {
         this.dueAt = dueAt;
-    }
-
-    public void setResolvedAt(LocalDateTime resolvedAt) {
-        this.resolvedAt = resolvedAt;
     }
 
     public void setClosedAt(LocalDateTime closedAt) {
