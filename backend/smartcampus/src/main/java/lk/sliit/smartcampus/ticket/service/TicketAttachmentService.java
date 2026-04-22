@@ -53,7 +53,7 @@ public class TicketAttachmentService {
                 String name = UUID.randomUUID() + ext;
 
                 Path path = dir.resolve(name);
-                file.transferTo(path);
+                file.transferTo(path.toFile());
 
                 urls.add(baseUrl + "/uploads/tickets/" + ticketId + "/" + name);
 
