@@ -1,29 +1,26 @@
 package lk.sliit.smartcampus.ticket.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
-import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
-import lk.sliit.smartcampus.ticket.entity.TicketAttachment;
-import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
+import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class TicketAttachmentService {
 
-    private final TicketAttachmentRepository attachmentRepository;
     private final TicketRepository ticketRepository;
-    private final TicketValidationService ticketValidationService;
+    private final TicketValidationService validationService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${app.uploads.dir:uploads}")
     private String uploadsDir;
@@ -31,97 +28,89 @@ public class TicketAttachmentService {
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    public TicketAttachmentService(TicketAttachmentRepository attachmentRepository,
-                                   TicketRepository ticketRepository,
-                                   TicketValidationService ticketValidationService) {
-        this.attachmentRepository = attachmentRepository;
+    public TicketAttachmentService(
+            TicketRepository ticketRepository,
+            TicketValidationService validationService) {
         this.ticketRepository = ticketRepository;
-        this.ticketValidationService = ticketValidationService;
+        this.validationService = validationService;
     }
 
-    public List<TicketAttachmentResponse> uploadAttachments(Long ticketId,
-                                                            Long uploadedBy,
-                                                            List<MultipartFile> files) {
-        ticketValidationService.validateAttachmentUpload(ticketId, files);
+    public List<String> upload(Long ticketId, List<MultipartFile> files) {
+        Ticket ticket = find(ticketId);
 
-        List<TicketAttachmentResponse> results = new ArrayList<>();
+        validationService.validateFiles(files);
+
+        List<String> urls = readUrls(ticket);
 
         for (MultipartFile file : files) {
-            if (file.isEmpty()) {
-                continue;
-            }
+            if (file.isEmpty()) continue;
 
             try {
-                Path dir = Paths.get(uploadsDir, "tickets", String.valueOf(ticketId));
+                Path dir = Paths.get(uploadsDir, "tickets", ticketId.toString());
                 Files.createDirectories(dir);
 
-                String ext = getExtension(file.getOriginalFilename());
-                String storedName = UUID.randomUUID() + ext;
-                Path dest = dir.resolve(storedName);
-                file.transferTo(dest);
+                String ext = ext(file.getOriginalFilename());
+                String name = UUID.randomUUID() + ext;
 
-                TicketAttachment attachment = new TicketAttachment();
-                attachment.setTicketId(ticketId);
-                attachment.setUploadedBy(uploadedBy);
-                attachment.setFileUrl(baseUrl + "/uploads/tickets/" + ticketId + "/" + storedName);
+                Path path = dir.resolve(name);
+                file.transferTo(path);
 
-                TicketAttachment saved = attachmentRepository.save(attachment);
-                results.add(toResponse(saved));
+                urls.add(baseUrl + "/uploads/tickets/" + ticketId + "/" + name);
 
             } catch (IOException e) {
-                throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
+                throw new RuntimeException(e);
             }
         }
 
-        return results;
+        ticket.setAttachmentUrls(writeUrls(urls));
+        ticketRepository.save(ticket);
+
+        return urls;
     }
 
-    public List<TicketAttachmentResponse> getAttachments(Long ticketId) {
-        ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
-
-        return attachmentRepository.findByTicketId(ticketId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public List<String> get(Long ticketId) {
+        return readUrls(find(ticketId));
     }
 
-    public void deleteAttachment(Long ticketId, Long attachmentId) {
-        TicketAttachment attachment = attachmentRepository.findById(attachmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Attachment not found: " + attachmentId));
+    public void delete(Long ticketId, String url) {
+        Ticket ticket = find(ticketId);
 
-        if (!attachment.getTicketId().equals(ticketId)) {
-            throw new ResourceNotFoundException("Attachment does not belong to this ticket");
-        }
+        List<String> urls = readUrls(ticket);
+        urls.remove(url);
 
+        ticket.setAttachmentUrls(writeUrls(urls));
+        ticketRepository.save(ticket);
+    }
+
+    private Ticket find(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+    }
+
+    private List<String> readUrls(Ticket ticket) {
         try {
-            String prefix = baseUrl + "/";
-            String relativePath = attachment.getFileUrl().startsWith(prefix)
-                    ? attachment.getFileUrl().substring(prefix.length())
-                    : attachment.getFileUrl();
+            String json = ticket.getAttachmentUrls();
+            if (json == null || json.isBlank()) return new ArrayList<>();
 
-            Path filePath = Paths.get(relativePath);
-            Files.deleteIfExists(filePath);
-        } catch (IOException ignored) {
+            return objectMapper.readValue(
+                    json,
+                    new TypeReference<List<String>>() {}
+            );
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
-
-        attachmentRepository.delete(attachment);
     }
 
-    private TicketAttachmentResponse toResponse(TicketAttachment a) {
-        TicketAttachmentResponse r = new TicketAttachmentResponse();
-        r.setId(a.getId());
-        r.setTicketId(a.getTicketId());
-        r.setFileUrl(a.getFileUrl());
-        r.setUploadedBy(a.getUploadedBy());
-        r.setCreatedAt(a.getCreatedAt());
-        return r;
+    private String writeUrls(List<String> urls) {
+        try {
+            return objectMapper.writeValueAsString(urls);
+        } catch (Exception e) {
+            return "[]";
+        }
     }
 
-    private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            return ".jpg";
-        }
-        return filename.substring(filename.lastIndexOf('.'));
+    private String ext(String name) {
+        if (name == null || !name.contains(".")) return ".jpg";
+        return name.substring(name.lastIndexOf('.'));
     }
 }
