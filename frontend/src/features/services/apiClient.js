@@ -1,10 +1,13 @@
-import axios from "axios";
+import axios from 'axios';
+
+// This pulls the URL from the .env file we just created!
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
-  headers: {
-    "Content-Type": "application/json",
-  },
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
 export default apiClient;

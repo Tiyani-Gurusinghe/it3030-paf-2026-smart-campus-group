@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AuthController {
 
     private final UserRepository userRepository;
@@ -27,7 +28,7 @@ public class AuthController {
 
         return userRepository
                 .findByEmailIgnoreCase(email)
-                .map(user -> ResponseEntity.ok((Object) user))
+                .map(user -> ResponseEntity.ok((Object) lk.sliit.smartcampus.user.mapper.UserMapper.toDto(user)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found"));
     }
 }
