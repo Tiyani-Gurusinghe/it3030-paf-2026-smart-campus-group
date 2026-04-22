@@ -12,11 +12,8 @@ CREATE TABLE roles (
 -- =========================
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    role VARCHAR(50) NOT NULL,
-    status VARCHAR(50) NOT NULL,
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(100) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -35,48 +32,20 @@ CREATE TABLE user_roles (
 -- =========================
 -- SKILLS
 -- =========================
-
 CREATE TABLE IF NOT EXISTS skills (
-
-    id BIGINT PRIMARY KEY,
-
-    name VARCHAR(100) NOT NULL
-
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- =========================
 -- RESOURCE TYPE SKILLS
--- Align with shared ResourceType enum
 -- =========================
-
 CREATE TABLE IF NOT EXISTS resource_type_skills (
-
-    resource_type ENUM(
-
-        'LECTURE_HALL',
-
-        'LAB',
-
-        'MEETING_ROOM',
-
-        'PROJECTOR',
-
-        'PC',
-
-        'SMART_BOARD',
-
-        'CHAIR'
-
-    ) NOT NULL,
-
+    resource_type VARCHAR(50) NOT NULL,
     skill_id BIGINT NOT NULL,
-
     PRIMARY KEY (resource_type, skill_id),
-
     CONSTRAINT fk_resource_type_skills_skill
-
-        FOREIGN KEY (skill_id) REFERENCES skills(id)
-
+        FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
 -- =========================
@@ -102,13 +71,19 @@ CREATE TABLE IF NOT EXISTS technician_skills (
 CREATE TABLE resources (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     resource_name VARCHAR(100) NOT NULL,
-    resource_type ENUM('LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT') NOT NULL,
+    resource_type VARCHAR(50) NOT NULL,
+    resource_category VARCHAR(50),
+    config_type VARCHAR(50),
+    floor VARCHAR(255),
     capacity INT,
     location VARCHAR(150) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    parent_id BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     availability_start TIME,
     availability_end TIME,
-    status ENUM('ACTIVE', 'OUT_OF_SERVICE') NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CONSTRAINT fk_resource_parent
+        FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
 );
 
 -- =========================
@@ -122,14 +97,12 @@ CREATE TABLE bookings (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     purpose VARCHAR(255) NOT NULL,
-    expected_attendees INT,
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
-    admin_reason VARCHAR(255),
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_bookings_resource FOREIGN KEY (resource_id) REFERENCES resources(id),
-    CONSTRAINT chk_booking_time CHECK (start_time < end_time)
+    CONSTRAINT fk_bookings_user
+        FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_bookings_resource
+        FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
 
 -- =========================================================

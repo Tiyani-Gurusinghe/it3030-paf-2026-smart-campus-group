@@ -46,7 +46,7 @@ public class TicketCommentService {
 
         return historyRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
                 .stream()
-                .filter(h -> "COMMENT".equals(h.getActionType()))
+                .filter(h -> "NOTE".equals(h.getActionType()))
                 .map(h -> toResponse(h, resolveUserName(h.getActorUserId())))
                 .collect(Collectors.toList());
     }
@@ -63,7 +63,7 @@ public class TicketCommentService {
         TicketHistory history = new TicketHistory();
         history.setTicketId(ticketId);
         history.setActorUserId(userId);
-        history.setActionType("COMMENT");
+        history.setActionType("NOTE");
         history.setNote(request.getContent());
 
         TicketHistory saved = historyRepository.save(history);
@@ -72,6 +72,7 @@ public class TicketCommentService {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.NEW_COMMENT,
+                    "New comment on your ticket",
                     author.getFullName() + " commented on your ticket: \"" + ticket.getTitle() + "\"",
                     ticketId
             );
@@ -89,7 +90,7 @@ public class TicketCommentService {
         TicketHistory history = historyRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
-        if (!history.getTicketId().equals(ticketId) || !"COMMENT".equals(history.getActionType())) {
+        if (!history.getTicketId().equals(ticketId) || !"NOTE".equals(history.getActionType())) {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
 
@@ -114,7 +115,7 @@ public class TicketCommentService {
         TicketHistory history = historyRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
-        if (!history.getTicketId().equals(ticketId) || !"COMMENT".equals(history.getActionType())) {
+        if (!history.getTicketId().equals(ticketId) || !"NOTE".equals(history.getActionType())) {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
 

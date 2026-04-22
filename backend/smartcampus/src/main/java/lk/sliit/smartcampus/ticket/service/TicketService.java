@@ -1,5 +1,7 @@
 package lk.sliit.smartcampus.ticket.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +41,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public TicketService(TicketRepository ticketRepository,
                          TechnicianSkillRepository technicianSkillRepository,
@@ -197,9 +201,10 @@ public class TicketService {
 
         if (assignedTechnicianId != null) {
             notificationService.createNotification(
-                    currentUserId,
+                    assignedTechnicianId,
                     NotificationType.TICKET_ASSIGNED,
-                    "Your ticket \"" + saved.getTitle() + "\" has been assigned automatically.",
+                    "New ticket assigned",
+                    "Ticket \"" + saved.getTitle() + "\" has been assigned to you.",
                     saved.getId()
             );
         }
@@ -270,7 +275,8 @@ public class TicketService {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.TICKET_STATUS_CHANGED,
-                    "Ticket \"" + ticket.getTitle() + "\" changed to " + nextStatus,
+                    "Ticket status updated",
+                    "Your ticket \"" + ticket.getTitle() + "\" status changed to " + nextStatus,
                     ticketId
             );
         }
@@ -418,9 +424,24 @@ public class TicketService {
         r.setDueAt(ticket.getDueAt());
         r.setClosedAt(ticket.getClosedAt());
 
+        r.setAttachmentUrls(parseAttachmentUrls(ticket.getAttachmentUrls()));
         r.setCommentCount(0);
         r.setAttachments(Collections.emptyList());
 
         return r;
+    }
+
+    private List<String> parseAttachmentUrls(String json) {
+        try {
+            if (json == null || json.isBlank()) {
+                return new ArrayList<>();
+            }
+            return objectMapper.readValue(
+                    json,
+                    new TypeReference<List<String>>() {}
+            );
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 }

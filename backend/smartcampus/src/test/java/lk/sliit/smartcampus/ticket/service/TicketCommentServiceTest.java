@@ -55,7 +55,7 @@ class TicketCommentServiceTest {
         comment.setId(100L);
         comment.setTicketId(1L);
         comment.setActorUserId(3L);
-        comment.setActionType("COMMENT");
+        comment.setActionType("NOTE");
         comment.setCreatedAt(LocalDateTime.now());
 
         TicketCommentRequest request = new TicketCommentRequest();
@@ -83,7 +83,7 @@ class TicketCommentServiceTest {
         comment.setId(100L);
         comment.setTicketId(1L);
         comment.setActorUserId(3L);
-        comment.setActionType("COMMENT");
+        comment.setActionType("NOTE");
 
         TicketCommentRequest request = new TicketCommentRequest();
         request.setContent("Updated");
@@ -105,7 +105,7 @@ class TicketCommentServiceTest {
         comment.setId(100L);
         comment.setTicketId(1L);
         comment.setActorUserId(3L);
-        comment.setActionType("COMMENT");
+        comment.setActionType("NOTE");
 
         when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
         when(historyRepository.findById(100L)).thenReturn(Optional.of(comment));

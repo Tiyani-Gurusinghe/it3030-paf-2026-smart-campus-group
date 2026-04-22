@@ -32,6 +32,7 @@ public class TicketResponse {
 
     private String preferredContact;
 
+    private List<String> attachmentUrls;
     private int commentCount;
     private List<TicketAttachmentResponse> attachments;
 
@@ -106,6 +107,10 @@ public class TicketResponse {
 
     public String getPreferredContact() {
         return preferredContact;
+    }
+
+    public List<String> getAttachmentUrls() {
+        return attachmentUrls;
     }
 
     public int getCommentCount() {
@@ -198,6 +203,10 @@ public class TicketResponse {
 
     public void setPreferredContact(String preferredContact) {
         this.preferredContact = preferredContact;
+    }
+
+    public void setAttachmentUrls(List<String> attachmentUrls) {
+        this.attachmentUrls = attachmentUrls;
     }
 
     public void setCommentCount(int commentCount) {
