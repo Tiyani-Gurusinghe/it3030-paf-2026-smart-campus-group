@@ -70,6 +70,15 @@ public class BookingController {
         return ResponseEntity.ok(ApiSuccessResponse.success(updatedBooking, "Booking status updated successfully"));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a booking")
+    public ResponseEntity<ApiSuccessResponse<BookingResponseDto>> updateBooking(
+            @PathVariable Long id, 
+            @Valid @RequestBody BookingRequestDto requestDto) {
+        BookingResponseDto updatedBooking = bookingService.updateBooking(id, requestDto);
+        return ResponseEntity.ok(ApiSuccessResponse.success(updatedBooking, "Booking updated successfully"));
+    }
+    
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a booking")
     public ResponseEntity<ApiSuccessResponse<Void>> deleteBooking(@PathVariable Long id) {

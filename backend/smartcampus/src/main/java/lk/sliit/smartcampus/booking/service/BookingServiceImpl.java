@@ -116,6 +116,50 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
+    public BookingResponseDto updateBooking(Long id, BookingRequestDto requestDto) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
+
+        User user = userRepository.findById(requestDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + requestDto.getUserId()));
+
+        Resource resource = resourceRepository.findById(requestDto.getResourceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + requestDto.getResourceId()));
+
+        if (resource.getStatus() != ResourceStatus.ACTIVE) {
+            throw new ConflictException("Cannot book an inactive resource");
+        }
+
+        if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
+            throw new ConflictException("Start time must be before end time");
+        }
+
+        boolean isOverlapping = bookingRepository.existsOverlappingBookingExcludingId(
+                requestDto.getResourceId(),
+                id,
+                requestDto.getStartTime(),
+                requestDto.getEndTime()
+        );
+
+        if (isOverlapping) {
+            throw new ConflictException("The resource is already booked for the selected time period");
+        }
+
+        booking.setResource(resource);
+        booking.setUser(user);
+        booking.setStartTime(requestDto.getStartTime());
+        booking.setEndTime(requestDto.getEndTime());
+        booking.setPurpose(requestDto.getPurpose());
+        if (requestDto.getBookingDate() != null) {
+            booking.setBookingDate(requestDto.getBookingDate());
+        }
+
+        Booking updatedBooking = bookingRepository.save(booking);
+        return mapToDto(updatedBooking);
+    }
+
+    @Override
+    @Transactional
     public void deleteBooking(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
