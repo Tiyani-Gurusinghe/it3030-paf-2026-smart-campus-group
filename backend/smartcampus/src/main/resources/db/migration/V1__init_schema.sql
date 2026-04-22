@@ -65,7 +65,6 @@ CREATE TABLE resources (
     availability_end TIME,
     CONSTRAINT fk_resource_parent FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
 );
-
 -- 7. Resource Type Skills (Mapping Skills to Resource Types)
 CREATE TABLE resource_type_skills (
     resource_type VARCHAR(50) NOT NULL,

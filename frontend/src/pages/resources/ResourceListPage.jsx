@@ -370,16 +370,24 @@ const canManage = isStaff;
                                 )}
                             </div>
                             
-                            {canManage && (
-                                <div className="card-actions">
-                                    <button onClick={() => navigate(`/resources/edit/${resource.id}`)} className="btn secondary" style={{ flex: 1 }}>
-                                        Edit
-                                    </button>
-                                    <button onClick={() => promptDelete(resource)} className="btn danger" style={{ flex: 1 }}>
-                                        Delete
-                                    </button>
-                                </div>
-                            )}
+                            <div className="card-actions" style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/bookings/new?resourceId=${resource.id}&resourceName=${encodeURIComponent(resource.name)}`); }} 
+                                    className="btn primary" 
+                                    style={{ flex: 1 }}>
+                                    Book
+                                </button>
+                                {isStaff && (
+                                    <>
+                                        <button onClick={(e) => { e.stopPropagation(); navigate(`/resources/edit/${resource.id}`); }} className="btn secondary" style={{ flex: 1 }}>
+                                            Edit
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); promptDelete(resource); }} className="btn danger" style={{ flex: 1 }}>
+                                            Delete
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
