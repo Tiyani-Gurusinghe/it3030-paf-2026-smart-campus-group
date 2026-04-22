@@ -1,8 +1,7 @@
 import useAuth from "../../features/auth/hooks/useAuth";
 
 function ProfilePage() {
-  // Destructure with a default empty array as a safety net
-  const { user, roles = [], primaryRole } = useAuth();
+  const { user, roles, primaryRole } = useAuth();
 
   return (
     <div className="page">
@@ -25,14 +24,11 @@ function ProfilePage() {
           </div>
           <div className="detail-item">
             <div className="detail-item-label">Primary Role</div>
-            <div className="detail-item-value">{primaryRole ?? "USER"}</div>
+            <div className="detail-item-value">{primaryRole}</div>
           </div>
           <div className="detail-item">
             <div className="detail-item-label">All Roles</div>
-            {/* Added optional chaining and a cleaner fallback */}
-            <div className="detail-item-value">
-              {roles?.length > 0 ? roles.join(", ") : "USER"}
-            </div>
+            <div className="detail-item-value">{roles.join(", ") || "USER"}</div>
           </div>
           <div className="detail-item">
             <div className="detail-item-label">User ID</div>

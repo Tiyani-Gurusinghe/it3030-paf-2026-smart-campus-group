@@ -1,15 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { authApi } from "../../features/auth/api/authApi";
 import useAuth from "../../features/auth/hooks/useAuth";
 import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
-
-// Helper to match paths defined in router.jsx
-const getLandingRoute = (role) => {
-  if (role === 'ADMIN') return '/dashboard';
-  if (role === 'TECHNICIAN') return '/tickets';
-  return '/resources';
-};
 
 const TEST_EMAILS = [
   { email: "user2@test.com", role: "USER", hint: "Normal user" },
@@ -19,50 +12,35 @@ const TEST_EMAILS = [
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user, primaryRole } = useAuth(); 
-  const [email, setEmail] = useState("admin2@test.com"); // Set default to admin for your testing
+  const { login, isAuthenticated, user } = useAuth();
+  const [email, setEmail] = useState("user@test.com");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      // Use the primaryRole provided by your AuthContext
-      const role = primaryRole || (user.roles && user.roles[0]) || 'USER';
-      const destination = getLandingRoute(role);
-      
-      if (window.location.pathname === '/login') {
-        navigate(destination, { replace: true });
-      }
-    }
-  }, [isAuthenticated, user, primaryRole, navigate]);
-  
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
     setLoading(true);
     try {
       const userData = await authApi.login({ email });
-      
-      // Update Context
-      const sessionUser = login(userData);
-      
-      // Determine role from the session data
-      const role = sessionUser.primaryRole || (sessionUser.roles && sessionUser.roles[0]) || 'USER';
-      const destination = getLandingRoute(role);
-      
+      const normalized = login(userData);
+      const destination = computeLandingRoute(normalized.roles);
       navigate(destination, { replace: true });
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        "Login failed. Please check if the user exists in the database."
+          err?.response?.data ||
+          err.message ||
+          "Login failed"
       );
     } finally {
       setLoading(false);
     }
   }
 
-  if (isAuthenticated && user) return null;
+  if (isAuthenticated) {
+    return <Navigate to={computeLandingRoute(user?.roles ?? [])} replace />;
+  }
 
   return (
     <div className="login-page">

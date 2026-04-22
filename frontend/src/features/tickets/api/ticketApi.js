@@ -1,26 +1,13 @@
-// import apiClient from "../../services/apiClient";
+import apiClient from "../../services/apiClient";
 
-/**
- * All paths here automatically use the Base URL from apiClient.js (port 8081).
- * We add /v1 to match your Spring Boot @RequestMapping("/api/v1/tickets").
- */
+// Individual exports (This fixes the "not provide an export named" error)
+export const getAllTickets = () => apiClient.get("/tickets");
+export const getTicket = (id) => apiClient.get(`/tickets/${id}`);
+export const createTicket = (payload) => apiClient.post("/tickets", payload);
+export const updateTicket = (id, payload) => apiClient.put(`/tickets/${id}`, payload);
+export const deleteTicket = (id) => apiClient.delete(`/tickets/${id}`);
 
-export const getAllTickets = (page = 0, size = 10) => 
-    apiClient.get(`/v1/tickets?page=${page}&size=${size}`);
-
-export const getTicket = (id) => 
-    apiClient.get(`/v1/tickets/${id}`);
-
-export const createTicket = (payload) => 
-    apiClient.post("/v1/tickets", payload);
-
-export const updateTicket = (id, payload) => 
-    apiClient.put(`/v1/tickets/${id}`, payload);
-
-export const deleteTicket = (id) => 
-    apiClient.delete(`/v1/tickets/${id}`);
-
-// Object export for compatibility with components using ticketApi.getAll()
+// Also keeping the object export so you don't break other files
 export const ticketApi = {
   getAll: getAllTickets,
   getById: getTicket,
