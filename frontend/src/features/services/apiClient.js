@@ -3,9 +3,6 @@ import axios from 'axios';
 // This pulls the URL from the .env file we just created!
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
-// 🚨 ADD THIS LINE TEMPORARILY:
-console.log("DEBUG: Current API URL is:", API_BASE_URL);
-
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
