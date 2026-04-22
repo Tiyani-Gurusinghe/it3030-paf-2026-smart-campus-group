@@ -11,6 +11,12 @@ const BookingListPage = () => {
     const [error, setError] = useState(null);
     const [updatingId, setUpdatingId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
+    const [editingBooking, setEditingBooking] = useState(null);
+    const [editForm, setEditForm] = useState({
+        purpose: '',
+        startTime: '',
+        endTime: '',
+    });
     console.log("user:", user, "isStaff:", isStaff);
 
     useEffect(() => {
@@ -74,51 +80,74 @@ const BookingListPage = () => {
         }
     };
 
-    const handleUpdate = async (booking) => {
-        const currentPurpose = booking.purpose || '';
-        const currentStart = booking.startTime ? new Date(booking.startTime).toISOString().slice(0, 16) : '';
-        const currentEnd = booking.endTime ? new Date(booking.endTime).toISOString().slice(0, 16) : '';
+    const handleUpdate = (booking) => {
+        const toLocalDateTimeInput = (value) => {
+            if (!value) return '';
+            const date = new Date(value);
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        };
 
-        const purpose = window.prompt('Update booking purpose:', currentPurpose);
-        if (purpose === null) return;
+        setEditingBooking(booking);
+        setEditForm({
+            purpose: booking.purpose || '',
+            startTime: toLocalDateTimeInput(booking.startTime),
+            endTime: toLocalDateTimeInput(booking.endTime),
+        });
+    };
 
-        const startTime = window.prompt('Update start time (YYYY-MM-DDTHH:mm):', currentStart);
-        if (startTime === null) return;
+    const handleEditFormChange = (e) => {
+        const { name, value } = e.target;
+        setEditForm(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
 
-        const endTime = window.prompt('Update end time (YYYY-MM-DDTHH:mm):', currentEnd);
-        if (endTime === null) return;
+    const closeEditModal = () => {
+        setEditingBooking(null);
+        setEditForm({
+            purpose: '',
+            startTime: '',
+            endTime: '',
+        });
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!editingBooking) return;
 
         const formatDateTime = (value) => {
             if (!value) return value;
             return value.length === 16 ? `${value}:00` : value;
         };
-        
+
         const getBookingDate = (value) => {
             if (!value) return value;
             return value.slice(0, 10);
         };
-        
+
         const payload = {
-            resourceId: booking.resourceId,
-            userId: booking.userId,
-            purpose: purpose.trim(),
-            bookingDate: getBookingDate(startTime),
-            startTime: formatDateTime(startTime),
-            endTime: formatDateTime(endTime),
+            resourceId: editingBooking.resourceId,
+            userId: editingBooking.userId,
+            purpose: editForm.purpose.trim(),
+            bookingDate: getBookingDate(editForm.startTime),
+            startTime: formatDateTime(editForm.startTime),
+            endTime: formatDateTime(editForm.endTime),
         };
+
         try {
-            setUpdatingId(booking.id);
+            setUpdatingId(editingBooking.id);
 
             let updatedBooking;
 
             if (typeof bookingApi.update === 'function') {
-                console.log("update payload 1:", payload);
-                console.log("booking object 1:", booking);
-                updatedBooking = await bookingApi.update(booking.id, payload);
+                updatedBooking = await bookingApi.update(editingBooking.id, payload);
                 updatedBooking = updatedBooking?.data?.data || updatedBooking?.data || updatedBooking;
             } else {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`/api/bookings/${booking.id}`, {
+                const response = await fetch(`/api/bookings/${editingBooking.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -135,8 +164,9 @@ const BookingListPage = () => {
                 updatedBooking = result?.data || result;
             }
 
-            setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, ...updatedBooking } : b));
+            setBookings(prev => prev.map(b => b.id === editingBooking.id ? { ...b, ...updatedBooking } : b));
             alert('Booking updated successfully.');
+            closeEditModal();
         } catch (err) {
             console.error(err);
             console.error("backend response:", err.response?.data);
@@ -244,6 +274,108 @@ const BookingListPage = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {editingBooking && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                        padding: '16px',
+                    }}
+                >
+                    <div
+                        className="card"
+                        style={{
+                            width: '100%',
+                            maxWidth: '500px',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            background: 'white',
+                        }}
+                    >
+                        <h3 style={{ marginBottom: '16px' }}>Update Booking</h3>
+
+                        <form onSubmit={handleEditSubmit}>
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                    Resource
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingBooking.resourceName || ''}
+                                    disabled
+                                    style={{ width: '100%', padding: '10px' }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                    Purpose
+                                </label>
+                                <input
+                                    type="text"
+                                    name="purpose"
+                                    value={editForm.purpose}
+                                    onChange={handleEditFormChange}
+                                    required
+                                    style={{ width: '100%', padding: '10px' }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                    Start Time
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    name="startTime"
+                                    value={editForm.startTime}
+                                    onChange={handleEditFormChange}
+                                    required
+                                    style={{ width: '100%', padding: '10px' }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                    End Time
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    name="endTime"
+                                    value={editForm.endTime}
+                                    onChange={handleEditFormChange}
+                                    required
+                                    style={{ width: '100%', padding: '10px' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                <button
+                                    type="button"
+                                    onClick={closeEditModal}
+                                    className="btn secondary"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    className="btn primary"
+                                    disabled={updatingId === editingBooking.id}
+                                >
+                                    {updatingId === editingBooking.id ? 'Updating...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
         </div>
