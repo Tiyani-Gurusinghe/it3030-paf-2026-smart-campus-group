@@ -52,13 +52,18 @@ CREATE TABLE technician_skills (
 CREATE TABLE resources (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     resource_name VARCHAR(100) NOT NULL,
-    resource_type VARCHAR(50) NOT NULL, -- e.g., 'LECTURE_HALL', 'LAB', etc.
+    resource_type VARCHAR(50) NOT NULL,     -- e.g., 'LECTURE_HALL', 'LAB', 'PROJECTOR'
+    resource_category VARCHAR(50),          -- e.g., 'BUILDING', 'SPACE', 'EQUIPMENT'
+    config_type VARCHAR(50),                -- e.g., 'FIXED', 'FLEXIBLE'
+    floor VARCHAR(255),
     capacity INT,
     location VARCHAR(150) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
+    parent_id BIGINT,                       -- Allows for building -> room -> equipment hierarchy
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     availability_start TIME,
     availability_end TIME,
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CONSTRAINT fk_resource_parent FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
 );
 
 -- 7. Resource Type Skills (Mapping Skills to Resource Types)
