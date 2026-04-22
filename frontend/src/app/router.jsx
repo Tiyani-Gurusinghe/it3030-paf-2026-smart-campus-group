@@ -22,7 +22,7 @@ import ProfilePage from "../pages/profile/ProfilePage";
 const router = createBrowserRouter([
   // Public
   { path: "/login", element: <LoginPage /> },
-  { path: "/unauthorized", element: <UnauthorizedPage /> },
+  //{ path: "/unauthorized", element: <UnauthorizedPage /> },
 
   // Protected shell
   {
@@ -54,7 +54,7 @@ const router = createBrowserRouter([
       { path: "tickets", element: <TicketsPage /> },
       { path: "tickets/new", element: <CreateTicketPage /> },
       { path: "tickets/:id", element: <TicketDetailsPage /> },
-      { path: "tickets/:id/edit", element: <EditTicketPage /> },
+      //{ path: "tickets/:id/edit", element: <EditTicketPage /> },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },
