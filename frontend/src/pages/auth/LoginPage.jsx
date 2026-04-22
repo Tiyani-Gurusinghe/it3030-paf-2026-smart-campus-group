@@ -5,9 +5,9 @@ import { getLandingRoute as computeLandingRoute } from "../../features/auth/cont
 import useAuth from "../../features/auth/hooks/useAuth";
 
 const TEST_EMAILS = [
-  { email: "user2@test.com", role: "USER", hint: "Normal user" },
-  { email: "alice@test.com", role: "TECHNICIAN", hint: "Technician" },
-  { email: "admin2@test.com", role: "ADMIN", hint: "Admin" },
+  { email: "user@test.com", role: "USER", hint: "Normal user" },
+  { email: "tech@test.com", role: "TECHNICIAN", hint: "Technician" },
+  { email: "admin@test.com", role: "ADMIN", hint: "Admin" },
 ];
 
 function LoginPage() {
