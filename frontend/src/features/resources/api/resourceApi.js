@@ -14,43 +14,43 @@ const resourceApi = {
         if (filters.location && filters.location.trim() !== '') validParams.location = filters.location;
         
         // Axios will automatically handle the ? and formatting for us safely
-        const response = await apiClient.get('/resources', { params: validParams });
+        const response = await apiClient.get('/api/resources', { params: validParams });
         return response.data;
     },
 
     // GET a single resource by ID
     getResourceById: async (id) => {
-        const response = await apiClient.get(`/resources/${id}`);
+        const response = await apiClient.get(`/api/resources/${id}`);
         return response.data;
     },
 
     // GET faculties in a building
     getFacultiesByBuilding: async (buildingId) => {
-        const response = await apiClient.get(`/resources/building/${buildingId}/faculties`);
+        const response = await apiClient.get(`/api/resources/building/${buildingId}/faculties`);
         return response.data;
     },
 
     // GET floors related to a faculty
     getFloorsByFaculty: async (faculty) => {
-        const response = await apiClient.get(`/resources/faculty/${faculty}/floors`);
+        const response = await apiClient.get(`/api/resources/faculty/${faculty}/floors`);
         return response.data;
     },
 
     // POST a new resource
     createResource: async (resourceData) => {
-        const response = await apiClient.post('/resources', resourceData);
+        const response = await apiClient.post('/api/resources', resourceData);
         return response.data;
     },
 
     // PUT to update a resource
     updateResource: async (id, resourceData) => {
-        const response = await apiClient.put(`/resources/${id}`, resourceData);
+        const response = await apiClient.put(`/api/resources/${id}`, resourceData);
         return response.data;
     },
 
     // DELETE a resource
     deleteResource: async (id) => {
-        const response = await apiClient.delete(`/resources/${id}`);
+        const response = await apiClient.delete(`/api/resources/${id}`);
         return response.data;
     }
 };
