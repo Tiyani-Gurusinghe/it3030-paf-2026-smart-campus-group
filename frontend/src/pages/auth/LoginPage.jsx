@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link, useLocation } from "react-router-dom";
 import { authApi } from "../../features/auth/api/authApi";
 import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 import useAuth from "../../features/auth/hooks/useAuth";
@@ -13,8 +13,11 @@ const TEST_EMAILS = [
 function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated, getLandingRoute } = useAuth();
-  const [email, setEmail] = useState("user@test.com");
+  const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || "");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
@@ -22,7 +25,7 @@ function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const userData = await authApi.login({ email });
+      const userData = await authApi.login({ email, password });
       const normalized = login(userData);
       const destination = computeLandingRoute(normalized.roles);
       navigate(destination, { replace: true });
@@ -51,13 +54,19 @@ function LoginPage() {
           <p className="login-subtitle">Sign in to your account</p>
         </div>
 
+        {successMessage && (
+          <div className="success-box" style={{ background: 'rgba(46, 213, 115, 0.1)', color: '#2ed573', padding: '10px', borderRadius: '8px', marginBottom: '15px', border: '1px solid rgba(46, 213, 115, 0.3)' }}>
+            <span>✅</span> {successMessage}
+          </div>
+        )}
+
         {error && (
           <div className="error-box">
             <span>⚠️</span> {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
           <div className="form-field">
             <label htmlFor="email">Email Address</label>
             <input
@@ -69,6 +78,21 @@ function LoginPage() {
               placeholder="Enter your email"
               required
               autoFocus
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              autoComplete="current-password"
             />
           </div>
 
@@ -88,7 +112,7 @@ function LoginPage() {
               <button
                 key={e}
                 className="login-hint-btn"
-                onClick={() => setEmail(e)}
+                onClick={() => { setEmail(e); setPassword("SmartCampus!2026"); }}
                 type="button"
                 title={hint}
               >
@@ -99,6 +123,13 @@ function LoginPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="login-footer" style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Don't have an account?{" "}
+          <Link to="/signup" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 500 }}>
+            Sign up
+          </Link>
         </div>
       </div>
     </div>
