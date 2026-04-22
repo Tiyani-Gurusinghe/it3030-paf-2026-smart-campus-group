@@ -66,7 +66,7 @@ const router = createBrowserRouter([
       { path: "tickets/new", element: <CreateTicketPage /> },
       { path: "tickets/create", element: <CreateTicketPage /> },
       { path: "tickets/:id", element: <TicketDetailsPage /> },
-      { path: "tickets/:id/edit", element: <EditTicketPage /> },
+      //{ path: "tickets/:id/edit", element: <EditTicketPage /> },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },
