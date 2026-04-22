@@ -10,7 +10,18 @@ const ResourceListPage = () => {
     const [error, setError] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [resourceToDelete, setResourceToDelete] = useState(null);
-    const { isStaff } = useAuthContext();
+    //const { isStaff } = useAuthContext();
+    const { isStaff, user, primaryRole } = useAuthContext();
+    // // Create a combined permission check
+    // const canManage = isStaff || primaryRole === 'ADMIN' || user?.primaryRole === 'ADMIN';
+    
+    // Since we fixed AuthContext, isStaff now means (Admin OR Technician)
+const canManage = isStaff; 
+
+//console.log("Can Manage Resources:", canManage);
+
+//console.log("Can Manage Resources:", canManage);
+    
     const [activeTab, setActiveTab] = useState('infrastructure');
     const [activeInventoryTab, setActiveInventoryTab] = useState('ALL');
     const [selectedSpaceId, setSelectedSpaceId] = useState(null);
@@ -52,8 +63,8 @@ const ResourceListPage = () => {
             setLoading(true);
             const eqs = await resourceApi.getAllResources({ category: 'EQUIPMENT' });
             const uts = await resourceApi.getAllResources({ category: 'UTILITY' });
-            // Standalone inventory are those without a parent resource
-            const allInventory = [...eqs, ...uts].filter(r => !r.parentResource);
+            // Aggregate complete inventory list across all deployment endpoints
+            const allInventory = [...eqs, ...uts];
             setResources(allInventory);
             setError(null);
         } catch (err) {
@@ -177,7 +188,7 @@ const ResourceListPage = () => {
                     <h2 className="page-title">Facilities & Assets</h2>
                     <p className="page-subtitle">Manage campus lecture halls, labs, meeting rooms, and equipment.</p>
                 </div>
-                {isStaff && (
+                {canManage && (
                     <button onClick={() => navigate('/resources/new')} className="btn primary">
                         + Add Resource
                     </button>
@@ -344,29 +355,39 @@ const ResourceListPage = () => {
                             
                             <div className="ticket-meta" style={{ flexGrow: 1 }}>
                                 <div className="ticket-meta-item">
-                                    <strong>LOCATION</strong>
+                                    <strong>{['EQUIPMENT', 'UTILITY'].includes(resource.category) ? 'STORAGE' : 'LOCATION'}</strong>
                                     <span>{resource.location}</span>
                                 </div>
                                 <div className="ticket-meta-item">
-                                    <strong>CAPACITY</strong>
+                                    <strong>{['EQUIPMENT', 'UTILITY'].includes(resource.category) ? 'QTY' : 'CAPACITY'}</strong>
                                     <span>{resource.capacity || 'N/A'}</span>
                                 </div>
-                                <div className="ticket-meta-item">
-                                    <strong>AVAILABILITY</strong>
-                                    <span>{resource.availableFrom} - {resource.availableTo}</span>
-                                </div>
+                                {!['EQUIPMENT', 'UTILITY'].includes(resource.category) && (
+                                    <div className="ticket-meta-item">
+                                        <strong>AVAILABILITY</strong>
+                                        <span>{resource.availableFrom} - {resource.availableTo}</span>
+                                    </div>
+                                )}
                             </div>
                             
-                            {isStaff && (
-                                <div className="card-actions">
-                                    <button onClick={() => navigate(`/resources/edit/${resource.id}`)} className="btn secondary" style={{ flex: 1 }}>
-                                        Edit
-                                    </button>
-                                    <button onClick={() => promptDelete(resource)} className="btn danger" style={{ flex: 1 }}>
-                                        Delete
-                                    </button>
-                                </div>
-                            )}
+                            <div className="card-actions" style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/bookings/new?resourceId=${resource.id}&resourceName=${encodeURIComponent(resource.name)}`); }} 
+                                    className="btn primary" 
+                                    style={{ flex: 1 }}>
+                                    Book
+                                </button>
+                                {isStaff && (
+                                    <>
+                                        <button onClick={(e) => { e.stopPropagation(); navigate(`/resources/edit/${resource.id}`); }} className="btn secondary" style={{ flex: 1 }}>
+                                            Edit
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); promptDelete(resource); }} className="btn danger" style={{ flex: 1 }}>
+                                            Delete
+                                        </button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
