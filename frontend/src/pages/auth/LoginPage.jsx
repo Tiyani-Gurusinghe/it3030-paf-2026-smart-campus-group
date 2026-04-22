@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { authApi } from "../../features/auth/api/authApi";
 import useAuth from "../../features/auth/hooks/useAuth";
+import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 
 // Helper to match paths defined in router.jsx
 const getLandingRoute = (role) => {

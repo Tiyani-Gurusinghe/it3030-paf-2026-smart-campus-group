@@ -115,7 +115,9 @@ CREATE TABLE tickets (
 -- 11. Ticket Comments
 CREATE TABLE ticket_comments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     ticket_id BIGINT NOT NULL,
+
     user_id BIGINT NOT NULL,
     comment_text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

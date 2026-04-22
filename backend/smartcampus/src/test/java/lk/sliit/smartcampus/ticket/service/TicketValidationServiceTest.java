@@ -2,9 +2,9 @@ package lk.sliit.smartcampus.ticket.service;
 
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
-import lk.sliit.smartcampus.ticket.entity.TicketResourceType;
 import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
@@ -17,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TicketValidationServiceTest {
 
@@ -61,10 +63,31 @@ class TicketValidationServiceTest {
         when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 1L))
                 .thenReturn(List.of(Map.of("resource_type", "LECTURE_HALL")));
 
-        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(TicketResourceType.LECTURE_HALL, 2L))
+        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.LECTURE_HALL, 2L))
                 .thenReturn(false);
 
         assertThrows(BadRequestException.class, () -> service.validateCreateRequest(request));
+    }
+
+    @Test
+    void createAllowsValidSkillResourceCombo() {
+        TicketRequest request = new TicketRequest();
+        request.setTitle("Valid ticket");
+        request.setDescription("Valid description");
+        request.setResourceId(7L);
+        request.setRequiredSkillId(2L);
+        request.setPriority(TicketPriority.HIGH);
+
+        when(jdbcTemplate.queryForList("SELECT id, status FROM resources WHERE id = ?", 7L))
+                .thenReturn(List.of(Map.of("id", 7L, "status", "ACTIVE")));
+
+        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 7L))
+                .thenReturn(List.of(Map.of("resource_type", "PROJECTOR")));
+
+        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.PROJECTOR, 2L))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> service.validateCreateRequest(request));
     }
 
     @Test
