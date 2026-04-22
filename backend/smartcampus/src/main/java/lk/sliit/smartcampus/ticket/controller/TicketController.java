@@ -64,8 +64,11 @@ public ResponseEntity<List<TicketResponse>> getMyTickets(
     }
 
     @PostMapping
-    public ResponseEntity<TicketResponse> createTicket(@Valid @RequestBody TicketRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ticketService.createTicket(request));
+    public ResponseEntity<TicketResponse> createTicket(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ticketService.createTicket(currentUserId, request));
     }
 
     @PutMapping("/{id}")
