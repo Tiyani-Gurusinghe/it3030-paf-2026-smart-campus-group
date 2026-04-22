@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
+import SignupPage from "../pages/auth/SignupPage";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -18,6 +19,8 @@ import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+import EditTicketPage from "../pages/tickets/EditTicketPage";
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 
 const router = createBrowserRouter([
   // Public
