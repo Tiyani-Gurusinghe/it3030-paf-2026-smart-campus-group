@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { authApi } from "../../features/auth/api/authApi";
-import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 import useAuth from "../../features/auth/hooks/useAuth";
+import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 
 const TEST_EMAILS = [
   { email: "user2@test.com", role: "USER", hint: "Normal user" },
@@ -12,7 +12,7 @@ const TEST_EMAILS = [
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, getLandingRoute } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState("user@test.com");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={getLandingRoute()} replace />;
+    return <Navigate to={computeLandingRoute(user?.roles ?? [])} replace />;
   }
 
   return (

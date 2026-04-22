@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TicketForm from "../../components/ticket/TicketForm";
-// We import the object 'ticketApi' directly to avoid named export errors
-import { getTicket, updateTicket } from "../../features/tickets/api/ticketApi";
+import { getTicketById, updateTicket } from "../../api/ticket/ticketApi";
+
 export default function EditTicketPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -13,10 +13,8 @@ export default function EditTicketPage() {
   useEffect(() => {
     async function loadTicket() {
       try {
-        // Changed to use the object method
-        const response = await ticketApi.getById(id);
-        // Assuming your API returns { data: ... } or just the object
-        setTicket(response.data || response); 
+        const data = await getTicketById(id);
+        setTicket(data);
       } catch (err) {
         console.error("Load Error:", err);
         setError("Could not find this ticket. It may have been deleted.");
@@ -28,8 +26,7 @@ export default function EditTicketPage() {
   async function handleUpdate(formData) {
     setIsSubmitting(true);
     try {
-      // Changed to use the object method
-      await ticketApi.update(id, formData);
+      await updateTicket(id, formData);
       navigate(`/tickets/${id}`);
     } catch (err) {
       setError(err.message || "Failed to update ticket");
@@ -42,8 +39,8 @@ export default function EditTicketPage() {
       <div className="page">
         <div className="error-box">
           <span>⚠️</span> {error}
-          <button onClick={() => navigate("/tickets")} className="btn-secondary">
-            Back to Tickets
+          <button onClick={() => navigate("/tickets/my")} className="btn secondary" style={{ marginLeft: 12 }}>
+            Back to My Tickets
           </button>
         </div>
       </div>
@@ -65,10 +62,10 @@ export default function EditTicketPage() {
       <header className="page-header">
         <h2>Edit Ticket #{id}</h2>
       </header>
-      <TicketForm 
-        initialData={ticket} 
-        onSubmit={handleUpdate} 
-        submitText={isSubmitting ? "Saving..." : "Update Ticket"} 
+      <TicketForm
+        initialData={ticket}
+        onSubmit={handleUpdate}
+        submitText={isSubmitting ? "Saving..." : "Update Ticket"}
       />
     </div>
   );

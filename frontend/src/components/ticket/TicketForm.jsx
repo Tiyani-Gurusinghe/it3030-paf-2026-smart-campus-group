@@ -68,7 +68,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         </div>
 
         <div className="form-field">
-          <label htmlFor="resourceId">Resource ID</label>
+          <label htmlFor="resourceId">Resource ID *</label>
           <input
             id="resourceId"
             name="resourceId"
@@ -77,11 +77,12 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
             value={form.resourceId}
             onChange={handleChange}
             placeholder="e.g. 1"
+            required
           />
         </div>
 
         <div className="form-field">
-          <label htmlFor="requiredSkillId">Required Skill ID</label>
+          <label htmlFor="requiredSkillId">Required Skill ID *</label>
           <input
             id="requiredSkillId"
             name="requiredSkillId"
@@ -90,6 +91,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
             value={form.requiredSkillId}
             onChange={handleChange}
             placeholder="e.g. 2"
+            required
           />
         </div>
 

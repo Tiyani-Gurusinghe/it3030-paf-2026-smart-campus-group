@@ -2,8 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
-import UnauthorizedPage from "../pages/auth/UnauthorizedPage"; // Added missing import
-import { AuthProvider } from "../features/auth/context/AuthContext"; // Import the Provider
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
+import { AuthProvider } from "../features/auth/context/AuthContext";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -18,11 +18,19 @@ import BookingListPage from "../pages/bookings/BookingListPage";
 import BookingFormPage from "../pages/bookings/BookingFormPage";
 import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
 
-// Tickets
-import TicketsPage from "../pages/tickets/TicketsPage";
+// Tickets — user
+import MyTicketsPage from "../pages/tickets/MyTicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
-import EditTicketPage from "../pages/tickets/EditTicketPage"; // Added missing import
+import EditTicketPage from "../pages/tickets/EditTicketPage";
+
+// Tickets — admin
+import AdminTicketsPage from "../pages/admin/AdminTicketsPage";
+import AdminTicketDetailPage from "../pages/admin/AdminTicketDetailPage";
+
+// Tickets — technician
+import TechnicianTicketsPage from "../pages/technician/TechnicianTicketsPage";
+import TechnicianTicketDetailPage from "../pages/technician/TechnicianTicketDetailPage";
 
 // Misc
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
@@ -37,10 +45,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      /* Wrapping AuthProvider here ensures all protected 
-         routes have access to 'isAuthenticated' 
-      */
-      <AuthProvider> 
+      <AuthProvider>
         <ProtectedRoute>
           <AppLayout />
         </ProtectedRoute>
@@ -51,8 +56,8 @@ const router = createBrowserRouter([
         index: true,
         element: <DashboardPage />,
       },
-      
-      // --- RESOURCES (Your Hierarchy Work) ---
+
+      // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },
       { path: "resources/new", element: <ResourceFormPage /> },
       { path: "resources/edit/:id", element: <ResourceFormPage /> },
@@ -63,11 +68,20 @@ const router = createBrowserRouter([
       { path: "bookings/new", element: <BookingFormPage /> },
       { path: "bookings/:id", element: <BookingDetailsPage /> },
 
-      // --- TICKETS ---
-      { path: "tickets", element: <TicketsPage /> },
+      // --- TICKETS (user) ---
+      { path: "tickets/my", element: <MyTicketsPage /> },
+      { path: "tickets/create", element: <CreateTicketPage /> },
       { path: "tickets/new", element: <CreateTicketPage /> },
       { path: "tickets/:id", element: <TicketDetailsPage /> },
       { path: "tickets/:id/edit", element: <EditTicketPage /> },
+
+      // --- TICKETS (admin) ---
+      { path: "admin/tickets", element: <AdminTicketsPage /> },
+      { path: "admin/tickets/:id", element: <AdminTicketDetailPage /> },
+
+      // --- TICKETS (technician) ---
+      { path: "technician/tickets", element: <TechnicianTicketsPage /> },
+      { path: "technician/tickets/:id", element: <TechnicianTicketDetailPage /> },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },

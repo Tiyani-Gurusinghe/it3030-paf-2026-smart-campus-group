@@ -76,6 +76,19 @@ export async function createTicket(payload) {
 }
 
 /**
+ * Update an existing ticket (USER).
+ * Backend expects the full TicketRequest shape.
+ */
+export async function updateTicket(id, payload) {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+/**
  * Get current user's own tickets (USER).
  * Filters: { status, page, size }
  */
