@@ -38,13 +38,14 @@ public class TicketController {
 
     @GetMapping
 public ResponseEntity<List<TicketResponse>> getAllTickets(
+        @RequestHeader("X-User-Id") Long currentUserId,
         @RequestParam(required = false) TicketStatus status,
         @RequestParam(required = false) TicketPriority priority,
         @RequestParam(required = false) Long reportedBy,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
 ) {
-    return ResponseEntity.ok(ticketService.getAllTickets(status, priority, reportedBy, page, size));
+    return ResponseEntity.ok(ticketService.getAllTickets(currentUserId, status, priority, reportedBy, page, size));
 }
 
     @GetMapping("/my")

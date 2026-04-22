@@ -78,15 +78,21 @@ public class TicketService {
         return findUserByIdOrThrow(userId).hasRole(RoleType.TECHNICIAN);
     }
 
-    public List<TicketResponse> getAllTickets(TicketStatus status,
+    public List<TicketResponse> getAllTickets(Long currentUserId,
+                                          TicketStatus status,
                                           TicketPriority priority,
                                           Long reportedBy,
                                           int page,
                                           int size) {
+    User user = findUserByIdOrThrow(currentUserId);
+
+    if (!user.hasRole(RoleType.ADMIN)) {
+        throw new UnauthorizedException("Only admin can view all tickets");
+    }
+
     Pageable pageable = PageRequest.of(page, size);
     return mapPage(ticketRepository.findWithFilters(status, priority, reportedBy, pageable));
 }
-
     public List<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
     User user = findUserByIdOrThrow(currentUserId);
     Pageable pageable = PageRequest.of(page, size);
