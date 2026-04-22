@@ -22,37 +22,34 @@ import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
 import TicketsPage from "../pages/tickets/TicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
-import EditTicketPage from "../pages/tickets/EditTicketPage"; // Added missing import
+import EditTicketPage from "../pages/tickets/EditTicketPage"; 
+import MyTicketsPage from "../pages/tickets/MyTicketsPage"; // Added missing import
 
 // Misc
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
 
 const router = createBrowserRouter([
-  // --- PUBLIC ROUTES ---
   { path: "/login", element: <LoginPage /> },
-  { path: "/unauthorized", element: <UnauthorizedPage /> },
-
-  // --- PROTECTED ROUTES ---
+  { path: "/unauthorized", element: <UnauthorizedPage /> }, // Added this for security redirects
   {
     path: "/",
     element: (
-      /* Wrapping AuthProvider here ensures all protected 
-         routes have access to 'isAuthenticated' 
-      */
-      <AuthProvider> 
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      </AuthProvider>
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
     ),
     children: [
       {
-        index: true,
+        index: true, // This handles the base "/" URL
+        element: <DashboardPage />,
+      },
+      {
+        path: "dashboard", // 🚨 ADDED THIS: This handles the "/dashboard" URL
         element: <DashboardPage />,
       },
       
-      // --- RESOURCES (Your Hierarchy Work) ---
+      // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },
       { path: "resources/new", element: <ResourceFormPage /> },
       { path: "resources/edit/:id", element: <ResourceFormPage /> },
@@ -65,7 +62,9 @@ const router = createBrowserRouter([
 
       // --- TICKETS ---
       { path: "tickets", element: <TicketsPage /> },
+      { path: "tickets/my", element: <MyTicketsPage /> },
       { path: "tickets/new", element: <CreateTicketPage /> },
+      { path: "tickets/create", element: <CreateTicketPage /> },
       { path: "tickets/:id", element: <TicketDetailsPage /> },
       { path: "tickets/:id/edit", element: <EditTicketPage /> },
 
