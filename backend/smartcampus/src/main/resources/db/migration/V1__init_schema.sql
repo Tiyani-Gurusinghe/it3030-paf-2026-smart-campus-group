@@ -132,16 +132,14 @@ CREATE TABLE bookings (
     CONSTRAINT chk_booking_time CHECK (start_time < end_time)
 );
 
--- =========================
-
--- TICKETS
-
--- =========================
-
-CREATE TABLE IF NOT EXISTS tickets (
-
+-- =========================================================
+-- 10. TICKETS
+-- Compact ticket design:
+-- - attachment_urls keeps file references in one place
+-- - ticket_history handles comments/assignment/status log
+-- =========================================================
+CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
     title VARCHAR(120) NOT NULL,
     location VARCHAR(120) NOT NULL,
     category VARCHAR(30) NOT NULL,
@@ -174,7 +172,14 @@ CREATE TABLE IF NOT EXISTS tickets (
         FOREIGN KEY (required_skill_id) REFERENCES skills(id)
 );
 
--- 11. Ticket History
+-- =========================================================
+-- 11. TICKET HISTORY
+-- One table for:
+-- - assignment history
+-- - status changes
+-- - internal notes / comments
+-- - activity timeline
+-- =========================================================
 CREATE TABLE ticket_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
@@ -197,112 +202,36 @@ CREATE TABLE ticket_history (
         FOREIGN KEY (new_assignee) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- =========================
-
--- ATTACHMENTS
-
--- =========================
-
-CREATE TABLE IF NOT EXISTS attachments (
-
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    ticket_id BIGINT NOT NULL,
-
-    file_url VARCHAR(255) NOT NULL,
-
-    uploaded_by BIGINT NOT NULL,
-
-    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-
-    CONSTRAINT fk_attachments_ticket
-
-        FOREIGN KEY (ticket_id) REFERENCES tickets(id),
-
-    CONSTRAINT fk_attachments_user
-
-        FOREIGN KEY (uploaded_by) REFERENCES users(id)
-
-);
-
--- =========================
-
--- TICKET ASSIGNMENT HISTORY
-
--- =========================
-
-CREATE TABLE IF NOT EXISTS ticket_assignment_history (
-
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    ticket_id BIGINT NOT NULL,
-
-    from_user_id BIGINT NULL,
-
-    to_user_id BIGINT NULL,
-
-    changed_by BIGINT NOT NULL,
-
-    changed_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-
-    CONSTRAINT fk_tah_ticket
-
-        FOREIGN KEY (ticket_id) REFERENCES tickets(id),
-
-    CONSTRAINT fk_tah_from_user
-
-        FOREIGN KEY (from_user_id) REFERENCES users(id),
-
-    CONSTRAINT fk_tah_to_user
-
-        FOREIGN KEY (to_user_id) REFERENCES users(id),
-
-    CONSTRAINT fk_tah_changed_by
-
-        FOREIGN KEY (changed_by) REFERENCES users(id)
-
-);
-
--- =========================
-
--- INDEXES
-
--- =========================
-
-CREATE INDEX idx_tickets_status ON tickets(status);
-
-CREATE INDEX idx_tickets_assigned_to ON tickets(assigned_to);
-
-CREATE INDEX idx_tickets_reported_by ON tickets(reported_by);
-
-CREATE INDEX idx_comments_ticket_id ON comments(ticket_id);
-
-CREATE INDEX idx_attachments_ticket_id ON attachments(ticket_id);
-
-CREATE INDEX idx_tah_ticket_id ON ticket_assignment_history(ticket_id);
-
--- =========================
--- Notifications
--- =========================
+-- =========================================================
+-- 12. NOTIFICATIONS
+-- =========================================================
 CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    message VARCHAR(255) NOT NULL,
+    ticket_id BIGINT NULL,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    message VARCHAR(500) NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
 
+    CONSTRAINT fk_notifications_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_ticket
+        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+);
 -- =========================
 -- Audit Logs
 -- =========================
 CREATE TABLE audit_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    actor_user_id BIGINT,
-    action_type VARCHAR(100) NOT NULL,
-    entity_type VARCHAR(100) NOT NULL,
+    actor_user_id BIGINT NULL,
+    entity_type VARCHAR(50) NOT NULL,
     entity_id BIGINT NOT NULL,
-    action_details TEXT,
+    action VARCHAR(50) NOT NULL,
+    details VARCHAR(1000) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_audit_logs_actor FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+
+    CONSTRAINT fk_audit_logs_actor
+        FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
