@@ -1726,3 +1726,84 @@ select option {
     gap: 8px;
   }
 }
+
+/* --- Added for Ticket Updates --- */
+.resource-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  color: var(--text-color);
+  font-size: 14px;
+}
+
+.resource-details-panel {
+  background-color: var(--background);
+  border-left: 4px solid var(--primary-color);
+  padding: 12px 16px;
+  margin-top: -8px;
+  margin-bottom: 24px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 14px;
+}
+.resource-details-panel p {
+  margin: 4px 0;
+}
+.resource-details-panel strong {
+  color: var(--text-muted);
+  width: 80px;
+  display: inline-block;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  margin-top: -4px;
+}
+
+.assignee-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(99, 102, 241, 0.1);
+  color: var(--primary-color);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.unassigned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.skeleton-line {
+  background: var(--bg-surface, #e2e8f0);
+  border-radius: var(--radius, 4px);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}

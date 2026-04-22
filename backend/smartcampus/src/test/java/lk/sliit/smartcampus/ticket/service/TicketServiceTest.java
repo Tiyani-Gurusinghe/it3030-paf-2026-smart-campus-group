@@ -3,8 +3,10 @@ package lk.sliit.smartcampus.ticket.service;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
+import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -30,6 +32,8 @@ class TicketServiceTest {
 
     private TicketRepository ticketRepository;
     private TechnicianSkillRepository technicianSkillRepository;
+    private ResourceTypeSkillRepository resourceTypeSkillRepository;
+    private ResourceRepository resourceRepository;
     private UserRepository userRepository;
     private NotificationService notificationService;
     private TicketValidationService validationService;
@@ -39,6 +43,8 @@ class TicketServiceTest {
     void setUp() {
         ticketRepository = mock(TicketRepository.class);
         technicianSkillRepository = mock(TechnicianSkillRepository.class);
+        resourceTypeSkillRepository = mock(ResourceTypeSkillRepository.class);
+        resourceRepository = mock(ResourceRepository.class);
         userRepository = mock(UserRepository.class);
         notificationService = mock(NotificationService.class);
         validationService = mock(TicketValidationService.class);
@@ -46,6 +52,8 @@ class TicketServiceTest {
         service = new TicketService(
                 ticketRepository,
                 technicianSkillRepository,
+                resourceTypeSkillRepository,
+                resourceRepository,
                 userRepository,
                 notificationService,
                 validationService

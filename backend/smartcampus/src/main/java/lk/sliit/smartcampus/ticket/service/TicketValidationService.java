@@ -15,10 +15,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class TicketValidationService {
+    private static final int MAX_FILES = 3;
+    private static final long MAX_FILE_BYTES = 5L * 1024L * 1024L;
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+    );
 
     private final TicketRepository ticketRepository;
     private final TechnicianSkillRepository technicianSkillRepository;
@@ -128,17 +138,23 @@ public class TicketValidationService {
             return;
         }
 
-        if (files.size() > 3) {
+        if (files.size() > MAX_FILES) {
             throw new BadRequestException("Maximum 3 files allowed");
         }
 
         for (MultipartFile file : files) {
             if (file.isEmpty()) continue;
 
-            String type = file.getContentType();
+            String type = file.getContentType() == null
+                    ? ""
+                    : file.getContentType().toLowerCase(Locale.ROOT).trim();
 
-            if (type == null || !type.startsWith("image/")) {
-                throw new BadRequestException("Only image files allowed");
+            if (!ALLOWED_IMAGE_TYPES.contains(type)) {
+                throw new BadRequestException("Only JPEG, PNG, GIF, or WEBP images are allowed");
+            }
+
+            if (file.getSize() > MAX_FILE_BYTES) {
+                throw new BadRequestException("Each file must be 5MB or smaller");
             }
         }
     }

@@ -5,9 +5,13 @@ import useAuth from "../../features/auth/hooks/useAuth";
 import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 
 const TEST_EMAILS = [
-  { email: "user2@test.com", role: "USER", hint: "Normal user" },
-  { email: "alice@test.com", role: "TECHNICIAN", hint: "Technician" },
-  { email: "admin2@test.com", role: "ADMIN", hint: "Admin" },
+  { email: "admin@test.com", role: "ADMIN", hint: "Admin User" },
+  { email: "user@test.com", role: "USER", hint: "Normal User" },
+  { email: "alice@test.com", role: "TECHNICIAN", hint: "Alice Technician" },
+  { email: "bob@test.com", role: "TECHNICIAN", hint: "Bob Electrician" },
+  { email: "charlie@test.com", role: "TECHNICIAN", hint: "Charlie HVAC" },
+  { email: "nimal@test.com", role: "USER", hint: "Nimal Perera" },
+  { email: "ayesha@test.com", role: "USER", hint: "Ayesha Silva" },
 ];
 
 function LoginPage() {

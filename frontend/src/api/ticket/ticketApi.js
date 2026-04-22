@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8080";
+const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
 const TECH_BASE = `${BASE}/api/technician/tickets`;
 const ADMIN_BASE = `${BASE}/api/admin/tickets`;
@@ -98,6 +98,14 @@ export async function getMyTickets(filters = {}) {
   params.set("page", String(filters.page ?? 0));
   params.set("size", String(filters.size ?? 10));
   const res = await fetch(`${TICKET_BASE}/my?${params}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
+export async function getSkillsForResource(resourceId) {
+  const params = new URLSearchParams({ resourceId: String(resourceId) });
+  const res = await fetch(`${TICKET_BASE}/skills?${params}`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
@@ -270,14 +278,12 @@ export async function uploadAttachments(ticketId, files) {
   return handleResponse(res);
 }
 
-export async function deleteAttachment(ticketId, attachmentId) {
-  const res = await fetch(
-    `${TICKET_BASE}/${ticketId}/attachments/${attachmentId}`,
-    {
-      method: "DELETE",
-      headers: getHeaders(),
-    }
-  );
+export async function deleteAttachment(ticketId, url) {
+  const params = new URLSearchParams({ url });
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments?${params}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
   return handleResponse(res);
 }
 

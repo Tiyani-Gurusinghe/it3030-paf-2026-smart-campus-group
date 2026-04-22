@@ -5,6 +5,7 @@ import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -54,6 +55,12 @@ public class TicketController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId, page, size));
+    }
+
+    @GetMapping("/skills")
+    public ResponseEntity<List<SkillOptionResponse>> getSkillsForResource(
+            @RequestParam Long resourceId) {
+        return ResponseEntity.ok(ticketService.getSkillsForResource(resourceId));
     }
 
     @GetMapping("/{id}")

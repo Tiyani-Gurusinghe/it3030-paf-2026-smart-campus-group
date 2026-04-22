@@ -122,7 +122,13 @@ export default function TicketsPage() {
 
       {error && <div className="error-box"><span>⚠️</span> {error}</div>}
       {loading && <SkeletonCards />}
-      {!loading && !error && <TicketList tickets={tickets} onDelete={handleDelete} />}
+      {!loading && !error && (
+        <TicketList
+          tickets={tickets}
+          onDelete={handleDelete}
+          emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
+        />
+      )}
     </div>
   );
 }

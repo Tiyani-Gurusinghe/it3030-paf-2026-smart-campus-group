@@ -8,14 +8,18 @@ import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.entity.NotificationType;
 import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.resource.entity.Resource;
+import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
+import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
+import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
@@ -38,6 +42,8 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TechnicianSkillRepository technicianSkillRepository;
+    private final ResourceTypeSkillRepository resourceTypeSkillRepository;
+    private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketValidationService ticketValidationService;
@@ -45,11 +51,15 @@ public class TicketService {
 
     public TicketService(TicketRepository ticketRepository,
                          TechnicianSkillRepository technicianSkillRepository,
+                         ResourceTypeSkillRepository resourceTypeSkillRepository,
+                         ResourceRepository resourceRepository,
                          UserRepository userRepository,
                          NotificationService notificationService,
                          TicketValidationService ticketValidationService) {
         this.ticketRepository = ticketRepository;
         this.technicianSkillRepository = technicianSkillRepository;
+        this.resourceTypeSkillRepository = resourceTypeSkillRepository;
+        this.resourceRepository = resourceRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.ticketValidationService = ticketValidationService;
@@ -98,6 +108,16 @@ public class TicketService {
         }
 
         return mapPage(ticketRepository.findByReportedBy(currentUserId, pageable));
+    }
+
+    public List<SkillOptionResponse> getSkillsForResource(Long resourceId) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found: " + resourceId));
+
+        return resourceTypeSkillRepository.findSkillOptionsByResourceType(resource.getType().name())
+                .stream()
+                .map(row -> new SkillOptionResponse(row.getId(), row.getName()))
+                .collect(Collectors.toList());
     }
 
     public List<TicketResponse> getTechnicianTickets(Long technicianUserId,

@@ -2,6 +2,7 @@ package lk.sliit.smartcampus.ticket.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
@@ -10,13 +11,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class TicketAttachmentService {
+
+    private static final Map<String, String> CONTENT_TYPE_EXTENSIONS = Map.of(
+            "image/jpeg", ".jpg",
+            "image/png", ".png",
+            "image/gif", ".gif",
+            "image/webp", ".webp"
+    );
 
     private final TicketRepository ticketRepository;
     private final TicketValidationService validationService;
@@ -25,7 +40,7 @@ public class TicketAttachmentService {
     @Value("${app.uploads.dir:uploads}")
     private String uploadsDir;
 
-    @Value("${app.base-url:http://localhost:8080}")
+    @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
 
     public TicketAttachmentService(
@@ -41,22 +56,27 @@ public class TicketAttachmentService {
         validationService.validateFiles(files);
 
         List<String> urls = readUrls(ticket);
+        Path baseDir = Paths.get(uploadsDir).toAbsolutePath().normalize();
+        Path ticketDir = baseDir.resolve(Paths.get("tickets", ticketId.toString())).normalize();
 
         for (MultipartFile file : files) {
-            if (file.isEmpty()) continue;
+            if (file.isEmpty()) {
+                continue;
+            }
 
             try {
-                Path dir = Paths.get(uploadsDir, "tickets", ticketId.toString());
-                Files.createDirectories(dir);
+                Files.createDirectories(ticketDir);
 
-                String ext = ext(file.getOriginalFilename());
+                String ext = extensionFor(file);
                 String name = UUID.randomUUID() + ext;
+                Path path = ticketDir.resolve(name).normalize();
 
-                Path path = dir.resolve(name);
-                file.transferTo(path.toFile());
+                if (!path.startsWith(ticketDir)) {
+                    throw new BadRequestException("Invalid file path");
+                }
 
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
                 urls.add(baseUrl + "/uploads/tickets/" + ticketId + "/" + name);
-
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -76,7 +96,12 @@ public class TicketAttachmentService {
         Ticket ticket = find(ticketId);
 
         List<String> urls = readUrls(ticket);
-        urls.remove(url);
+        boolean removed = urls.remove(url);
+        if (!removed) {
+            return;
+        }
+
+        deletePhysicalFile(ticketId, url);
 
         ticket.setAttachmentUrls(writeUrls(urls));
         ticketRepository.save(ticket);
@@ -109,8 +134,46 @@ public class TicketAttachmentService {
         }
     }
 
-    private String ext(String name) {
-        if (name == null || !name.contains(".")) return ".jpg";
-        return name.substring(name.lastIndexOf('.'));
+    private String extensionFor(MultipartFile file) {
+        String contentType = file.getContentType() == null
+                ? ""
+                : file.getContentType().toLowerCase(Locale.ROOT).trim();
+        return CONTENT_TYPE_EXTENSIONS.getOrDefault(contentType, ".jpg");
+    }
+
+    private void deletePhysicalFile(Long ticketId, String url) {
+        String filename = extractFileName(url);
+        if (filename.isBlank()) {
+            return;
+        }
+
+        Path ticketDir = Paths.get(uploadsDir, "tickets", ticketId.toString())
+                .toAbsolutePath()
+                .normalize();
+        Path target = ticketDir.resolve(filename).normalize();
+        if (!target.startsWith(ticketDir)) {
+            throw new BadRequestException("Invalid attachment path");
+        }
+
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String extractFileName(String url) {
+        String pathValue = url;
+        try {
+            URI uri = new URI(url);
+            if (uri.getPath() != null) {
+                pathValue = uri.getPath();
+            }
+        } catch (URISyntaxException ignored) {
+            // Keep original value for plain relative paths.
+        }
+
+        Path path = Paths.get(pathValue).getFileName();
+        return path == null ? "" : path.toString();
     }
 }
