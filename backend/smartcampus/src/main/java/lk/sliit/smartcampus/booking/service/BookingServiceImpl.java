@@ -1,5 +1,4 @@
 package lk.sliit.smartcampus.booking.service;
-
 import lk.sliit.smartcampus.booking.dto.BookingRequestDto;
 import lk.sliit.smartcampus.booking.dto.BookingResponseDto;
 import lk.sliit.smartcampus.booking.entity.Booking;
@@ -69,6 +68,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStartTime(requestDto.getStartTime());
         booking.setEndTime(requestDto.getEndTime());
         booking.setPurpose(requestDto.getPurpose());
+        booking.setBookingDate(requestDto.getBookingDate());
         booking.setStatus(BookingStatus.PENDING); // Default status
 
         Booking savedBooking = bookingRepository.save(booking);

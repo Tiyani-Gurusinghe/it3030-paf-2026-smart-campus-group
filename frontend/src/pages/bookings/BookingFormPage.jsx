@@ -59,7 +59,8 @@ const BookingFormPage = () => {
             resourceId: formData.resourceId,
             startTime: formData.startTime,
             endTime: formData.endTime,
-            purpose: formData.purpose
+            purpose: formData.purpose,
+            bookingDate: formData.startTime.split("T")[0]
         };
 
         try {

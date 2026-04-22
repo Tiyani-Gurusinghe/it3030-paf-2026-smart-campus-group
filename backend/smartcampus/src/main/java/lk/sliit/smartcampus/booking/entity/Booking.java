@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import lk.sliit.smartcampus.resource.entity.Resource;
 import lk.sliit.smartcampus.user.entity.User;
@@ -40,6 +41,9 @@ public class Booking {
     @Column(columnDefinition = "TEXT")
     @NotBlank(message = "Purpose is required")
     private String purpose;
+
+    @Column(name = "booking_date", nullable = false)
+    private LocalDate bookingDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -126,5 +130,13 @@ public class Booking {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
+
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
     }
 }

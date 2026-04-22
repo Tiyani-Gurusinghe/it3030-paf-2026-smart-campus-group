@@ -5,6 +5,7 @@ import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class BookingRequestDto {
 
@@ -24,6 +25,9 @@ public class BookingRequestDto {
 
     @NotBlank(message = "Purpose is required")
     private String purpose;
+
+    @NotNull(message = "Booking date is required")
+    private LocalDate bookingDate;
 
     // --- Getters and Setters ---
 
@@ -65,5 +69,13 @@ public class BookingRequestDto {
 
     public void setPurpose(String purpose) {
         this.purpose = purpose;
+    }
+
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
+
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
     }
 }
