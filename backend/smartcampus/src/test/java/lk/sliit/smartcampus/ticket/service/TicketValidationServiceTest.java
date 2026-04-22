@@ -2,9 +2,9 @@ package lk.sliit.smartcampus.ticket.service;
 
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
-import lk.sliit.smartcampus.ticket.entity.TicketResourceType;
 import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
@@ -61,7 +61,7 @@ class TicketValidationServiceTest {
         when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 1L))
                 .thenReturn(List.of(Map.of("resource_type", "LECTURE_HALL")));
 
-        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(TicketResourceType.LECTURE_HALL, 2L))
+        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.LECTURE_HALL, 2L))
                 .thenReturn(false);
 
         assertThrows(BadRequestException.class, () -> service.validateCreateRequest(request));

@@ -3,9 +3,9 @@ package lk.sliit.smartcampus.ticket.service;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
-import lk.sliit.smartcampus.ticket.entity.TicketResourceType;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
@@ -94,9 +94,9 @@ public class TicketValidationService {
 
         String resourceTypeValue = String.valueOf(rows.get(0).get("resource_type"));
 
-        TicketResourceType resourceType;
+        ResourceType resourceType;
         try {
-            resourceType = TicketResourceType.valueOf(resourceTypeValue);
+            resourceType = ResourceType.valueOf(resourceTypeValue);
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Invalid resource type found in database: " + resourceTypeValue);
         }
