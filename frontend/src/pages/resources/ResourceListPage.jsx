@@ -63,8 +63,8 @@ const canManage = isStaff;
             setLoading(true);
             const eqs = await resourceApi.getAllResources({ category: 'EQUIPMENT' });
             const uts = await resourceApi.getAllResources({ category: 'UTILITY' });
-            // Standalone inventory are those without a parent resource
-            const allInventory = [...eqs, ...uts].filter(r => !r.parentResource);
+            // Aggregate complete inventory list across all deployment endpoints
+            const allInventory = [...eqs, ...uts];
             setResources(allInventory);
             setError(null);
         } catch (err) {
@@ -355,17 +355,19 @@ const canManage = isStaff;
                             
                             <div className="ticket-meta" style={{ flexGrow: 1 }}>
                                 <div className="ticket-meta-item">
-                                    <strong>LOCATION</strong>
+                                    <strong>{['EQUIPMENT', 'UTILITY'].includes(resource.category) ? 'STORAGE' : 'LOCATION'}</strong>
                                     <span>{resource.location}</span>
                                 </div>
                                 <div className="ticket-meta-item">
-                                    <strong>CAPACITY</strong>
+                                    <strong>{['EQUIPMENT', 'UTILITY'].includes(resource.category) ? 'QTY' : 'CAPACITY'}</strong>
                                     <span>{resource.capacity || 'N/A'}</span>
                                 </div>
-                                <div className="ticket-meta-item">
-                                    <strong>AVAILABILITY</strong>
-                                    <span>{resource.availableFrom} - {resource.availableTo}</span>
-                                </div>
+                                {!['EQUIPMENT', 'UTILITY'].includes(resource.category) && (
+                                    <div className="ticket-meta-item">
+                                        <strong>AVAILABILITY</strong>
+                                        <span>{resource.availableFrom} - {resource.availableTo}</span>
+                                    </div>
+                                )}
                             </div>
                             
                             {canManage && (
