@@ -17,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class TicketValidationServiceTest {
 
@@ -65,6 +67,27 @@ class TicketValidationServiceTest {
                 .thenReturn(false);
 
         assertThrows(BadRequestException.class, () -> service.validateCreateRequest(request));
+    }
+
+    @Test
+    void createAllowsValidSkillResourceCombo() {
+        TicketRequest request = new TicketRequest();
+        request.setTitle("Valid ticket");
+        request.setDescription("Valid description");
+        request.setResourceId(7L);
+        request.setRequiredSkillId(2L);
+        request.setPriority(TicketPriority.HIGH);
+
+        when(jdbcTemplate.queryForList("SELECT id, status FROM resources WHERE id = ?", 7L))
+                .thenReturn(List.of(Map.of("id", 7L, "status", "ACTIVE")));
+
+        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 7L))
+                .thenReturn(List.of(Map.of("resource_type", "PROJECTOR")));
+
+        when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.PROJECTOR, 2L))
+                .thenReturn(true);
+
+        assertDoesNotThrow(() -> service.validateCreateRequest(request));
     }
 
     @Test

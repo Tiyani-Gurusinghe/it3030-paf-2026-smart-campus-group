@@ -40,7 +40,7 @@ public class ResourceTypeSkillId implements Serializable {
         if (!(o instanceof ResourceTypeSkillId)) return false;
         ResourceTypeSkillId that = (ResourceTypeSkillId) o;
         return resourceType == that.resourceType &&
-               Objects.equals(skillId, that.skillId);
+                Objects.equals(skillId, that.skillId);
     }
 
     @Override
