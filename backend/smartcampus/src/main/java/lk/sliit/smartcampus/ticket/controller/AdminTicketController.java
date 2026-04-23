@@ -2,6 +2,7 @@ package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
 import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
@@ -36,11 +37,34 @@ public class AdminTicketController {
         return ResponseEntity.ok(ticketService.assignTicket(id, currentUserId, request));
     }
 
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<TicketResponse> assignTicketLegacy(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketAssignRequest request) {
+        return ResponseEntity.ok(ticketService.assignTicket(id, currentUserId, request));
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<TicketResponse> updateTicketStatus(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
         return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<TicketResponse> rejectTicketLegacy(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketRejectRequest request) {
+        return ResponseEntity.ok(ticketService.rejectTicket(id, currentUserId, request));
+    }
+
+    @PatchMapping("/{id}/close")
+    public ResponseEntity<TicketResponse> closeTicketLegacy(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.closeTicket(id, currentUserId));
     }
 }

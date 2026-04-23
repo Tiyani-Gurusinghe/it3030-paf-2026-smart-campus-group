@@ -513,6 +513,10 @@ public class TicketService {
         List<Long> technicianIds = technicianSkillRepository.findTechnicianIdsBySkillId(requiredSkillId);
 
         if (technicianIds == null || technicianIds.isEmpty()) {
+            technicianIds = userRepository.findUserIdsByRoleType(RoleType.TECHNICIAN);
+        }
+
+        if (technicianIds == null || technicianIds.isEmpty()) {
             return null;
         }
 
@@ -540,7 +544,9 @@ public class TicketService {
         r.setPriority(ticket.getPriority());
         r.setStatus(ticket.getStatus());
         r.setReportedBy(ticket.getReportedBy());
+        r.setReportedByName(resolveUserName(ticket.getReportedBy()));
         r.setAssignedTo(ticket.getAssignedTo());
+        r.setAssignedToName(resolveUserName(ticket.getAssignedTo()));
         r.setPreferredContact(ticket.getPreferredContact());
 
         r.setCreatedAt(ticket.getCreatedAt());
@@ -559,6 +565,15 @@ public class TicketService {
         r.setAttachments(Collections.emptyList());
 
         return r;
+    }
+
+    private String resolveUserName(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return userRepository.findById(userId)
+                .map(User::getFullName)
+                .orElse(null);
     }
 
     private Long calculateMinutes(LocalDateTime start, LocalDateTime end) {

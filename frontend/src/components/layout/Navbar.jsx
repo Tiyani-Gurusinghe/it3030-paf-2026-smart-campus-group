@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import useAuth from "../../features/auth/hooks/useAuth";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
 
@@ -10,10 +9,12 @@ const ROLE_STYLES = {
 };
 
 function Navbar() {
+  const navigate = useNavigate();
   const { user, logout } = useAuthContext();
   
   const handleLogout = () => {
     logout();
+    navigate("/login", { replace: true });
   };
 
   const initials = user?.fullName
