@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, tickets,
                      bookings, resource_faculties, resource_type_skills, 
                      technician_skills, resources, user_roles, users, roles, skills;
 SET FOREIGN_KEY_CHECKS = 1;
+USE smartcampusdb;
+
 
 -- 1. Roles
 CREATE TABLE roles (
@@ -87,14 +89,16 @@ CREATE TABLE bookings (
     user_id BIGINT NOT NULL,
     resource_id BIGINT NOT NULL,
     booking_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
+    start_time DATETIME(6) NOT NULL,
+    end_time DATETIME(6) NOT NULL,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
+ALTER TABLE bookings
+ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 -- 10. Tickets
 
