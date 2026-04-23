@@ -159,6 +159,17 @@ public class TicketValidationService {
         }
     }
 
+    public void validateCumulativeFileLimit(int existingCount, List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return;
+        }
+
+        long incomingCount = files.stream().filter(file -> !file.isEmpty()).count();
+        if (existingCount + incomingCount > MAX_FILES) {
+            throw new BadRequestException("A ticket can have at most 3 attachments");
+        }
+    }
+
     public void validateStatusTransition(
             Ticket ticket,
             TicketStatus newStatus,

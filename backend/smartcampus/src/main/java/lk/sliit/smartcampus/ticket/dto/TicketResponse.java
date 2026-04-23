@@ -39,7 +39,13 @@ public class TicketResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime dueAt;
+    private LocalDateTime firstRespondedAt;
+    private LocalDateTime resolvedAt;
     private LocalDateTime closedAt;
+    private String resolutionNotes;
+    private String rejectedReason;
+    private Long timeToFirstResponseMinutes;
+    private Long timeToResolutionMinutes;
 
     public Long getId() {
         return id;
@@ -133,8 +139,32 @@ public class TicketResponse {
         return dueAt;
     }
 
+    public LocalDateTime getFirstRespondedAt() {
+        return firstRespondedAt;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public Long getTimeToFirstResponseMinutes() {
+        return timeToFirstResponseMinutes;
+    }
+
+    public Long getTimeToResolutionMinutes() {
+        return timeToResolutionMinutes;
     }
 
     public void setId(Long id) {
@@ -229,7 +259,31 @@ public class TicketResponse {
         this.dueAt = dueAt;
     }
 
+    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
+        this.firstRespondedAt = firstRespondedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+
+    public void setTimeToFirstResponseMinutes(Long timeToFirstResponseMinutes) {
+        this.timeToFirstResponseMinutes = timeToFirstResponseMinutes;
+    }
+
+    public void setTimeToResolutionMinutes(Long timeToResolutionMinutes) {
+        this.timeToResolutionMinutes = timeToResolutionMinutes;
     }
 }
