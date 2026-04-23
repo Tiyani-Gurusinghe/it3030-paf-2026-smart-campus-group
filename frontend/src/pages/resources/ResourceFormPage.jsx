@@ -270,6 +270,8 @@ const ResourceFormPage = () => {
 
     if (pageLoading) return <div className="page"><div className="empty-state">Loading resource details...</div></div>;
 
+    const isInventory = formData.category === 'EQUIPMENT' || formData.category === 'UTILITY';
+
     return (
         <div className="page ticket-form">
             <div className="form-header">
@@ -482,27 +484,27 @@ const ResourceFormPage = () => {
                     )}
 
                     <div className="form-field">
-                        <label>Location *</label>
+                        <label>{isInventory ? 'Storage / Current Location *' : 'Location *'}</label>
                         <input 
                             required 
                             type="text" 
                             name="location" 
                             value={formData.location} 
                             onChange={handleChange}
-                            placeholder="e.g. Block A, Floor 2"
+                            placeholder={isInventory ? "e.g. Storage Room B" : "e.g. Block A, Floor 2"}
                             style={validationErrors.location ? { borderColor: 'var(--priority-high)' } : {}}
                         />
                         {validationErrors.location && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.location}</span>}
                     </div>
 
                     <div className="form-field">
-                        <label>Capacity</label>
+                        <label>{isInventory ? 'Quantity Count' : 'Capacity'}</label>
                         <input 
                             type="number" 
                             name="capacity" 
                             value={formData.capacity} 
                             onChange={handleChange}
-                            placeholder="Number of seats/items"
+                            placeholder={isInventory ? "e.g. 50" : "Number of seats/items"}
                             style={validationErrors.capacity ? { borderColor: 'var(--priority-high)' } : {}}
                         />
                         {validationErrors.capacity && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.capacity}</span>}
