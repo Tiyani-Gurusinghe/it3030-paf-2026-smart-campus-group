@@ -1,15 +1,20 @@
--- =========================
--- Roles
--- =========================
+-- ========================================================
+-- SMART CAMPUS SYSTEM - COMPLETE SCHEMA (MySQL)
+-- ========================================================
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, tickets, 
+                     bookings, resource_faculties, resource_type_skills, 
+                     technician_skills, resources, user_roles, users, roles, skills;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. Roles
 CREATE TABLE roles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
-
--- =========================
--- Users
--- =========================
+-- 2. Users (Matched to your MySQL Screenshot)
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
@@ -18,77 +23,65 @@ CREATE TABLE users (
     oauth_id VARCHAR(100) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
--- =========================
--- User Roles
--- =========================
-CREATE TABLE user_roles (
-    user_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
 
--- =========================
--- SKILLS
--- =========================
-CREATE TABLE IF NOT EXISTS skills (
+-- 3. Skills
+CREATE TABLE skills (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- =========================
--- RESOURCE TYPE SKILLS
--- =========================
-CREATE TABLE IF NOT EXISTS resource_type_skills (
-    resource_type VARCHAR(50) NOT NULL,
-    skill_id BIGINT NOT NULL,
-    PRIMARY KEY (resource_type, skill_id),
-    CONSTRAINT fk_resource_type_skills_skill
-        FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+-- 4. User Roles (Junction Table)
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
--- =========================
--- TECHNICIAN SKILLS
--- =========================
-
-CREATE TABLE IF NOT EXISTS technician_skills (
+-- 5. Technician Skills (Junction Table)
+CREATE TABLE technician_skills (
     user_id BIGINT NOT NULL,
     skill_id BIGINT NOT NULL,
-
     PRIMARY KEY (user_id, skill_id),
-    CONSTRAINT fk_technician_skills_user
-        FOREIGN KEY (user_id) REFERENCES users(id),
-
-    CONSTRAINT fk_technician_skills_skill
-
-        FOREIGN KEY (skill_id) REFERENCES skills(id)
-
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
--- =========================
--- Resources
--- =========================
+
+-- 6. Resources
 CREATE TABLE resources (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     resource_name VARCHAR(100) NOT NULL,
-    resource_type VARCHAR(50) NOT NULL,
-    resource_category VARCHAR(50),
-    config_type VARCHAR(50),
+    resource_type VARCHAR(50) NOT NULL,     -- e.g., 'LECTURE_HALL', 'LAB', 'PROJECTOR'
+    resource_category VARCHAR(50),          -- e.g., 'BUILDING', 'SPACE', 'EQUIPMENT'
+    config_type VARCHAR(50),                -- e.g., 'FIXED', 'FLEXIBLE'
     floor VARCHAR(255),
     capacity INT,
     location VARCHAR(150) NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
-    parent_id BIGINT,
+    parent_id BIGINT,                       -- Allows for building -> room -> equipment hierarchy
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     availability_start TIME,
     availability_end TIME,
-    CONSTRAINT fk_resource_parent
-        FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
+    CONSTRAINT fk_resource_parent FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
+);
+-- 7. Resource Type Skills (Mapping Skills to Resource Types)
+CREATE TABLE resource_type_skills (
+    resource_type VARCHAR(50) NOT NULL,
+    skill_id BIGINT NOT NULL,
+    PRIMARY KEY (resource_type, skill_id),
+    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
--- =========================
--- Bookings
--- =========================
+-- 8. Resource Faculties
+CREATE TABLE resource_faculties (
+    resource_id BIGINT NOT NULL,
+    faculty VARCHAR(50) NOT NULL,
+    PRIMARY KEY (resource_id, faculty),
+    FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
+);
+
+-- 9. Bookings
 CREATE TABLE bookings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -99,18 +92,12 @@ CREATE TABLE bookings (
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_bookings_user
-        FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_bookings_resource
-        FOREIGN KEY (resource_id) REFERENCES resources(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
 
--- =========================================================
--- 10. TICKETS
--- Compact ticket design:
--- - attachment_urls keeps file references in one place
--- - ticket_history handles comments/assignment/status log
--- =========================================================
+-- 10. Tickets
+
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(120) NOT NULL,
@@ -193,9 +180,10 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notifications_ticket
         FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
 );
--- =========================
--- Audit Logs
--- =========================
+
+-- =========================================================
+-- 13. AUDIT LOGS
+-- =========================================================
 CREATE TABLE audit_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     actor_user_id BIGINT NULL,

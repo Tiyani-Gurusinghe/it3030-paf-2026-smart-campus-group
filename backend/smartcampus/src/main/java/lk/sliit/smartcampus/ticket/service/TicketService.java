@@ -13,6 +13,7 @@ import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
@@ -117,6 +118,26 @@ public class TicketService {
         return resourceTypeSkillRepository.findSkillOptionsByResourceType(resource.getType().name())
                 .stream()
                 .map(row -> new SkillOptionResponse(row.getId(), row.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public List<TechnicianOptionResponse> getAssignableTechnicians(Long ticketId, Long currentUserId) {
+        User currentUser = findUserByIdOrThrow(currentUserId);
+        if (!currentUser.hasRole(RoleType.ADMIN)) {
+            throw new UnauthorizedException("Only admin can view assignable technicians");
+        }
+
+        Ticket ticket = findByIdOrThrow(ticketId);
+        List<Long> technicianIds = technicianSkillRepository.findTechnicianIdsBySkillId(ticket.getRequiredSkillId());
+        if (technicianIds == null || technicianIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return userRepository.findAllById(technicianIds).stream()
+                .map(user -> new TechnicianOptionResponse(user.getId(), user.getFullName(), user.getEmail()))
+                .sorted(Comparator.comparing(
+                        item -> item.getFullName() == null ? "" : item.getFullName(),
+                        String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 

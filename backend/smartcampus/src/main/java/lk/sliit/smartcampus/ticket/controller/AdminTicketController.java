@@ -4,9 +4,12 @@ import jakarta.validation.Valid;
 import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
 import lk.sliit.smartcampus.ticket.service.TicketService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/tickets")
@@ -16,6 +19,13 @@ public class AdminTicketController {
 
     public AdminTicketController(TicketService ticketService) {
         this.ticketService = ticketService;
+    }
+
+    @GetMapping("/{id}/technicians")
+    public ResponseEntity<List<TechnicianOptionResponse>> getAssignableTechnicians(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.getAssignableTechnicians(id, currentUserId));
     }
 
     @PatchMapping("/{id}/assign")

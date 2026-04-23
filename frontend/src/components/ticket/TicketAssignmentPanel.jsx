@@ -1,15 +1,70 @@
-import { useState } from "react";
-import { assignTicket, rejectTicket, closeTicket } from "../../api/ticket/ticketApi";
+import { useEffect, useState } from "react";
+import {
+  assignTicket,
+  rejectTicket,
+  closeTicket,
+  getAssignableTechnicians,
+} from "../../api/ticket/ticketApi";
 
 export default function TicketAssignmentPanel({ ticket, onUpdated }) {
   const [assignTo, setAssignTo] = useState(ticket.assignedTo ? String(ticket.assignedTo) : "");
+  const [technicians, setTechnicians] = useState([]);
+  const [loadingTechnicians, setLoadingTechnicians] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    setAssignTo(ticket.assignedTo ? String(ticket.assignedTo) : "");
+  }, [ticket.assignedTo]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadTechnicians() {
+      setLoadingTechnicians(true);
+      setError("");
+      try {
+        const data = await getAssignableTechnicians(ticket.id);
+        if (!active) {
+          return;
+        }
+
+        const options = Array.isArray(data) ? data : [];
+        setTechnicians(options);
+
+        if (assignTo && !options.some((t) => String(t.id) === String(assignTo))) {
+          setAssignTo("");
+        }
+      } catch (err) {
+        if (active) {
+          setError(err.message || "Failed to load technicians");
+          setTechnicians([]);
+        }
+      } finally {
+        if (active) {
+          setLoadingTechnicians(false);
+        }
+      }
+    }
+
+    loadTechnicians();
+
+    return () => {
+      active = false;
+    };
+  }, [ticket.id, ticket.requiredSkillId]);
+
   async function handleAssign() {
-    if (!assignTo.trim()) return;
+    if (!assignTo.trim()) {
+      setError("Please select a technician.");
+      return;
+    }
+    if (!technicians.some((t) => String(t.id) === String(assignTo))) {
+      setError("Selected technician is not valid for this ticket.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -23,11 +78,23 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
   }
 
   async function handleReject() {
-    if (!rejectReason.trim()) return;
+    const reason = rejectReason.trim();
+    if (!reason) {
+      setError("Rejection reason is required.");
+      return;
+    }
+    if (reason.length < 10) {
+      setError("Rejection reason must be at least 10 characters.");
+      return;
+    }
+    if (reason.length > 4000) {
+      setError("Rejection reason must be at most 4000 characters.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
-      const updated = await rejectTicket(ticket.id, { rejectedReason: rejectReason.trim() });
+      const updated = await rejectTicket(ticket.id, { rejectedReason: reason });
       onUpdated(updated);
       setShowRejectForm(false);
     } catch (err) {
@@ -71,18 +138,29 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
             {ticket.assignedTo ? "Reassign Technician" : "Assign Technician"}
           </label>
           <div className="admin-inline">
-            <input
-              type="number"
-              min="1"
+            <select
               value={assignTo}
               onChange={(e) => setAssignTo(e.target.value)}
-              placeholder="Technician user ID"
               className="admin-input"
-            />
+              disabled={loadingTechnicians || saving || technicians.length === 0}
+            >
+              <option value="">
+                {loadingTechnicians
+                  ? "Loading technicians..."
+                  : technicians.length
+                    ? "Select technician"
+                    : "No eligible technicians"}
+              </option>
+              {technicians.map((tech) => (
+                <option key={tech.id} value={String(tech.id)}>
+                  {tech.fullName} ({tech.email})
+                </option>
+              ))}
+            </select>
             <button
               className="btn"
               onClick={handleAssign}
-              disabled={saving || !assignTo.trim()}
+              disabled={saving || !assignTo.trim() || loadingTechnicians}
             >
               {ticket.assignedTo ? "Reassign" : "Assign"}
             </button>
@@ -131,13 +209,21 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
                 <button
                   className="btn danger"
                   onClick={handleReject}
-                  disabled={saving || !rejectReason.trim()}
+                  disabled={
+                    saving ||
+                    !rejectReason.trim() ||
+                    rejectReason.trim().length < 10 ||
+                    rejectReason.trim().length > 4000
+                  }
                 >
                   Confirm Reject
                 </button>
                 <button
                   className="btn secondary"
-                  onClick={() => { setShowRejectForm(false); setRejectReason(""); }}
+                  onClick={() => {
+                    setShowRejectForm(false);
+                    setRejectReason("");
+                  }}
                 >
                   Cancel
                 </button>
@@ -149,7 +235,7 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
 
       {isRejectedOrClosed && (
         <p className="admin-panel-hint" style={{ fontStyle: "italic" }}>
-          This ticket is {ticket.status.toLowerCase()} — no further admin actions available.
+          This ticket is {ticket.status.toLowerCase()} - no further admin actions available.
         </p>
       )}
     </div>

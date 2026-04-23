@@ -12,7 +12,7 @@ INSERT IGNORE INTO roles (id, name) VALUES
 INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, created_at) VALUES
 (10, 'google', 'admin1', 'Admin User', 'admin@test.com', CURRENT_TIMESTAMP),
 (20, 'google', 'user1', 'Normal User', 'user@test.com', CURRENT_TIMESTAMP),
-(30, 'google', 'tech1', 'Alice Technician', 'tech@test.com', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', CURRENT_TIMESTAMP),
 (40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', CURRENT_TIMESTAMP),
 (50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', CURRENT_TIMESTAMP),
 (60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', CURRENT_TIMESTAMP),
@@ -41,7 +41,6 @@ INSERT IGNORE INTO skills (id, name) VALUES
 
 -- =========================
 -- RESOURCE TYPE SKILLS
--- Updated to match shared resource types
 -- =========================
 INSERT IGNORE INTO resource_type_skills (resource_type, skill_id) VALUES
 -- building-level issues
@@ -104,10 +103,7 @@ VALUES
   (12, 'Architecture Studio', 'LAB', 'SPACE', 'FIXED', 'Floor 3', 30, 'New Building', 'ACTIVE', 2, CURRENT_TIMESTAMP),
   (13, 'Business Hall A', 'LECTURE_HALL', 'SPACE', 'FIXED', 'Ground Floor', 150, 'Business Building', 'ACTIVE', 3, CURRENT_TIMESTAMP),
   (14, 'Mechanical Workshop', 'LAB', 'SPACE', 'FIXED', 'Lower Ground', 80, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP),
-  (15, 'Electrical Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 45, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP),
-  (16, 'Seminar Room 01',      'MEETING_ROOM', 'SPACE',     'FLEXIBLE', 'Floor 1',        25, 'Main Building',       'ACTIVE', 1, CURRENT_TIMESTAMP, '08:00:00', '17:00:00'),
-    (17, 'Ceiling AC Unit - MB', 'ACADEMIC',     'EQUIPMENT', 'NONE',     'Floor 2',         1, 'Main Building',       'ACTIVE', 1, CURRENT_TIMESTAMP, NULL, NULL),
-(18, 'Backup Generator',     'ACADEMIC',     'EQUIPMENT', 'NONE',     'Ground Floor',    1, 'Engineering Building','ACTIVE', 4, CURRENT_TIMESTAMP, NULL, NULL);
+  (15, 'Electrical Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 45, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP);
 
 -- =========================
 -- RESOURCE FACULTIES
@@ -126,16 +122,12 @@ INSERT IGNORE INTO resource_faculties (resource_id, faculty) VALUES
 (12, 'ARCHITECTURE'),
 (13, 'BUSINESS'),
 (14, 'ENGINEERING'),
-(15, 'ENGINEERING'),
-(16, 'COMPUTING'),
-(17, 'COMPUTING'),
-(18, 'ENGINEERING');
+(15, 'ENGINEERING');
+
 
 -- =========================
 -- TICKETS
--- Now aligned with shared resources
 -- =========================
-
 INSERT IGNORE INTO tickets (
     id, title, location, category, description, priority, preferred_contact, status,
     reported_by, assigned_to, resource_id, required_skill_id, due_at, closed_at,
@@ -173,13 +165,13 @@ INSERT IGNORE INTO tickets (
 
 (3,
  'Air conditioning not cooling',
- 'Main Building Floor 2',
+ 'Architecture Studio',
  'FACILITY',
- 'Air conditioning on the second floor is running but not cooling properly.',
+ 'The studio is unusually hot and the air conditioning is not cooling properly during lectures.',
  'MEDIUM',
  'nimal@test.com',
  'OPEN',
- 60, 50, 17, 3,
+ 60, 50, 12, 3,
  DATE_ADD(NOW(), INTERVAL 1 DAY),
  NULL,
  NULL,
@@ -190,11 +182,11 @@ INSERT IGNORE INTO tickets (
  'Broken chairs in hall',
  'Business Hall A',
  'FURNITURE',
- 'Several folding chairs are broken and unsafe for student use.',
+ 'Several chairs in Business Hall A are broken and unsafe for student use.',
  'LOW',
  'user@test.com',
  'OPEN',
- 20, 30, 10, 1,
+ 20, 30, 13, 1,
  DATE_ADD(NOW(), INTERVAL 3 DAY),
  NULL,
  NULL,
@@ -214,27 +206,10 @@ INSERT IGNORE INTO tickets (
  NULL,
  JSON_ARRAY('/uploads/tickets/5/network-lab-error.png'),
  CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-),
-
-(6,
- 'Generator maintenance completed',
- 'Engineering Building',
- 'MAINTENANCE',
- 'Routine generator inspection and electrical checks completed successfully.',
- 'LOW',
- 'admin@test.com',
- 'RESOLVED',
- 10, 40, 18, 4,
- DATE_ADD(NOW(), INTERVAL 3 DAY),
- NOW(),
- NULL,
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
 -- =========================
 -- TICKET HISTORY
--- action_type examples:
--- CREATED, ASSIGNED, STATUS_CHANGED, NOTE, RESOLVED
 -- =========================
 INSERT IGNORE INTO ticket_history (
     id, ticket_id, actor_user_id, action_type, from_status, to_status,
@@ -253,7 +228,7 @@ INSERT IGNORE INTO ticket_history (
  'Started inspection of affected switchboard.', CURRENT_TIMESTAMP),
 
 (6, 3, 60, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'AC issue reported on second floor.', CURRENT_TIMESTAMP),
+ 'Cooling issue reported in Architecture Studio.', CURRENT_TIMESTAMP),
 (7, 3, 10, 'ASSIGNED', NULL, NULL, NULL, 50,
  'Assigned to Charlie HVAC.', CURRENT_TIMESTAMP),
 
@@ -263,21 +238,11 @@ INSERT IGNORE INTO ticket_history (
  'Assigned as general maintenance task.', CURRENT_TIMESTAMP),
 
 (10, 5, 70, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Network outage reported in lab.', CURRENT_TIMESTAMP),
+ 'Network outage reported in Network Lab.', CURRENT_TIMESTAMP),
 (11, 5, 10, 'ASSIGNED', NULL, NULL, NULL, 30,
  'Assigned to Alice Technician.', CURRENT_TIMESTAMP),
 (12, 5, 30, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 30, 30,
- 'Diagnosing switch and router connectivity.', CURRENT_TIMESTAMP),
-
-(13, 6, 10, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Maintenance task logged by admin.', CURRENT_TIMESTAMP),
-(14, 6, 10, 'ASSIGNED', NULL, NULL, NULL, 40,
- 'Assigned to Bob Electrician.', CURRENT_TIMESTAMP),
-(15, 6, 40, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 40, 40,
- 'Performed generator inspection.', CURRENT_TIMESTAMP),
-(16, 6, 40, 'RESOLVED', 'IN_PROGRESS', 'RESOLVED', 40, 40,
- 'Inspection completed and generator is operational.', CURRENT_TIMESTAMP);
-
+ 'Diagnosing switch and router connectivity.', CURRENT_TIMESTAMP);
 
 -- =========================
 -- NOTIFICATIONS
@@ -288,10 +253,10 @@ INSERT IGNORE INTO notifications (
 (1, 30, 1, 'TICKET_ASSIGNED', 'New ticket assigned', 'Projector not turning on has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
 (2, 40, 2, 'TICKET_ASSIGNED', 'New ticket assigned', 'Electrical sparks near lab switchboard has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
 (3, 50, 3, 'TICKET_ASSIGNED', 'New ticket assigned', 'Air conditioning not cooling has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
-(4, 30, 5, 'TICKET_ASSIGNED', 'New ticket assigned', 'Lab computers cannot access internet has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
-(5, 70, 2, 'TICKET_UPDATED', 'Ticket status updated', 'Your ticket Electrical sparks near lab switchboard is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP),
-(6, 70, 5, 'TICKET_UPDATED', 'Ticket status updated', 'Your ticket Lab computers cannot access internet is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP),
-(7, 10, 6, 'TICKET_RESOLVED', 'Ticket resolved', 'Generator maintenance completed has been resolved.', FALSE, CURRENT_TIMESTAMP);
+(4, 30, 4, 'TICKET_ASSIGNED', 'New ticket assigned', 'Broken chairs in hall has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
+(5, 30, 5, 'TICKET_ASSIGNED', 'New ticket assigned', 'Lab computers cannot access internet has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
+(6, 70, 2, 'TICKET_UPDATED', 'Ticket status updated', 'Your ticket Electrical sparks near lab switchboard is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP),
+(7, 70, 5, 'Ticket status updated', 'Ticket status updated', 'Your ticket Lab computers cannot access internet is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP);
 
 -- =========================
 -- AUDIT LOGS
@@ -302,6 +267,7 @@ INSERT IGNORE INTO audit_logs (
 (1, 10, 'TICKET', 1, 'ASSIGN', 'Assigned ticket 1 to user 30', CURRENT_TIMESTAMP),
 (2, 10, 'TICKET', 2, 'ASSIGN', 'Assigned ticket 2 to user 40', CURRENT_TIMESTAMP),
 (3, 10, 'TICKET', 3, 'ASSIGN', 'Assigned ticket 3 to user 50', CURRENT_TIMESTAMP),
-(4, 40, 'TICKET', 2, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP),
-(5, 30, 'TICKET', 5, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP),
-(6, 40, 'TICKET', 6, 'RESOLVE', 'Resolved generator maintenance ticket', CURRENT_TIMESTAMP);
+(4, 10, 'TICKET', 4, 'ASSIGN', 'Assigned ticket 4 to user 30', CURRENT_TIMESTAMP),
+(5, 10, 'TICKET', 5, 'ASSIGN', 'Assigned ticket 5 to user 30', CURRENT_TIMESTAMP),
+(6, 40, 'TICKET', 2, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP),
+(7, 30, 'TICKET', 5, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP);

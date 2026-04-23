@@ -5,6 +5,7 @@ import { getSkillsForResource } from "../../api/ticket/ticketApi";
 
 const MAX_ATTACHMENTS = 3;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const CONTACT_REGEX = /^(\+?[0-9][0-9\s-]{6,18}|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
 
 const defaultForm = {
   resourceId: "",
@@ -131,9 +132,49 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     setAttachmentFiles(files);
   }
 
+  function validateForm() {
+    const title = (form.title || "").trim();
+    const description = (form.description || "").trim();
+    const preferredContact = (form.preferredContact || "").trim();
+
+    if (!form.resourceId) {
+      return "Please select an affected resource.";
+    }
+    if (!form.requiredSkillId) {
+      return "Please select the required skill.";
+    }
+    if (!title) {
+      return "Title is required.";
+    }
+    if (title.length > 120) {
+      return "Title must be at most 120 characters.";
+    }
+    if (!description) {
+      return "Description is required.";
+    }
+    if (description.length > 1000) {
+      return "Description must be at most 1000 characters.";
+    }
+    if (!preferredContact) {
+      return "Preferred contact is required.";
+    }
+    if (preferredContact.length > 120) {
+      return "Preferred contact must be at most 120 characters.";
+    }
+    if (!CONTACT_REGEX.test(preferredContact)) {
+      return "Preferred contact must be a valid phone number or email.";
+    }
+    return "";
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    const validationMessage = validateForm();
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
     setSaving(true);
     try {
       const payload = {

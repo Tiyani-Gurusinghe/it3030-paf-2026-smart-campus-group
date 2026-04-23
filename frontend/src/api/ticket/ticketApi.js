@@ -206,6 +206,13 @@ export async function closeTicket(id) {
   return handleResponse(res);
 }
 
+export async function getAssignableTechnicians(ticketId) {
+  const res = await fetch(`${ADMIN_BASE}/${ticketId}/technicians`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
 export async function deleteTicket(id) {
   const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "DELETE",
