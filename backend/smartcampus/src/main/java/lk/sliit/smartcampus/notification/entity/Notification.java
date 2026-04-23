@@ -18,10 +18,13 @@ public class Notification {
     @Column(nullable = false, length = 50)
     private NotificationType type;
 
+    @Column(nullable = false, length = 150)
+    private String title;
+
     @Column(nullable = false, length = 500)
     private String message;
 
-    @Column(name = "reference_id")
+    @Column(name = "ticket_id")
     private Long referenceId;
 
     @Column(name = "is_read")
@@ -45,6 +48,9 @@ public class Notification {
 
     public NotificationType getType() { return type; }
     public void setType(NotificationType type) { this.type = type; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
