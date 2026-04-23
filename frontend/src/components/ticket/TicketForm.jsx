@@ -1,29 +1,180 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useAuth from "../../features/auth/hooks/useAuth";
+import resourceApi from "../../features/resources/api/resourceApi";
+import { getSkillsForResource } from "../../api/ticket/ticketApi";
+
+const MAX_ATTACHMENTS = 3;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const CONTACT_REGEX = /^(\+?[0-9][0-9\s-]{6,18}|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
 
 const defaultForm = {
+  resourceId: "",
   title: "",
   description: "",
-  resourceId: "",
   requiredSkillId: "",
   priority: "MEDIUM",
-  preferredContactDetails: "",
+  preferredContact: "",
+  location: "",
+  category: "",
 };
 
 export default function TicketForm({ initialData, onSubmit, submitText = "Submit" }) {
   const { user } = useAuth();
-  const [form, setForm] = useState(initialData || defaultForm);
+  const [form, setForm] = useState(defaultForm);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resources, setResources] = useState([]);
+  const [loadingResources, setLoadingResources] = useState(true);
+  const [skills, setSkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+
+  useEffect(() => {
+    const normalized = initialData
+      ? {
+          ...defaultForm,
+          ...initialData,
+          resourceId: initialData.resourceId ? String(initialData.resourceId) : "",
+          requiredSkillId: initialData.requiredSkillId ? String(initialData.requiredSkillId) : "",
+          preferredContact:
+            initialData.preferredContact ?? initialData.preferredContactDetails ?? "",
+        }
+      : defaultForm;
+
+    setForm(normalized);
+  }, [initialData]);
+
+  useEffect(() => {
+    async function fetchResources() {
+      try {
+        const data = await resourceApi.getAllResources();
+        setResources(data);
+      } catch (err) {
+        console.error("Failed to fetch resources:", err);
+      } finally {
+        setLoadingResources(false);
+      }
+    }
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSkills() {
+      if (!form.resourceId) {
+        setSkills([]);
+        return;
+      }
+
+      setLoadingSkills(true);
+      try {
+        const data = await getSkillsForResource(Number(form.resourceId));
+        const options = Array.isArray(data) ? data : [];
+        setSkills(options);
+
+        if (form.requiredSkillId) {
+          const hasSelected = options.some(
+            (item) => Number(item.id) === Number(form.requiredSkillId)
+          );
+          if (!hasSelected) {
+            setForm((prev) => ({ ...prev, requiredSkillId: "" }));
+          }
+        }
+      } catch (err) {
+        setSkills([]);
+        setError(err.message || "Failed to load skills for selected resource");
+      } finally {
+        setLoadingSkills(false);
+      }
+    }
+
+    fetchSkills();
+  }, [form.resourceId]);
+
+  const selectedResource = useMemo(
+    () => resources.find((r) => r.id === Number(form.resourceId)),
+    [resources, form.resourceId]
+  );
 
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      if (name === "resourceId") {
+        return { ...prev, resourceId: value, requiredSkillId: "" };
+      }
+      return { ...prev, [name]: value };
+    });
+  }
+
+  function handleAttachmentChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      setAttachmentFiles([]);
+      return;
+    }
+
+    if (files.length > MAX_ATTACHMENTS) {
+      setError("You can upload up to 3 attachments.");
+      return;
+    }
+
+    for (const file of files) {
+      if (!file.type?.startsWith("image/")) {
+        setError("Only image files are allowed for attachments.");
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        setError("Each attachment must be 5MB or smaller.");
+        return;
+      }
+    }
+
+    setError("");
+    setAttachmentFiles(files);
+  }
+
+  function validateForm() {
+    const title = (form.title || "").trim();
+    const description = (form.description || "").trim();
+    const preferredContact = (form.preferredContact || "").trim();
+
+    if (!form.resourceId) {
+      return "Please select an affected resource.";
+    }
+    if (!form.requiredSkillId) {
+      return "Please select the required skill.";
+    }
+    if (!title) {
+      return "Title is required.";
+    }
+    if (title.length > 120) {
+      return "Title must be at most 120 characters.";
+    }
+    if (!description) {
+      return "Description is required.";
+    }
+    if (description.length > 1000) {
+      return "Description must be at most 1000 characters.";
+    }
+    if (!preferredContact) {
+      return "Preferred contact is required.";
+    }
+    if (preferredContact.length > 120) {
+      return "Preferred contact must be at most 120 characters.";
+    }
+    if (!CONTACT_REGEX.test(preferredContact)) {
+      return "Preferred contact must be a valid phone number or email.";
+    }
+    return "";
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    const validationMessage = validateForm();
+    if (validationMessage) {
+      setError(validationMessage);
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -31,8 +182,11 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         resourceId: form.resourceId ? Number(form.resourceId) : null,
         requiredSkillId: form.requiredSkillId ? Number(form.requiredSkillId) : null,
         reportedBy: user?.id ?? null,
+        location: selectedResource?.location || form.location || "Campus",
+        category: selectedResource?.category || form.category || "GENERAL",
+        preferredContact: form.preferredContact?.trim() || "",
       };
-      await onSubmit(payload);
+      await onSubmit(payload, attachmentFiles);
     } catch (err) {
       setError(err.message || "Failed to save ticket");
     } finally {
@@ -53,7 +207,45 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         </div>
       )}
 
-      <div className="form-section-title">Basic Information</div>
+      <div className="form-section-title">1. Select Resource</div>
+      <div className="form-field">
+        <label htmlFor="resourceId">Affected Resource *</label>
+        {loadingResources ? (
+          <div className="skeleton-line" style={{ height: "40px" }} />
+        ) : (
+          <select
+            id="resourceId"
+            name="resourceId"
+            value={form.resourceId}
+            onChange={handleChange}
+            required
+            className="resource-select"
+          >
+            <option value="">-- Select a resource --</option>
+            {resources.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name} {r.location ? `(${r.location})` : ""}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {selectedResource && (
+        <div className="resource-details-panel">
+          <p>
+            <strong>Type:</strong> {selectedResource.type?.replace("_", " ")}
+          </p>
+          <p>
+            <strong>Location:</strong> {selectedResource.location || "N/A"}
+          </p>
+          <p>
+            <strong>Category:</strong> {selectedResource.category?.replace("_", " ") || "N/A"}
+          </p>
+        </div>
+      )}
+
+      <div className="form-section-title">2. Issue Details</div>
       <div className="form-grid">
         <div className="form-field" style={{ gridColumn: "1 / -1" }}>
           <label htmlFor="title">Title *</label>
@@ -67,30 +259,15 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
           />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="resourceId">Resource ID *</label>
-          <input
-            id="resourceId"
-            name="resourceId"
-            type="number"
-            min="1"
-            value={form.resourceId}
+        <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+          <label htmlFor="description">Description *</label>
+          <textarea
+            id="description"
+            name="description"
+            value={form.description}
             onChange={handleChange}
-            placeholder="e.g. 1"
-            required
-          />
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="requiredSkillId">Required Skill ID *</label>
-          <input
-            id="requiredSkillId"
-            name="requiredSkillId"
-            type="number"
-            min="1"
-            value={form.requiredSkillId}
-            onChange={handleChange}
-            placeholder="e.g. 2"
+            rows={4}
+            placeholder="Describe the issue in detail..."
             required
           />
         </div>
@@ -105,33 +282,68 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         </div>
 
         <div className="form-field">
-          <label htmlFor="preferredContactDetails">Preferred Contact</label>
+          <label htmlFor="preferredContact">Preferred Contact *</label>
           <input
-            id="preferredContactDetails"
-            name="preferredContactDetails"
-            value={form.preferredContactDetails}
+            id="preferredContact"
+            name="preferredContact"
+            value={form.preferredContact}
             onChange={handleChange}
             placeholder="e.g. 0771234567 or email"
+            required
           />
         </div>
-      </div>
 
-      <div className="form-section-title">Description</div>
-      <div className="form-field">
-        <label htmlFor="description">Description *</label>
-        <textarea
-          id="description"
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          rows={5}
-          placeholder="Describe the issue in detail..."
-          required
-        />
+        <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+          <label htmlFor="requiredSkillId">Required Skill *</label>
+          {loadingSkills ? (
+            <div className="skeleton-line" style={{ height: "40px" }} />
+          ) : (
+            <select
+              id="requiredSkillId"
+              name="requiredSkillId"
+              value={form.requiredSkillId}
+              onChange={handleChange}
+              required
+              disabled={!form.resourceId || skills.length === 0}
+            >
+              <option value="">
+                {form.resourceId
+                  ? skills.length
+                    ? "-- Select required skill --"
+                    : "No configured skills for selected resource"
+                  : "Select a resource first"}
+              </option>
+              {skills.map((skill) => (
+                <option key={skill.id} value={skill.id}>
+                  {skill.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {!initialData && (
+          <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+            <label htmlFor="attachments">Attachments (up to 3 images, max 5MB each)</label>
+            <input
+              id="attachments"
+              name="attachments"
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              onChange={handleAttachmentChange}
+            />
+            {attachmentFiles.length > 0 && (
+              <p className="field-hint">
+                Selected: {attachmentFiles.map((f) => f.name).join(", ")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="form-actions">
-        <button type="submit" disabled={saving}>
+        <button type="submit" className="btn" disabled={saving}>
           {saving ? "⏳ Saving..." : submitText}
         </button>
       </div>

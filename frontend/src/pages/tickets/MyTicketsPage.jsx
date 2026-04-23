@@ -132,6 +132,7 @@ export default function MyTicketsPage() {
           tickets={tickets}
           linkBase="/tickets"
           emptyMessage="You haven't submitted any tickets yet."
+          emptyAction={<Link to="/tickets/create" className="btn">+ Create Your First Ticket</Link>}
         />
       )}
 

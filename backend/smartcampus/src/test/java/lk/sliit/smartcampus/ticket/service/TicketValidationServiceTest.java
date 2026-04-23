@@ -7,7 +7,6 @@ import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
-import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,6 @@ import static org.mockito.Mockito.when;
 class TicketValidationServiceTest {
 
     private TicketRepository ticketRepository;
-    private TicketAttachmentRepository ticketAttachmentRepository;
     private TechnicianSkillRepository technicianSkillRepository;
     private ResourceTypeSkillRepository resourceTypeSkillRepository;
     private JdbcTemplate jdbcTemplate;
@@ -34,14 +32,12 @@ class TicketValidationServiceTest {
     @BeforeEach
     void setUp() {
         ticketRepository = mock(TicketRepository.class);
-        ticketAttachmentRepository = mock(TicketAttachmentRepository.class);
         technicianSkillRepository = mock(TechnicianSkillRepository.class);
         resourceTypeSkillRepository = mock(ResourceTypeSkillRepository.class);
         jdbcTemplate = mock(JdbcTemplate.class);
 
         service = new TicketValidationService(
                 ticketRepository,
-                ticketAttachmentRepository,
                 technicianSkillRepository,
                 resourceTypeSkillRepository,
                 jdbcTemplate
@@ -52,15 +48,18 @@ class TicketValidationServiceTest {
     void createRejectsInvalidSkillResourceCombo() {
         TicketRequest request = new TicketRequest();
         request.setTitle("Test");
+        request.setLocation("Hall A");
+        request.setCategory("FACILITY");
         request.setDescription("Test desc");
         request.setResourceId(1L);
         request.setRequiredSkillId(2L);
         request.setPriority(TicketPriority.HIGH);
+        request.setPreferredContact("user@test.com");
 
-        when(jdbcTemplate.queryForList("SELECT id, status FROM resources WHERE id = ?", 1L))
+        when(jdbcTemplate.queryForList("SELECT id,status FROM resources WHERE id=?", 1L))
                 .thenReturn(List.of(Map.of("id", 1L, "status", "ACTIVE")));
 
-        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 1L))
+        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id=?", 1L))
                 .thenReturn(List.of(Map.of("resource_type", "LECTURE_HALL")));
 
         when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.LECTURE_HALL, 2L))
@@ -73,15 +72,18 @@ class TicketValidationServiceTest {
     void createAllowsValidSkillResourceCombo() {
         TicketRequest request = new TicketRequest();
         request.setTitle("Valid ticket");
+        request.setLocation("Auditorium");
+        request.setCategory("EQUIPMENT");
         request.setDescription("Valid description");
         request.setResourceId(7L);
         request.setRequiredSkillId(2L);
         request.setPriority(TicketPriority.HIGH);
+        request.setPreferredContact("user@test.com");
 
-        when(jdbcTemplate.queryForList("SELECT id, status FROM resources WHERE id = ?", 7L))
+        when(jdbcTemplate.queryForList("SELECT id,status FROM resources WHERE id=?", 7L))
                 .thenReturn(List.of(Map.of("id", 7L, "status", "ACTIVE")));
 
-        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id = ?", 7L))
+        when(jdbcTemplate.queryForList("SELECT resource_type FROM resources WHERE id=?", 7L))
                 .thenReturn(List.of(Map.of("resource_type", "PROJECTOR")));
 
         when(resourceTypeSkillRepository.existsByResourceTypeAndSkillId(ResourceType.PROJECTOR, 2L))
@@ -91,38 +93,29 @@ class TicketValidationServiceTest {
     }
 
     @Test
-    void attachmentRejectsMoreThanThreeFiles() {
-        when(ticketRepository.existsById(1L)).thenReturn(true);
-        when(ticketAttachmentRepository.countByTicketId(1L)).thenReturn(2L);
-
+    void fileValidationRejectsMoreThanThreeFiles() {
         MultipartFile f1 = mock(MultipartFile.class);
         MultipartFile f2 = mock(MultipartFile.class);
-
-        when(f1.isEmpty()).thenReturn(false);
-        when(f2.isEmpty()).thenReturn(false);
-        when(f1.getContentType()).thenReturn("image/png");
-        when(f2.getContentType()).thenReturn("image/png");
+        MultipartFile f3 = mock(MultipartFile.class);
+        MultipartFile f4 = mock(MultipartFile.class);
 
         assertThrows(BadRequestException.class,
-                () -> service.validateAttachmentUpload(1L, List.of(f1, f2)));
+                () -> service.validateFiles(List.of(f1, f2, f3, f4)));
     }
 
     @Test
-    void attachmentRejectsNonImageFiles() {
-        when(ticketRepository.existsById(1L)).thenReturn(true);
-        when(ticketAttachmentRepository.countByTicketId(1L)).thenReturn(0L);
-
+    void fileValidationRejectsNonImageFiles() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
         when(file.getContentType()).thenReturn("text/plain");
 
         assertThrows(BadRequestException.class,
-                () -> service.validateAttachmentUpload(1L, List.of(file)));
+                () -> service.validateFiles(List.of(file)));
     }
 
     @Test
     void missingResourceThrowsNotFound() {
-        when(jdbcTemplate.queryForList("SELECT id, status FROM resources WHERE id = ?", 10L))
+        when(jdbcTemplate.queryForList("SELECT id,status FROM resources WHERE id=?", 10L))
                 .thenReturn(List.of());
 
         assertThrows(ResourceNotFoundException.class,

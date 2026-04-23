@@ -1,12 +1,11 @@
 package lk.sliit.smartcampus.ticket.controller;
 
 import jakarta.validation.Valid;
-import lk.sliit.smartcampus.ticket.dto.TicketAttachmentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
-import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -37,24 +36,32 @@ public class TicketController {
     }
 
     @GetMapping
-public ResponseEntity<List<TicketResponse>> getAllTickets(
-        @RequestHeader("X-User-Id") Long currentUserId,
-        @RequestParam(required = false) TicketStatus status,
-        @RequestParam(required = false) TicketPriority priority,
-        @RequestParam(required = false) Long reportedBy,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
-) {
-    return ResponseEntity.ok(ticketService.getAllTickets(currentUserId, status, priority, reportedBy, page, size));
-}
+    public ResponseEntity<List<TicketResponse>> getAllTickets(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @RequestParam(required = false) Long reportedBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(
+                ticketService.getAllTickets(currentUserId, status, priority, reportedBy, page, size)
+        );
+    }
 
     @GetMapping("/my")
-public ResponseEntity<List<TicketResponse>> getMyTickets(
-        @RequestHeader("X-User-Id") Long currentUserId,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-    return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId, page, size));
-}
+    public ResponseEntity<List<TicketResponse>> getMyTickets(
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ticketService.getMyVisibleTickets(currentUserId, page, size));
+    }
+
+    @GetMapping("/skills")
+    public ResponseEntity<List<SkillOptionResponse>> getSkillsForResource(
+            @RequestParam Long resourceId) {
+        return ResponseEntity.ok(ticketService.getSkillsForResource(resourceId));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<TicketResponse> getTicketById(
@@ -72,8 +79,9 @@ public ResponseEntity<List<TicketResponse>> getMyTickets(
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TicketResponse> updateTicket(@PathVariable Long id,
-                                                       @Valid @RequestBody TicketRequest request) {
+    public ResponseEntity<TicketResponse> updateTicket(
+            @PathVariable Long id,
+            @Valid @RequestBody TicketRequest request) {
         return ResponseEntity.ok(ticketService.updateTicket(id, request));
     }
 
@@ -83,14 +91,6 @@ public ResponseEntity<List<TicketResponse>> getMyTickets(
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
         return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
-    }
-
-    @PatchMapping("/{id}/resolution")
-    public ResponseEntity<TicketResponse> updateResolution(
-            @PathVariable Long id,
-            @RequestHeader("X-User-Id") Long currentUserId,
-            @Valid @RequestBody TicketResolutionUpdateRequest request) {
-        return ResponseEntity.ok(ticketService.updateResolution(id, currentUserId, request));
     }
 
     @DeleteMapping("/{id}")
@@ -134,24 +134,24 @@ public ResponseEntity<List<TicketResponse>> getMyTickets(
     }
 
     @GetMapping("/{ticketId}/attachments")
-    public ResponseEntity<List<TicketAttachmentResponse>> getAttachments(@PathVariable Long ticketId) {
-        return ResponseEntity.ok(attachmentService.getAttachments(ticketId));
+    public ResponseEntity<List<String>> getAttachments(
+            @PathVariable Long ticketId) {
+        return ResponseEntity.ok(attachmentService.get(ticketId));
     }
 
     @PostMapping("/{ticketId}/attachments")
-    public ResponseEntity<List<TicketAttachmentResponse>> uploadAttachments(
+    public ResponseEntity<List<String>> uploadAttachments(
             @PathVariable Long ticketId,
-            @RequestHeader("X-User-Id") Long uploadedBy,
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attachmentService.uploadAttachments(ticketId, uploadedBy, files));
+                .body(attachmentService.upload(ticketId, files));
     }
 
-    @DeleteMapping("/{ticketId}/attachments/{attachmentId}")
+    @DeleteMapping("/{ticketId}/attachments")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable Long ticketId,
-            @PathVariable Long attachmentId) {
-        attachmentService.deleteAttachment(ticketId, attachmentId);
+            @RequestParam String url) {
+        attachmentService.delete(ticketId, url);
         return ResponseEntity.noContent().build();
     }
 }

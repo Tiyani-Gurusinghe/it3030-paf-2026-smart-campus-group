@@ -103,6 +103,14 @@ export async function getMyTickets(filters = {}) {
   return handleResponse(res);
 }
 
+export async function getSkillsForResource(resourceId) {
+  const params = new URLSearchParams({ resourceId: String(resourceId) });
+  const res = await fetch(`${TICKET_BASE}/skills?${params}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
 /**
  * Get single ticket by ID (visible to the requesting user).
  */
@@ -198,6 +206,13 @@ export async function closeTicket(id) {
   return handleResponse(res);
 }
 
+export async function getAssignableTechnicians(ticketId) {
+  const res = await fetch(`${ADMIN_BASE}/${ticketId}/technicians`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
 export async function deleteTicket(id) {
   const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "DELETE",
@@ -270,14 +285,12 @@ export async function uploadAttachments(ticketId, files) {
   return handleResponse(res);
 }
 
-export async function deleteAttachment(ticketId, attachmentId) {
-  const res = await fetch(
-    `${TICKET_BASE}/${ticketId}/attachments/${attachmentId}`,
-    {
-      method: "DELETE",
-      headers: getHeaders(),
-    }
-  );
+export async function deleteAttachment(ticketId, url) {
+  const params = new URLSearchParams({ url });
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments?${params}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
   return handleResponse(res);
 }
 

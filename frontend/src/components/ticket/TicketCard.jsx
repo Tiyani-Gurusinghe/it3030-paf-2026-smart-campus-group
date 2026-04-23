@@ -48,9 +48,13 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
         </div>
         <div className="ticket-meta-item">
           <strong>Assigned To</strong>
-          {ticket.assignedToName ?? (
-            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-              Unassigned
+          {ticket.assignedToName ? (
+            <span className="assignee-badge">
+              🧑‍🔧 {ticket.assignedToName}
+            </span>
+          ) : (
+            <span className="unassigned-badge">
+              ⚠️ Unassigned
             </span>
           )}
         </div>

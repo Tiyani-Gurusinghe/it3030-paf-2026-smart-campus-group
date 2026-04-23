@@ -3,15 +3,14 @@ package lk.sliit.smartcampus.ticket.service;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.UnauthorizedException;
 import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
+import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
-import lk.sliit.smartcampus.ticket.repository.TicketAssignmentHistoryRepository;
-import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
-import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
@@ -32,10 +31,9 @@ import static org.mockito.Mockito.when;
 class TicketServiceTest {
 
     private TicketRepository ticketRepository;
-    private TicketCommentRepository commentRepository;
-    private TicketAttachmentRepository attachmentRepository;
-    private TicketAssignmentHistoryRepository assignmentHistoryRepository;
     private TechnicianSkillRepository technicianSkillRepository;
+    private ResourceTypeSkillRepository resourceTypeSkillRepository;
+    private ResourceRepository resourceRepository;
     private UserRepository userRepository;
     private NotificationService notificationService;
     private TicketValidationService validationService;
@@ -44,20 +42,18 @@ class TicketServiceTest {
     @BeforeEach
     void setUp() {
         ticketRepository = mock(TicketRepository.class);
-        commentRepository = mock(TicketCommentRepository.class);
-        attachmentRepository = mock(TicketAttachmentRepository.class);
-        assignmentHistoryRepository = mock(TicketAssignmentHistoryRepository.class);
         technicianSkillRepository = mock(TechnicianSkillRepository.class);
+        resourceTypeSkillRepository = mock(ResourceTypeSkillRepository.class);
+        resourceRepository = mock(ResourceRepository.class);
         userRepository = mock(UserRepository.class);
         notificationService = mock(NotificationService.class);
         validationService = mock(TicketValidationService.class);
 
         service = new TicketService(
                 ticketRepository,
-                commentRepository,
-                attachmentRepository,
-                assignmentHistoryRepository,
                 technicianSkillRepository,
+                resourceTypeSkillRepository,
+                resourceRepository,
                 userRepository,
                 notificationService,
                 validationService
@@ -81,15 +77,21 @@ class TicketServiceTest {
 
         TicketRequest request = new TicketRequest();
         request.setTitle("AC issue");
+        request.setLocation("Main Building");
+        request.setCategory("FACILITY");
         request.setDescription("Broken");
         request.setResourceId(1L);
         request.setRequiredSkillId(2L);
         request.setPriority(TicketPriority.HIGH);
+        request.setPreferredContact("user@test.com");
 
         var response = service.createTicket(1L, request);
 
         assertEquals(4L, response.getAssignedTo());
         assertEquals(1L, response.getReportedBy());
+        assertEquals("Main Building", response.getLocation());
+        assertEquals("FACILITY", response.getCategory());
+        assertEquals("user@test.com", response.getPreferredContact());
     }
 
     @Test
