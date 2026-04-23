@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TicketForm from "../../components/ticket/TicketForm";
-import { getTicket, updateTicket } from "../../api/ticket/ticketApi";
+import { getTicket, updateTicketStatus } from "../../api/ticket/ticketApi";
 
 export default function EditTicketPage() {
   const { id } = useParams();
@@ -22,7 +22,7 @@ export default function EditTicketPage() {
   }, [id]);
 
   async function handleUpdate(data) {
-    await updateTicket(id, data);
+    await updateTicketStatus(id, data);
     navigate(`/tickets/${id}`);
   }
 

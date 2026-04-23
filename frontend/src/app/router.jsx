@@ -25,6 +25,7 @@ import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 const router = createBrowserRouter([
   // Public
   { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
   // Protected shell
