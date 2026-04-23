@@ -3,47 +3,58 @@ import { createBrowserRouter } from "react-router-dom";
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
 import SignupPage from "../pages/auth/SignupPage";
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage"; // Added missing import
+import { AuthProvider } from "../features/auth/context/AuthContext"; // Import the Provider
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
-// Add these imports to match your file structure (adjust paths if needed)
+// Resources
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
 import ResourceFormPage from "../pages/resources/ResourceFormPage";
 import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
+
+// Bookings
 import BookingListPage from "../pages/bookings/BookingListPage";
 import BookingFormPage from "../pages/bookings/BookingFormPage";
 import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
+
+// Tickets
 import TicketsPage from "../pages/tickets/TicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
+import EditTicketPage from "../pages/tickets/EditTicketPage"; // Added missing import
+
+// Misc
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
-import EditTicketPage from "../pages/tickets/EditTicketPage";
-import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 
 const router = createBrowserRouter([
-  // Public
+  // --- PUBLIC ROUTES ---
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
-  // Protected shell
+  // --- PROTECTED ROUTES ---
   {
     path: "/",
     element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
+      /* Wrapping AuthProvider here ensures all protected 
+         routes have access to 'isAuthenticated' 
+      */
+      <AuthProvider> 
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+      </AuthProvider>
     ),
     children: [
-      // Default / Index Route
       {
         index: true,
         element: <DashboardPage />,
       },
       
-      // --- RESOURCES ---
+      // --- RESOURCES (Your Hierarchy Work) ---
       { path: "resources", element: <ResourceListPage /> },
       { path: "resources/new", element: <ResourceFormPage /> },
       { path: "resources/edit/:id", element: <ResourceFormPage /> },
@@ -67,5 +78,4 @@ const router = createBrowserRouter([
   },
 ]);
 
-// Only ONE default export at the bottom!
 export default router;
