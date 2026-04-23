@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.ticket.entity;
 
 import jakarta.persistence.*;
+import lk.sliit.smartcampus.resource.enums.ResourceType;
 
 @Entity
 @Table(name = "resource_type_skills")
@@ -10,7 +11,7 @@ public class ResourceTypeSkill {
     @Id
     @Enumerated(EnumType.STRING)
     @Column(name = "resource_type", nullable = false)
-    private TicketResourceType resourceType;
+    private ResourceType resourceType;
 
     @Id
     @Column(name = "skill_id", nullable = false)
@@ -19,12 +20,12 @@ public class ResourceTypeSkill {
     public ResourceTypeSkill() {
     }
 
-    public ResourceTypeSkill(TicketResourceType resourceType, Long skillId) {
+    public ResourceTypeSkill(ResourceType resourceType, Long skillId) {
         this.resourceType = resourceType;
         this.skillId = skillId;
     }
 
-    public TicketResourceType getResourceType() {
+    public ResourceType getResourceType() {
         return resourceType;
     }
 
@@ -32,7 +33,7 @@ public class ResourceTypeSkill {
         return skillId;
     }
 
-    public void setResourceType(TicketResourceType resourceType) {
+    public void setResourceType(ResourceType resourceType) {
         this.resourceType = resourceType;
     }
 

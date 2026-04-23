@@ -16,13 +16,14 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
-    public Notification createNotification(Long userId, NotificationType type, String message, Long referenceId) {
+    public Notification createNotification(Long userId, NotificationType type, String title, String message, Long ticketId) {
         if (userId == null) return null;
         Notification n = new Notification();
         n.setUserId(userId);
         n.setType(type);
+        n.setTitle(title);
         n.setMessage(message);
-        n.setReferenceId(referenceId);
+        n.setTicketId(ticketId);
         n.setRead(false);
         return notificationRepository.save(n);
     }

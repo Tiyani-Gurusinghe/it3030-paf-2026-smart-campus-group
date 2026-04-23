@@ -2,8 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
-import UnauthorizedPage from "../pages/auth/UnauthorizedPage"; // Added missing import
-import { AuthProvider } from "../features/auth/context/AuthContext"; // Import the Provider
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
+import { AuthProvider } from "../features/auth/context/AuthContext";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -18,37 +18,45 @@ import BookingListPage from "../pages/bookings/BookingListPage";
 import BookingFormPage from "../pages/bookings/BookingFormPage";
 import BookingDetailsPage from "../pages/bookings/BookingDetailsPage";
 
-// Tickets
-import TicketsPage from "../pages/tickets/TicketsPage";
+// Tickets — user
+import MyTicketsPage from "../pages/tickets/MyTicketsPage";
 import CreateTicketPage from "../pages/tickets/CreateTicketPage";
 import TicketDetailsPage from "../pages/tickets/TicketDetailsPage";
-import EditTicketPage from "../pages/tickets/EditTicketPage"; 
-import MyTicketsPage from "../pages/tickets/MyTicketsPage"; // Added missing import
+import EditTicketPage from "../pages/tickets/EditTicketPage";
+
+// Tickets — admin
+import AdminTicketsPage from "../pages/admin/AdminTicketsPage";
+import AdminTicketDetailPage from "../pages/admin/AdminTicketDetailPage";
+
+// Tickets — technician
+import TechnicianTicketsPage from "../pages/technician/TechnicianTicketsPage";
+import TechnicianTicketDetailPage from "../pages/technician/TechnicianTicketDetailPage";
 
 // Misc
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
 
 const router = createBrowserRouter([
+  // --- PUBLIC ROUTES ---
   { path: "/login", element: <LoginPage /> },
-  { path: "/unauthorized", element: <UnauthorizedPage /> }, // Added this for security redirects
+  { path: "/unauthorized", element: <UnauthorizedPage /> },
+
+  // --- PROTECTED ROUTES ---
   {
     path: "/",
     element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
+      <AuthProvider>
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+      </AuthProvider>
     ),
     children: [
       {
-        index: true, // This handles the base "/" URL
+        index: true,
         element: <DashboardPage />,
       },
-      {
-        path: "dashboard", // 🚨 ADDED THIS: This handles the "/dashboard" URL
-        element: <DashboardPage />,
-      },
-      
+
       // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },
       { path: "resources/new", element: <ResourceFormPage /> },
@@ -60,13 +68,20 @@ const router = createBrowserRouter([
       { path: "bookings/new", element: <BookingFormPage /> },
       { path: "bookings/:id", element: <BookingDetailsPage /> },
 
-      // --- TICKETS ---
-      { path: "tickets", element: <TicketsPage /> },
+      // --- TICKETS (user) ---
       { path: "tickets/my", element: <MyTicketsPage /> },
-      { path: "tickets/new", element: <CreateTicketPage /> },
       { path: "tickets/create", element: <CreateTicketPage /> },
+      { path: "tickets/new", element: <CreateTicketPage /> },
       { path: "tickets/:id", element: <TicketDetailsPage /> },
-      //{ path: "tickets/:id/edit", element: <EditTicketPage /> },
+      { path: "tickets/:id/edit", element: <EditTicketPage /> },
+
+      // --- TICKETS (admin) ---
+      { path: "admin/tickets", element: <AdminTicketsPage /> },
+      { path: "admin/tickets/:id", element: <AdminTicketDetailPage /> },
+
+      // --- TICKETS (technician) ---
+      { path: "technician/tickets", element: <TechnicianTicketsPage /> },
+      { path: "technician/tickets/:id", element: <TechnicianTicketDetailPage /> },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },

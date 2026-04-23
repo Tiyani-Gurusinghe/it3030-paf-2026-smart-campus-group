@@ -39,3 +39,6 @@ src/main/resources/application.properties-dev.properties
 
 ../../.metals/
 .metals/
+
+
+src/main/resources/application-dev.properties

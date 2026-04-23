@@ -220,5 +220,5 @@ Each feature follows the same pattern:
 ```bash
 cd backend/smartcampus
 ./mvnw spring-boot:run
-http://localhost:8080
+http://localhost:8081
 ```

@@ -12,9 +12,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 🚨 CRITICAL: Enable CORS support in Spring Security
-            .cors(Customizer.withDefaults()) 
-            
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -27,9 +24,7 @@ public class SecurityConfig {
             )
             .httpBasic(Customizer.withDefaults());
 
-        // Disable frame options so H2 console works
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-        
         return http.build();
     }
 }
