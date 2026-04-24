@@ -350,12 +350,16 @@ a {
   margin-bottom: 18px;
 }
 
-.ticket-card-top h3 {
+.ticket-card-title {
   font-size: 24px;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ticket-meta {
