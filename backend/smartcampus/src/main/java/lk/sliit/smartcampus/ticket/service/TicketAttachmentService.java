@@ -35,6 +35,7 @@ public class TicketAttachmentService {
 
     private final TicketRepository ticketRepository;
     private final TicketValidationService validationService;
+    private final TicketService ticketService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${app.uploads.dir:uploads}")
@@ -45,17 +46,21 @@ public class TicketAttachmentService {
 
     public TicketAttachmentService(
             TicketRepository ticketRepository,
-            TicketValidationService validationService) {
+            TicketValidationService validationService,
+            TicketService ticketService) {
         this.ticketRepository = ticketRepository;
         this.validationService = validationService;
+        this.ticketService = ticketService;
     }
 
-    public List<String> upload(Long ticketId, List<MultipartFile> files) {
+    public List<String> upload(Long ticketId, Long currentUserId, List<MultipartFile> files) {
         Ticket ticket = find(ticketId);
+        ticketService.validateAttachmentModificationPermission(ticket, currentUserId);
 
         validationService.validateFiles(files);
 
         List<String> urls = readUrls(ticket);
+        validationService.validateCumulativeFileLimit(urls.size(), files);
         Path baseDir = Paths.get(uploadsDir).toAbsolutePath().normalize();
         Path ticketDir = baseDir.resolve(Paths.get("tickets", ticketId.toString())).normalize();
 
@@ -88,12 +93,15 @@ public class TicketAttachmentService {
         return urls;
     }
 
-    public List<String> get(Long ticketId) {
-        return readUrls(find(ticketId));
+    public List<String> get(Long ticketId, Long currentUserId) {
+        Ticket ticket = find(ticketId);
+        ticketService.validateTicketVisibility(ticket, currentUserId);
+        return readUrls(ticket);
     }
 
-    public void delete(Long ticketId, String url) {
+    public void delete(Long ticketId, Long currentUserId, String url) {
         Ticket ticket = find(ticketId);
+        ticketService.validateAttachmentModificationPermission(ticket, currentUserId);
 
         List<String> urls = readUrls(ticket);
         boolean removed = urls.remove(url);

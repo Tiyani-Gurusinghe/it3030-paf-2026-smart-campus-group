@@ -48,11 +48,17 @@ function LoginPage() {
 
   return (
     <div className="login-page">
+      <div className="login-page-glow" aria-hidden="true" />
       <div className="login-card">
-        <div className="login-logo">
-          <div className="login-logo-icon">🏛️</div>
-          <h1 className="login-title">Smart Campus</h1>
-          <p className="login-subtitle">Sign in to your account</p>
+        <div className="login-card-accent" aria-hidden="true" />
+
+        <div className="login-header">
+          <div className="login-logo">
+            <div className="login-logo-icon">🏛️</div>
+            <h1 className="login-title">Smart Campus</h1>
+            <p className="login-subtitle">Sign in to continue to your SLIIT workspace</p>
+          </div>
+          <div className="login-context-chip">SLIIT Portal</div>
         </div>
 
         {error && (
@@ -86,20 +92,21 @@ function LoginPage() {
         </form>
 
         <div className="login-hints">
-          <p className="login-hints-label">Quick login (dev mode):</p>
+          <p className="login-hints-label">Quick login (dev mode)</p>
           <div className="login-hints-list">
             {TEST_EMAILS.map(({ email: e, role, hint }) => (
               <button
                 key={e}
-                className="login-hint-btn"
+                className={`login-hint-btn ${email === e ? "selected" : ""}`}
                 onClick={() => setEmail(e)}
                 type="button"
                 title={hint}
               >
-                <span className={`role-badge role-badge-${role.toLowerCase()}`}>
-                  {role}
+                <span className={`role-badge role-badge-${role.toLowerCase()}`}>{role}</span>
+                <span className="login-hint-meta">
+                  <span className="login-hint-email">{e}</span>
+                  <span className="login-hint-name">{hint}</span>
                 </span>
-                <span className="login-hint-email">{e}</span>
               </button>
             ))}
           </div>

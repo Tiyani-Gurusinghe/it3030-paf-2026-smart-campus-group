@@ -136,6 +136,7 @@ CREATE TABLE tickets (
         FOREIGN KEY (required_skill_id) REFERENCES skills(id)
 );
 
+
 -- =========================================================
 -- 11. TICKET HISTORY
 -- One table for:
@@ -164,6 +165,23 @@ CREATE TABLE ticket_history (
         FOREIGN KEY (previous_assignee) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_ticket_history_new_assignee
         FOREIGN KEY (new_assignee) REFERENCES users(id) ON DELETE SET NULL
+);
+ALTER TABLE tickets ADD COLUMN resolution_notes TEXT NULL;
+ALTER TABLE tickets ADD COLUMN rejected_reason TEXT NULL;
+ALTER TABLE tickets ADD COLUMN first_responded_at DATETIME NULL;
+ALTER TABLE tickets ADD COLUMN resolved_at DATETIME NULL;
+
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notification_preferences_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_notification_pref_user_type UNIQUE (user_id, type)
 );
 
 -- =========================================================

@@ -49,8 +49,20 @@ public class Ticket {
     @Column(name = "due_at")
     private LocalDateTime dueAt;
 
+    @Column(name = "first_responded_at")
+    private LocalDateTime firstRespondedAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
+
+    @Column(name = "resolution_notes", columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(name = "rejected_reason", columnDefinition = "TEXT")
+    private String rejectedReason;
 
     @Column(name = "attachment_urls", columnDefinition = "json")
     private String attachmentUrls;
@@ -132,8 +144,24 @@ public class Ticket {
         return dueAt;
     }
 
+    public LocalDateTime getFirstRespondedAt() {
+        return firstRespondedAt;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
     }
 
     public String getAttachmentUrls() {
@@ -200,8 +228,24 @@ public class Ticket {
         this.dueAt = dueAt;
     }
 
+    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
+        this.firstRespondedAt = firstRespondedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 
     public void setAttachmentUrls(String attachmentUrls) {

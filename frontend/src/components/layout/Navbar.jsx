@@ -6,6 +6,7 @@ function Navbar() {
   
   const handleLogout = () => {
     logout();
+    navigate("/login", { replace: true });
   };
 
   const initials = user?.fullName

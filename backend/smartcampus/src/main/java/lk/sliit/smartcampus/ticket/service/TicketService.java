@@ -31,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -215,8 +216,60 @@ public class TicketService {
         throw new UnauthorizedException("You do not have permission to access this ticket");
     }
 
+    public void validateTicketModificationPermission(Ticket ticket, Long currentUserId) {
+        User user = findUserByIdOrThrow(currentUserId);
+
+        if (user.hasRole(RoleType.ADMIN)) {
+            return;
+        }
+
+        boolean isReporter = ticket.getReportedBy() != null && ticket.getReportedBy().equals(currentUserId);
+        if (!isReporter) {
+            throw new UnauthorizedException("Only the reporter or admin can modify this ticket");
+        }
+
+        if (ticket.getStatus() != TicketStatus.OPEN) {
+            throw new BadRequestException("Reporter can only modify OPEN tickets");
+        }
+    }
+
+    public void validateAttachmentModificationPermission(Ticket ticket, Long currentUserId) {
+        User user = findUserByIdOrThrow(currentUserId);
+
+        if (user.hasRole(RoleType.ADMIN)) {
+            return;
+        }
+
+        boolean isReporter = ticket.getReportedBy() != null && ticket.getReportedBy().equals(currentUserId);
+        boolean isAssignedTechnician = user.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUserId);
+
+        if (!isReporter && !isAssignedTechnician) {
+            throw new UnauthorizedException("Only reporter, assigned technician, or admin can modify attachments");
+        }
+
+        if (ticket.getStatus() == TicketStatus.CLOSED || ticket.getStatus() == TicketStatus.REJECTED) {
+            throw new BadRequestException("Attachments cannot be modified for CLOSED or REJECTED tickets");
+        }
+    }
+
+    @Transactional
+    public void markFirstResponseIfApplicable(Ticket ticket, Long actorUserId) {
+        if (ticket.getFirstRespondedAt() != null || actorUserId == null) {
+            return;
+        }
+
+        User actor = findUserByIdOrThrow(actorUserId);
+        if (actor.hasRole(RoleType.ADMIN) || actor.hasRole(RoleType.TECHNICIAN)) {
+            ticket.setFirstRespondedAt(LocalDateTime.now());
+            ticketRepository.save(ticket);
+        }
+    }
+
     @Transactional
     public TicketResponse createTicket(Long currentUserId, TicketRequest request) {
+        findUserByIdOrThrow(currentUserId);
         ticketValidationService.validateCreateRequest(request);
 
         Ticket ticket = new Ticket();
@@ -236,6 +289,7 @@ public class TicketService {
         Long assignedTechnicianId = findLeastBusyTechnician(request.getRequiredSkillId());
         if (assignedTechnicianId != null) {
             ticket.setAssignedTo(assignedTechnicianId);
+            ticket.setFirstRespondedAt(LocalDateTime.now());
         }
 
         Ticket saved = ticketRepository.save(ticket);
@@ -253,8 +307,9 @@ public class TicketService {
         return toResponse(saved);
     }
 
-    public TicketResponse updateTicket(Long id, TicketRequest request) {
+    public TicketResponse updateTicket(Long id, TicketRequest request, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(id);
+        validateTicketModificationPermission(ticket, currentUserId);
 
         ticketValidationService.validateCreateRequest(request);
 
@@ -282,6 +337,9 @@ public class TicketService {
         ticketValidationService.validateTechnicianHasSkill(request.getAssignedTo(), ticket.getRequiredSkillId());
 
         ticket.setAssignedTo(request.getAssignedTo());
+        if (ticket.getFirstRespondedAt() == null) {
+            ticket.setFirstRespondedAt(LocalDateTime.now());
+        }
         Ticket saved = ticketRepository.save(ticket);
 
         return toResponse(saved);
@@ -306,8 +364,31 @@ public class TicketService {
 
         ticket.setStatus(nextStatus);
 
+        if (nextStatus == TicketStatus.RESOLVED) {
+            String resolutionNotes = request.getResolutionNotes();
+            if (resolutionNotes == null || resolutionNotes.isBlank()) {
+                throw new BadRequestException("Resolution notes are required when resolving a ticket");
+            }
+            ticket.setResolutionNotes(resolutionNotes.trim());
+            ticket.setResolvedAt(LocalDateTime.now());
+            if (ticket.getFirstRespondedAt() == null) {
+                ticket.setFirstRespondedAt(LocalDateTime.now());
+            }
+        }
+
+        if (nextStatus == TicketStatus.REJECTED) {
+            ticket.setRejectedReason(request.getRejectedReason().trim());
+            if (ticket.getFirstRespondedAt() == null) {
+                ticket.setFirstRespondedAt(LocalDateTime.now());
+            }
+        }
+
         if (nextStatus == TicketStatus.CLOSED) {
             ticket.setClosedAt(LocalDateTime.now());
+        }
+
+        if (currentStatus == TicketStatus.OPEN && nextStatus == TicketStatus.IN_PROGRESS && ticket.getFirstRespondedAt() == null) {
+            ticket.setFirstRespondedAt(LocalDateTime.now());
         }
 
         Ticket saved = ticketRepository.save(ticket);
@@ -340,8 +421,10 @@ public class TicketService {
         return updateStatus(ticketId, statusRequest, currentUserId);
     }
 
-    public void deleteTicket(Long id) {
-        ticketRepository.delete(findByIdOrThrow(id));
+    public void deleteTicket(Long id, Long currentUserId) {
+        Ticket ticket = findByIdOrThrow(id);
+        validateTicketModificationPermission(ticket, currentUserId);
+        ticketRepository.delete(ticket);
     }
 
     private void enforceStatusTransition(Ticket ticket,
@@ -430,6 +513,10 @@ public class TicketService {
         List<Long> technicianIds = technicianSkillRepository.findTechnicianIdsBySkillId(requiredSkillId);
 
         if (technicianIds == null || technicianIds.isEmpty()) {
+            technicianIds = userRepository.findUserIdsByRoleType(RoleType.TECHNICIAN);
+        }
+
+        if (technicianIds == null || technicianIds.isEmpty()) {
             return null;
         }
 
@@ -457,19 +544,43 @@ public class TicketService {
         r.setPriority(ticket.getPriority());
         r.setStatus(ticket.getStatus());
         r.setReportedBy(ticket.getReportedBy());
+        r.setReportedByName(resolveUserName(ticket.getReportedBy()));
         r.setAssignedTo(ticket.getAssignedTo());
+        r.setAssignedToName(resolveUserName(ticket.getAssignedTo()));
         r.setPreferredContact(ticket.getPreferredContact());
 
         r.setCreatedAt(ticket.getCreatedAt());
         r.setUpdatedAt(ticket.getUpdatedAt());
         r.setDueAt(ticket.getDueAt());
+        r.setFirstRespondedAt(ticket.getFirstRespondedAt());
+        r.setResolvedAt(ticket.getResolvedAt());
         r.setClosedAt(ticket.getClosedAt());
+        r.setResolutionNotes(ticket.getResolutionNotes());
+        r.setRejectedReason(ticket.getRejectedReason());
+        r.setTimeToFirstResponseMinutes(calculateMinutes(ticket.getCreatedAt(), ticket.getFirstRespondedAt()));
+        r.setTimeToResolutionMinutes(calculateMinutes(ticket.getCreatedAt(), ticket.getResolvedAt()));
 
         r.setAttachmentUrls(parseAttachmentUrls(ticket.getAttachmentUrls()));
         r.setCommentCount(0);
         r.setAttachments(Collections.emptyList());
 
         return r;
+    }
+
+    private String resolveUserName(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return userRepository.findById(userId)
+                .map(User::getFullName)
+                .orElse(null);
+    }
+
+    private Long calculateMinutes(LocalDateTime start, LocalDateTime end) {
+        if (start == null || end == null) {
+            return null;
+        }
+        return Duration.between(start, end).toMinutes();
     }
 
     private List<String> parseAttachmentUrls(String json) {
