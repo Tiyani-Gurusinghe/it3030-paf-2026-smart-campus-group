@@ -5,20 +5,34 @@ function DashboardPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
+      <div className="dashboard-hero">
         <div>
-          <h1 className="page-title">Campus Dashboard</h1>
-          <p className="page-subtitle">
-            Admin workspace for monitoring ticket operations across campus.
+          <span className="dashboard-kicker">Sri Lanka Institute of Information Technology</span>
+          <h1>Campus Dashboard</h1>
+          <p>
+            Welcome{user?.fullName ? `, ${user.fullName}` : ""}. Monitor ticket operations,
+            bookings, notifications, and facility activity from one workspace.
           </p>
         </div>
+        <div className="dashboard-mark">SC</div>
       </div>
 
-      <div className="card" style={{ padding: 24 }}>
-        <h2 style={{ marginBottom: 10 }}>Welcome{user?.fullName ? `, ${user.fullName}` : ""}</h2>
-        <p className="subtext">
-          Use the sidebar to review all tickets, manage assignments, and track notifications.
-        </p>
+      <div className="dashboard-grid">
+        <div className="card dashboard-stat-card">
+          <span>Ticket Desk</span>
+          <strong>Live</strong>
+          <p>Review maintenance requests and coordinate assignments.</p>
+        </div>
+        <div className="card dashboard-stat-card">
+          <span>Facilities</span>
+          <strong>Ready</strong>
+          <p>Browse rooms, equipment, and campus assets.</p>
+        </div>
+        <div className="card dashboard-stat-card">
+          <span>Bookings</span>
+          <strong>Active</strong>
+          <p>Manage reservations and resource schedules.</p>
+        </div>
       </div>
     </div>
   );
