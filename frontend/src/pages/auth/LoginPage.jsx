@@ -18,7 +18,7 @@ const TEST_EMAILS = [
 function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated, getLandingRoute, user } = useAuth();
-  const [email, setEmail] = useState("user@test.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
