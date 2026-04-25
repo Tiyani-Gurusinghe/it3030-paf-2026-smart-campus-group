@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '../../features/bookings/api/bookingApi';
 import { useAuthContext } from '../../features/auth/context/AuthContext';
 
 const BookingListPage = () => {
     const navigate = useNavigate();
-    const { user, isStaff } = useAuthContext();
+    const { user, isAdmin } = useAuthContext();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,30 +17,17 @@ const BookingListPage = () => {
         startTime: '',
         endTime: '',
     });
-    console.log("user:", user, "isStaff:", isStaff);
 
-    useEffect(() => {
-        loadBookings();
-    }, [user]);
-
-    const loadBookings = async () => {
+    const loadBookings = useCallback(async () => {
         if (!user) {
             setLoading(false);
             return;
         }
         try {
             setLoading(true);
-            let data;
-            if (isStaff) {
-                data = await bookingApi.getAll();
-            } else {
-                data = await bookingApi.getByUserId(user.id);
-            }
-            console.log("raw response:", data);
-            console.log("bookingsList:", data?.data?.data || data?.data || data || []);
-            // data inside ApiSuccessResponse is usually returned as data.data if interceptor unpacks response.data
-            // If the backend returns { success: true, data: [...] }, we need to handle it.
-            // Our axios interceptor usually returns response.data directly. So data is { success: true, data: [...] }
+            const data = isAdmin
+                ? await bookingApi.getAll()
+                : await bookingApi.getByUserId(user.id);
             const bookingsList = data?.data?.data || data?.data || data || [];
             
             // Sort by createdAt descending
@@ -53,16 +40,23 @@ const BookingListPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [isAdmin, user]);
+
+    useEffect(() => {
+        loadBookings();
+    }, [loadBookings]);
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-            await bookingApi.updateStatus(id, newStatus);
-            // Update local state
-            setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+            setUpdatingId(id);
+            const response = await bookingApi.updateStatus(id, newStatus);
+            const updatedBooking = response?.data?.data || response?.data || response;
+            setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updatedBooking, status: newStatus } : b));
         } catch (err) {
             console.error(err);
             alert("Failed to update status.");
+        } finally {
+            setUpdatingId(null);
         }
     };
 
@@ -183,14 +177,29 @@ const BookingListPage = () => {
         });
     };
 
+    const getStatusClass = (status) => {
+        if (status === 'APPROVED' || status === 'COMPLETED') return 'resolved';
+        if (status === 'REJECTED' || status === 'CANCELLED') return 'rejected';
+        return 'pending';
+    };
+
+    const getStatusLabel = (status) => {
+        if (status === 'REJECTED') return 'DECLINED';
+        return status;
+    };
+
     if (loading) return <div className="page"><div className="empty-state">Loading bookings...</div></div>;
 
     return (
         <div className="page">
             <div className="page-header">
                 <div>
-                    <h2 className="page-title">{isStaff ? 'All Bookings' : 'My Bookings'}</h2>
-                    <p className="page-subtitle">Manage resource reservations and schedules.</p>
+                    <h2 className="page-title">{isAdmin ? 'All Bookings' : 'My Bookings'}</h2>
+                    <p className="page-subtitle">
+                        {isAdmin
+                            ? 'Review every campus reservation, approve pending requests, decline conflicts, or remove invalid bookings.'
+                            : 'Manage your resource reservations and schedules.'}
+                    </p>
                 </div>
                 <button onClick={() => navigate('/bookings/new')} className="btn primary">
                     + New Booking
@@ -210,8 +219,8 @@ const BookingListPage = () => {
                     {bookings.map(booking => (
                         <div key={booking.id} className="card ticket-card" style={{ display: 'flex', flexDirection: 'column' }}>
                             <div className="card-header">
-                                <span className={`status-badge status-${booking.status === 'APPROVED' ? 'resolved' : booking.status === 'REJECTED' || booking.status === 'CANCELLED' ? 'rejected' : 'pending'}`}>
-                                    {booking.status}
+                                <span className={`status-badge status-${getStatusClass(booking.status)}`}>
+                                    {getStatusLabel(booking.status)}
                                 </span>
                                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                                     #{booking.id}
@@ -239,14 +248,28 @@ const BookingListPage = () => {
                             </div>
 
                             <div className="card-actions" style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
-                                {isStaff && booking.status === 'PENDING' && (
+                                {isAdmin && booking.status === 'PENDING' && (
                                     <>
-                                        <button onClick={() => handleStatusUpdate(booking.id, 'APPROVED')} className="btn primary" style={{ flex: 1, padding: '6px' }}>Approve</button>
-                                        <button onClick={() => handleStatusUpdate(booking.id, 'REJECTED')} className="btn danger" style={{ flex: 1, padding: '6px' }}>Reject</button>
+                                        <button
+                                            onClick={() => handleStatusUpdate(booking.id, 'APPROVED')}
+                                            className="btn primary"
+                                            style={{ flex: 1, padding: '6px' }}
+                                            disabled={updatingId === booking.id}
+                                        >
+                                            {updatingId === booking.id ? 'Updating...' : 'Approve'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleStatusUpdate(booking.id, 'REJECTED')}
+                                            className="btn danger"
+                                            style={{ flex: 1, padding: '6px' }}
+                                            disabled={updatingId === booking.id}
+                                        >
+                                            {updatingId === booking.id ? 'Updating...' : 'Decline'}
+                                        </button>
                                     </>
                                 )}
 
-                                {booking.status === 'PENDING' && (
+                                {!isAdmin && booking.status === 'PENDING' && (
                                     <button
                                         onClick={() => handleUpdate(booking)}
                                         className="btn secondary"
@@ -257,11 +280,11 @@ const BookingListPage = () => {
                                     </button>
                                 )}
 
-                                {!isStaff && booking.status === 'PENDING' && (
+                                {!isAdmin && booking.status === 'PENDING' && (
                                     <button onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')} className="btn secondary" style={{ flex: 1, padding: '6px' }}>Cancel Booking</button>
                                 )}
 
-                                {(isStaff || booking.status === 'PENDING' || booking.status === 'CANCELLED') && (
+                                {(isAdmin || booking.status === 'PENDING' || booking.status === 'CANCELLED') && (
                                     <button
                                         onClick={() => handleDelete(booking.id)}
                                         className="btn danger"
