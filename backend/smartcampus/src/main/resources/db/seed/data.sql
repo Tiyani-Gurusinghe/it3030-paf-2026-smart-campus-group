@@ -1,4 +1,4 @@
-USE smartcampusdb1;
+USE smartcampusdb;
 
 -- Roles
 INSERT IGNORE INTO roles (id, name) VALUES
