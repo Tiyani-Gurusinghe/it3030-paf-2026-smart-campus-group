@@ -6,6 +6,9 @@ const TYPE_ICONS = {
   TICKET_STATUS_CHANGED: "🔄",
   NEW_COMMENT: "💬",
   TICKET_ASSIGNED: "👤",
+  TICKET_UPDATED: "📝",
+  BOOKING_APPROVED: "✅",
+  BOOKING_REJECTED: "❌",
 };
 
 function timeAgo(dateStr) {
@@ -94,6 +97,7 @@ export default function NotificationPanel() {
                 >
                   <span className="notification-icon">{TYPE_ICONS[n.type] ?? "📢"}</span>
                   <div className="notification-body">
+                    <p className="notification-title">{n.title}</p>
                     <p className="notification-message">{n.message}</p>
                     <span className="notification-time">{timeAgo(n.createdAt)}</span>
                   </div>
