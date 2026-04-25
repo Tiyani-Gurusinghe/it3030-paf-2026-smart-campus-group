@@ -21,7 +21,7 @@ export default function CreateTicketPage() {
     <div className="page">
       <div className="form-layout-wrapper">
         <button onClick={handleBack} className="btn-back btn-back-floating">
-          ← Back
+          Back
         </button>
         <TicketForm onSubmit={handleCreate} submitText="Create Ticket" />
       </div>

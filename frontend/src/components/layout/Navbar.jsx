@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
+import Breadcrumbs from "./Breadcrumbs";
 
 function Navbar() {
   const { user, logout, primaryRole } = useAuthContext();
@@ -24,6 +25,9 @@ function Navbar() {
           <span className="navbar-brand-title">Smart Campus</span>
           <span className="navbar-brand-subtitle">SLIIT Operations Hub</span>
         </div>
+      </div>
+      <div className="navbar-breadcrumb-area">
+        <Breadcrumbs />
       </div>
       <div className="navbar-spacer" />
       <div className="navbar-actions">

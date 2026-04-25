@@ -363,6 +363,56 @@ a {
     0 0 16px rgba(77, 87, 199, 0.35);
 }
 
+.navbar-breadcrumb-area {
+  display: flex;
+  align-items: center;
+  margin-left: 28px;
+  border-left: 1px solid var(--border-strong);
+  padding-left: 24px;
+}
+
+.navbar-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.breadcrumb-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 3px 7px;
+  border-radius: 5px;
+  transition: color 0.15s ease, background 0.15s ease;
+  font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+  color: var(--sliit-orange);
+  background: var(--sliit-orange-soft);
+}
+
+.breadcrumb-sep {
+  color: var(--border-strong);
+  font-size: 15px;
+  margin: 0 1px;
+  user-select: none;
+  opacity: 0.7;
+}
+
+.breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 3px 7px;
+}
+
 .navbar-spacer {
   flex: 1;
 }
@@ -1262,38 +1312,62 @@ select option {
 
 .btn-back-floating {
   position: absolute;
-  left: -80px;
-  top: 0;
+  left: -120px;
+  top: 4px;
   margin-bottom: 0;
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1200px) {
   .btn-back-floating {
     position: relative;
     left: 0;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    display: block;
   }
 }
 
 .btn-back {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 14px;
+  gap: 7px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 20px;
-  transition: all 0.15s ease;
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin-bottom: 0;
+  transition: all 0.18s ease;
+  letter-spacing: 0.1px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  font-family: inherit;
+}
+
+.btn-back::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 18 9 12 15 6'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
 }
 
 .btn-back:hover {
-  background: var(--accent-muted);
-  color: var(--accent-hover);
+  background: var(--bg-elevated);
+  border-color: var(--sliit-orange);
+  color: var(--sliit-orange);
+  box-shadow: 0 2px 8px rgba(255, 147, 0, 0.15);
+}
+
+.btn-back:hover::before {
+  transform: translateX(-2px);
 }
 
 /* ==============================
