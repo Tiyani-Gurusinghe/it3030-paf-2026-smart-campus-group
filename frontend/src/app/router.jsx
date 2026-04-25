@@ -42,7 +42,7 @@ import RouteErrorPage from "../pages/common/RouteErrorPage";
 
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
-  { path: "/", element: <HomePage />, errorElement: <RouteErrorPage /> },
+  { path: "/home", element: <HomePage />, errorElement: <RouteErrorPage /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteErrorPage /> },
   { path: "/signup", element: <SignupPage />, errorElement: <RouteErrorPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage />, errorElement: <RouteErrorPage /> },

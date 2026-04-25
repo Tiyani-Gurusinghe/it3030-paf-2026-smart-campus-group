@@ -94,117 +94,131 @@ function SignupPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card" style={{ maxWidth: '500px' }}>
-        <div className="login-logo">
-          <div className="login-logo-icon">🏛️</div>
-          <h1 className="login-title">Smart Campus</h1>
-          <p className="login-subtitle">Create a new account</p>
+    <div className="login-layout">
+      {/* Left side: Image banner */}
+      <div className="login-banner">
+        <img src="/home/it-lab-students.jpg" alt="Campus IT Lab" className="login-banner-image" />
+        <div className="login-banner-overlay" />
+        <div className="login-banner-content">
+          <Link to="/home" className="login-brand-link">
+            <span className="login-logo-icon">SC</span>
+            <div>
+              <h2>Smart Campus</h2>
+              <p>SLIIT Operations Hub</p>
+            </div>
+          </Link>
+          <div className="login-banner-text">
+            <h1>Join the Smart Campus network.</h1>
+            <p>Register your account to start managing bookings, tickets, and facilities.</p>
+          </div>
         </div>
+      </div>
 
-        {error && (
-          <div className="error-box">
-            <span>⚠️</span> {error}
+      {/* Right side: Signup form */}
+      <div className="login-form-container">
+        <div className="login-card-clean">
+          <div className="login-header-clean">
+            <h1 className="login-title-clean">Create Account</h1>
+            <p className="login-subtitle-clean">Sign up for your workspace</p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-field">
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="John Doe"
-              required
-              autoFocus
+          {error && (
+            <div className="error-box">
+              <span>Error</span> {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-field">
+              <label htmlFor="fullName">Full Name</label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="John Doe"
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="campusId">Campus ID</label>
+              <input
+                id="campusId"
+                name="campusId"
+                type="text"
+                value={formData.campusId}
+                onChange={handleChange}
+                placeholder="IT12345678"
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Min 6 chars, letters & numbers"
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn login-btn">
+              {loading ? "Creating Account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <div className="login-divider">
+            <span>OR</span>
+          </div>
+
+          <div className="google-login-container">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google Sign-In was unsuccessful. Try again later.")}
+              useOneTap
+              shape="rectangular"
+              theme="filled_black"
+              text="signup_with"
+              size="large"
             />
           </div>
 
-          <div className="form-field">
-            <label htmlFor="campusId">Campus ID</label>
-            <input
-              id="campusId"
-              name="campusId"
-              type="text"
-              value={formData.campusId}
-              onChange={handleChange}
-              placeholder="IT12345678"
-              required
-            />
+          <div className="login-signup-link">
+            Already have an account? <Link to="/login">Sign In here</Link>
           </div>
-
-          <div className="form-field">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Min 6 chars, letters & numbers"
-              required
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn login-btn"
-            style={{ marginTop: '10px' }}
-          >
-            {loading ? "⏳ Creating Account..." : "Sign Up →"}
-          </button>
-        </form>
-
-        <div style={{ textAlign: 'center', margin: '20px 0', color: '#666', fontSize: '14px' }}>
-            OR
-        </div>
-
-        <div className="google-login-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => {
-              setError("Google Sign-In was unsuccessful. Try again later.");
-            }}
-            useOneTap
-            shape="rectangular"
-            theme="filled_black"
-            text="signup_with"
-            size="large"
-          />
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
-            Already have an account? <Link to="/login" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>Sign In here</Link>
         </div>
       </div>
     </div>
