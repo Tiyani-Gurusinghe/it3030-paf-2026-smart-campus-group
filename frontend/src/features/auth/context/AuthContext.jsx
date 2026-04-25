@@ -58,6 +58,7 @@ function getStoredUser() {
   } catch {
     localStorage.removeItem("authUser");
     localStorage.removeItem("userId");
+    localStorage.removeItem("jwtToken");
     return null;
   }
 }
@@ -65,7 +66,7 @@ function getStoredUser() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser);
 
-  function login(userData) {
+  function login(userData, token) {
     const roles = extractRoles(userData);
     const normalizedUser = {
       id: userData.id,
@@ -75,6 +76,9 @@ export function AuthProvider({ children }) {
     };
     localStorage.setItem("authUser", JSON.stringify(normalizedUser));
     localStorage.setItem("userId", String(userData.id));
+    if (token) {
+        localStorage.setItem("jwtToken", token);
+    }
     setUser(normalizedUser);
     return normalizedUser;
   }
@@ -82,17 +86,21 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem("authUser");
     localStorage.removeItem("userId");
+    localStorage.removeItem("jwtToken");
     setUser(null);
   }
 
   const value = useMemo(
     () => {
-      const roleStr = user?.role?.toUpperCase() || "STUDENT";
+      const roleStr = getPrimaryRole(user?.roles || []);
       return {
         user,
+        roles: user?.roles || ["USER"],
+        primaryRole: roleStr,
         isAuthenticated: !!user,
         isAdmin: roleStr === "ADMIN",
         isStaff: !!user && roleStr !== "USER" && roleStr !== "STUDENT",
+        getLandingRoute: () => getLandingRoute(user?.roles || []),
         login,
         logout,
       };
