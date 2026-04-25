@@ -2,8 +2,8 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
+import SignupPage from "../pages/auth/SignupPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage"; // Added missing import
-import { AuthProvider } from "../features/auth/context/AuthContext"; // Import the Provider
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -31,20 +31,16 @@ import ProfilePage from "../pages/profile/ProfilePage";
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
   { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
 
   // --- PROTECTED ROUTES ---
   {
     path: "/",
     element: (
-      /* Wrapping AuthProvider here ensures all protected 
-         routes have access to 'isAuthenticated' 
-      */
-      <AuthProvider> 
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      </AuthProvider>
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
     ),
     children: [
       {
@@ -54,8 +50,22 @@ const router = createBrowserRouter([
       
       // --- RESOURCES (Your Hierarchy Work) ---
       { path: "resources", element: <ResourceListPage /> },
-      { path: "resources/new", element: <ResourceFormPage /> },
-      { path: "resources/edit/:id", element: <ResourceFormPage /> },
+      { 
+        path: "resources/new", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
+            <ResourceFormPage />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: "resources/edit/:id", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
+            <ResourceFormPage />
+          </ProtectedRoute>
+        ) 
+      },
       { path: "resources/:id", element: <ResourceDetailsPage /> },
 
       // --- BOOKINGS ---
