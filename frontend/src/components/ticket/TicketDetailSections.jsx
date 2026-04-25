@@ -58,7 +58,7 @@ export function CommentsSection({ ticketId, canCommentAsAdmin = false }) {
 
   return (
     <div className="details-section">
-      <div className="details-section-label">💬 Comments ({comments.length})</div>
+      <div className="details-section-label">Comments ({comments.length})</div>
 
       {comments.length === 0 && (
         <p style={{ color: "var(--text-muted)", fontStyle: "italic", fontSize: 14, marginBottom: 16 }}>
@@ -86,12 +86,12 @@ export function CommentsSection({ ticketId, canCommentAsAdmin = false }) {
                     <button
                       className="comment-action-btn"
                       onClick={() => { setEditingId(c.id); setEditContent(c.content); }}
-                    >✏️</button>
+                    >Edit</button>
                   )}
                   <button
                     className="comment-action-btn danger"
                     onClick={() => handleDelete(c.id)}
-                  >🗑️</button>
+                  >Delete</button>
                 </div>
               )}
             </div>
@@ -199,7 +199,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
 
   return (
     <div className="details-section">
-      <div className="details-section-label">📎 Attachments ({loading ? "…" : `${attachments.length}/3`})</div>
+      <div className="details-section-label">Attachments ({loading ? "..." : `${attachments.length}/3`})</div>
 
       {!loading && attachments.length > 0 ? (
         <div className="attachments-grid">
@@ -215,7 +215,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
                   className="attachment-delete-btn"
                   onClick={() => handleDelete(a)}
                   title="Remove"
-                >✕</button>
+                >Remove</button>
               )}
             </div>
           ))}
@@ -242,7 +242,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
             onClick={() => fileRef.current.click()}
             disabled={uploading}
           >
-            {uploading ? "Uploading..." : "📷 Add Image"}
+            {uploading ? "Uploading..." : "Add Image"}
           </button>
         </>
       )}
@@ -256,7 +256,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
               onClick={() => setLightboxIndex(null)}
               aria-label="Close attachment preview"
             >
-              ✕
+              Close
             </button>
             {hasMultipleAttachments && (
               <button

@@ -124,11 +124,11 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
 
   return (
     <div className="admin-panel">
-      <div className="admin-panel-title">🔧 Admin Controls</div>
+      <div className="admin-panel-title">Admin Controls</div>
 
       {error && (
         <div className="error-box" style={{ marginBottom: 16 }}>
-          <span>⚠️</span> {error}
+          <span>Error</span> {error}
         </div>
       )}
 
@@ -180,7 +180,7 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
           <label className="admin-panel-label">Close Ticket</label>
           <p className="admin-panel-hint">Ticket is resolved. Close it to complete the workflow.</p>
           <button className="btn" onClick={handleClose} disabled={saving}>
-            ✅ Close Ticket
+            Close Ticket
           </button>
         </div>
       )}
@@ -197,7 +197,7 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
               onClick={() => setShowRejectForm(true)}
               disabled={saving}
             >
-              ✕ Reject Ticket
+              Reject Ticket
             </button>
           ) : (
             <div>

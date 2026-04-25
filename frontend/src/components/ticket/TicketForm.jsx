@@ -7,9 +7,9 @@ const MAX_ATTACHMENTS = 3;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const CONTACT_REGEX = /^(\+?[0-9][0-9\s-]{6,18}|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
 const PRIORITY_DUE_INFO = {
-  HIGH: "High priority tickets are due in 1 day.",
-  MEDIUM: "Medium priority tickets are due in 5 days.",
-  LOW: "Low priority tickets are due in 14 days.",
+  HIGH: "High priority - Due in 1 day",
+  MEDIUM: "Medium priority - Due in 5 days",
+  LOW: "Low priority - Due in 14 days",
 };
 
 const defaultForm = {
@@ -202,13 +202,13 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
   return (
     <form className="ticket-form card" onSubmit={handleSubmit}>
       <div className="form-header">
-        <h2>🎫 {initialData ? "Edit Ticket" : "Create New Ticket"}</h2>
+        <h2>{initialData ? "Edit Ticket" : "Create New Ticket"}</h2>
         <p>Submit a maintenance or incident report for the campus.</p>
       </div>
 
       {error && (
         <div className="error-box">
-          <span>⚠️</span> {error}
+          <span>Error</span> {error}
         </div>
       )}
 
@@ -280,12 +280,12 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         <div className="form-field">
           <label htmlFor="priority">Priority *</label>
           <select id="priority" name="priority" value={form.priority} onChange={handleChange}>
-            <option value="LOW">🟢 Low</option>
-            <option value="MEDIUM">🟡 Medium</option>
-            <option value="HIGH">🔴 High</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
           </select>
           <p className="field-hint">
-            {PRIORITY_DUE_INFO[form.priority]} Choose the urgency based on how quickly campus operations are affected.
+            {PRIORITY_DUE_INFO[form.priority]}
           </p>
           <div className="priority-due-guide" aria-label="Priority due date guide">
             <span>High: 1 day</span>
@@ -357,7 +357,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
 
       <div className="form-actions">
         <button type="submit" className="btn" disabled={saving}>
-          {saving ? "⏳ Saving..." : submitText}
+          {saving ? "Saving..." : submitText}
         </button>
       </div>
     </form>

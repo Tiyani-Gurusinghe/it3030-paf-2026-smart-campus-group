@@ -31,8 +31,8 @@ export default function AdminTicketDetailPage() {
   if (error) {
     return (
       <div className="page">
-        <div className="error-box"><span>⚠️</span> {error}</div>
-        <Link to="/admin/tickets" className="btn secondary" style={{ marginTop: 12 }}>← Back</Link>
+        <div className="error-box"><span>Error</span> {error}</div>
+        <Link to="/admin/tickets" className="btn secondary" style={{ marginTop: 12 }}>Back</Link>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function AdminTicketDetailPage() {
             <h1 className="details-title">{ticket.title}</h1>
             {ticket.resourceName && (
               <p className="details-location">
-                📦 {ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}
+                {ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}
               </p>
             )}
           </div>
@@ -133,7 +133,7 @@ export default function AdminTicketDetailPage() {
         {ticket.resolutionNotes && (
           <>
             <div className="details-section">
-              <div className="details-section-label">✅ Resolution Notes</div>
+              <div className="details-section-label">Resolution Notes</div>
               <p>{ticket.resolutionNotes}</p>
             </div>
             <hr className="details-section-divider" />
@@ -144,7 +144,7 @@ export default function AdminTicketDetailPage() {
         {ticket.rejectedReason && (
           <>
             <div className="details-section">
-              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>✕ Rejection Reason</div>
+              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>Rejection Reason</div>
               <p>{ticket.rejectedReason}</p>
             </div>
             <hr className="details-section-divider" />
@@ -169,7 +169,7 @@ export default function AdminTicketDetailPage() {
 
         {/* Back */}
         <div className="card-actions">
-          <Link to="/admin/tickets" className="btn secondary">← Back to All Tickets</Link>
+          <Link to="/admin/tickets" className="btn secondary">Back to All Tickets</Link>
         </div>
       </div>
     </div>

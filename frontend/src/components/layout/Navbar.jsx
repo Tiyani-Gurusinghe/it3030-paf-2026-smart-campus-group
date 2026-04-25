@@ -1,12 +1,15 @@
+import { useNavigate } from "react-router-dom";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
 
 function Navbar() {
   const { user, logout, primaryRole } = useAuthContext();
+  const navigate = useNavigate();
   
   const handleLogout = () => {
     logout();
-    navigate("/login", { replace: true });
+    // Use window.location to force full page reload to homepage
+    window.location.href = "/";
   };
 
   const initials = user?.fullName

@@ -59,7 +59,7 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
   if (isTerminal) {
     return (
       <div className="resolution-panel">
-        <div className="resolution-panel-title">📝 Resolution Notes</div>
+        <div className="resolution-panel-title">Resolution Notes</div>
         <p className="resolution-notes-text">
           {ticket.resolutionNotes || (
             <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
@@ -73,11 +73,11 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
 
   return (
     <div className="resolution-panel">
-      <div className="resolution-panel-title">🔧 Work Panel</div>
+      <div className="resolution-panel-title">Work Panel</div>
 
       {error && (
         <div className="error-box" style={{ marginBottom: 12 }}>
-          <span>⚠️</span> {error}
+          <span>Error</span> {error}
         </div>
       )}
 
@@ -85,7 +85,7 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
         <div className="resolution-action-row">
           <p className="admin-panel-hint">Claim this ticket and start working on it.</p>
           <button className="btn" onClick={handleStartWork} disabled={saving}>
-            ▶ Start Work
+            Start Work
           </button>
         </div>
       )}
@@ -107,14 +107,14 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
               onClick={handleSaveNotes}
               disabled={saving || !notes.trim()}
             >
-              💾 Save Notes
+              Save Notes
             </button>
             <button
               className="btn"
               onClick={handleMarkResolved}
               disabled={saving}
             >
-              ✅ Mark Resolved
+              Mark Resolved
             </button>
           </div>
         </>

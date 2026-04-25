@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
@@ -28,6 +28,7 @@ function hasDisplayValue(value) {
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
 
@@ -40,8 +41,8 @@ export default function TicketDetailsPage() {
   if (error) {
     return (
       <div className="page">
-        <div className="error-box"><span>⚠️</span> {error}</div>
-        <Link to="/tickets/my" className="btn secondary" style={{ marginTop: 12 }}>← Back</Link>
+        <div className="error-box"><span>Error</span> {error}</div>
+        <Link to="/tickets/my" className="btn secondary" style={{ marginTop: 12 }}>Back</Link>
       </div>
     );
   }
@@ -62,6 +63,9 @@ export default function TicketDetailsPage() {
 
   return (
     <div className="page">
+      <button onClick={() => navigate("/tickets/my")} className="btn-back">
+        ← Back
+      </button>
       <div className="card details-card">
 
         {/* Header */}
@@ -69,14 +73,14 @@ export default function TicketDetailsPage() {
           <div>
             <h1 className="details-title">{ticket.title}</h1>
             {ticket.resourceName && (
-              <p className="details-location">📦 {ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}</p>
+              <p className="details-location">{ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}</p>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <StatusBadge status={ticket.status} />
             {ticket.commentCount > 0 && (
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                💬 {ticket.commentCount} comment{ticket.commentCount !== 1 ? "s" : ""}
+                {ticket.commentCount} comment{ticket.commentCount !== 1 ? "s" : ""}
               </span>
             )}
           </div>
@@ -112,7 +116,7 @@ export default function TicketDetailsPage() {
             </div>
           )}
           <div className={`detail-item ${overdue ? "overdue-item" : ""}`}>
-            <div className="detail-item-label">Due At {overdue && "⚠️"}</div>
+            <div className="detail-item-label">Due At {overdue && "(overdue)"}</div>
             <div className="detail-item-value" style={overdue ? { color: "var(--color-danger)" } : {}}>
               {formatDate(ticket.dueAt)}
             </div>
@@ -148,7 +152,7 @@ export default function TicketDetailsPage() {
         {ticket.resolutionNotes && (
           <>
             <div className="details-section">
-              <div className="details-section-label">✅ Resolution Notes</div>
+              <div className="details-section-label">Resolution Notes</div>
               <p>{ticket.resolutionNotes}</p>
               {ticket.resolvedAt && (
                 <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
@@ -164,7 +168,7 @@ export default function TicketDetailsPage() {
         {ticket.rejectedReason && (
           <>
             <div className="details-section">
-              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>✕ Rejection Reason</div>
+              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>Rejection Reason</div>
               <p>{ticket.rejectedReason}</p>
             </div>
             <hr className="details-section-divider" />
@@ -181,7 +185,7 @@ export default function TicketDetailsPage() {
 
         {/* Actions */}
         <div className="card-actions">
-          <Link to="/tickets/my" className="btn secondary">← Back to My Tickets</Link>
+          <Link to="/tickets/my" className="btn secondary">Back to My Tickets</Link>
         </div>
       </div>
     </div>

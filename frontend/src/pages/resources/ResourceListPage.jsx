@@ -207,13 +207,13 @@ const canManage = isStaff;
                     className={`btn ${activeTab === 'infrastructure' ? 'primary' : 'secondary'}`} 
                     onClick={() => setActiveTab('infrastructure')}
                     style={{ flex: 1, padding: '12px', fontSize: '16px' }}>
-                    🏢 Infrastructure (Buildings & Spaces)
+                    Infrastructure (Buildings and Spaces)
                 </button>
                 <button 
                     className={`btn ${activeTab === 'inventory' ? 'primary' : 'secondary'}`} 
                     onClick={() => setActiveTab('inventory')}
                     style={{ flex: 1, padding: '12px', fontSize: '16px' }}>
-                    📦 Inventory (Standalone Assets)
+                    Inventory (Standalone Assets)
                 </button>
             </div>
 
@@ -257,24 +257,24 @@ const canManage = isStaff;
                  if (!currentSpace) return null;
                  return (
                      <div className="card space-detail-view" style={{ padding: '32px' }}>
-                         <button onClick={() => setSelectedSpaceId(null)} className="btn secondary" style={{ marginBottom: '24px' }}>← Back to Layouts</button>
+                         <button onClick={() => setSelectedSpaceId(null)} className="btn secondary" style={{ marginBottom: '24px' }}>Back to Layouts</button>
                          <h2 style={{ fontSize: '28px', color: 'var(--text-primary)', marginBottom: '8px' }}>{currentSpace.name} Dashboard</h2>
                          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginTop: '12px' }}>
                             <span style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '16px' }}>
-                                🏢 Block: <strong>{currentSpace.parentResource ? currentSpace.parentResource.name : 'N/A'}</strong>
+                                Block: <strong>{currentSpace.parentResource ? currentSpace.parentResource.name : 'N/A'}</strong>
                             </span>
                             <span style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '16px' }}>
-                                🪜 Floor: <strong>{currentSpace.floor || 'N/A'}</strong>
+                                Floor: <strong>{currentSpace.floor || 'N/A'}</strong>
                             </span>
                             <span style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '16px' }}>
-                                📌 Location: <strong>{currentSpace.location || 'N/A'}</strong>
+                                Location: <strong>{currentSpace.location || 'N/A'}</strong>
                             </span>
                             <span style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '16px' }}>
-                                👥 Capacity: <strong>{currentSpace.capacity || 'N/A'}</strong>
+                                Capacity: <strong>{currentSpace.capacity || 'N/A'}</strong>
                             </span>
                             {currentSpace.configType !== 'NONE' && (
                                 <span style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '16px' }}>
-                                    ⚙️ <strong>{currentSpace.configType}</strong> Setup
+                                    <strong>{currentSpace.configType}</strong> Setup
                                 </span>
                             )}
                          </p>
@@ -286,7 +286,7 @@ const canManage = isStaff;
                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                                  {currentSpace.subResources.map(asset => (
                                      <div key={asset.id} style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', background: 'var(--bg-secondary)' }}>
-                                        <div style={{ fontSize: '24px', marginBottom: '8px' }}>{asset.category === 'EQUIPMENT' ? '📦' : '⚡'}</div>
+                                        <div style={{ fontSize: '12px', marginBottom: '8px', color: 'var(--text-secondary)', fontWeight: 700 }}>{asset.category === 'EQUIPMENT' ? 'EQUIPMENT' : 'UTILITY'}</div>
                                         <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)' }}>{asset.name}</h4>
                                         <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{asset.type.replace('_', ' ')}</span>
                                         {asset.capacity && <div style={{ fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>Qty Count: {asset.capacity}</div>}
@@ -300,7 +300,7 @@ const canManage = isStaff;
                  );
             })() : displayedResources.length === 0 && (!selectedBuildingId || (selectedBuildingId && !selectedFaculty && faculties.length === 0)) ? (
                 <div className="empty-state card">
-                    <div className="empty-state-icon">🏢</div>
+                    <div className="empty-state-icon">No resources</div>
                     <h3>No resources found</h3>
                     <p>Try adjusting your search filters or add a new resource.</p>
                 </div>
@@ -314,7 +314,7 @@ const canManage = isStaff;
                                 onClick={() => setSelectedFaculty(fac)} 
                                 onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--primary-color)'} 
                                 onMouseOut={(e) => e.currentTarget.style.borderColor = 'transparent'}>
-                                <div style={{ fontSize: '36px', marginBottom: '16px' }}>🎓</div>
+                                <div style={{ fontSize: '12px', marginBottom: '16px', color: 'var(--text-secondary)', fontWeight: 700 }}>FACULTY</div>
                                 <h3 className="card-title" style={{ textAlign: 'center', margin: 0, fontSize: '18px' }}>{fac.replace('_', ' ')} FACULTY</h3>
                                 <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', textAlign: 'center' }}>Click to view academic spaces & assets</div>
                             </div>
@@ -354,7 +354,7 @@ const canManage = isStaff;
                             )}
                             {resource.configType && resource.configType !== 'NONE' && (
                                 <div style={{ fontSize: '12px', background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px', display: 'inline-block', marginBottom: '10px' }}>
-                                    {resource.configType === 'FIXED' ? '🔒 Fixed Setup' : '⚙️ Flexible Setup'}
+                                    {resource.configType === 'FIXED' ? 'Fixed Setup' : 'Flexible Setup'}
                                 </div>
                             )}
                             
