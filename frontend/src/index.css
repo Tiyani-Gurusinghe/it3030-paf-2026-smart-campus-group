@@ -874,7 +874,7 @@ button:disabled {
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--sliit-orange);
   margin-bottom: 16px;
   margin-top: 28px;
 }
@@ -930,13 +930,12 @@ input,
 textarea,
 select {
   width: 100%;
-  padding: 13px 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
-    var(--bg-elevated);
+  padding: 14px 16px;
+  background: var(--bg-surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
   font-family: inherit;
   color: var(--text-primary);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -946,19 +945,20 @@ select {
 input::placeholder,
 textarea::placeholder {
   color: var(--text-muted);
+  font-weight: 400;
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-muted);
+  border-color: var(--sliit-orange);
+  box-shadow: 0 0 0 3px rgba(255, 147, 0, 0.15);
 }
 
 input:hover,
 textarea:hover,
 select:hover {
-  border-color: var(--border-strong);
+  border-color: var(--sliit-orange);
 }
 
 textarea {
@@ -969,7 +969,7 @@ textarea {
 select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2331418c' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ff9300' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 36px;
@@ -977,12 +977,12 @@ select {
 }
 
 select:hover {
-  border-color: var(--accent);
+  border-color: var(--sliit-orange);
 }
 
 select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-muted);
+  border-color: var(--sliit-orange);
+  box-shadow: 0 0 0 3px rgba(255, 147, 0, 0.15);
 }
 
 select option {

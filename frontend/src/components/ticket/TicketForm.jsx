@@ -284,7 +284,12 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
             <option value="MEDIUM">Medium</option>
             <option value="HIGH">High</option>
           </select>
-          <p className="field-hint">
+          <p className="field-hint" style={{
+            color: form.priority === "HIGH" ? "var(--priority-high)" :
+                   form.priority === "MEDIUM" ? "var(--priority-medium)" :
+                   "var(--priority-low)",
+            fontWeight: "600"
+          }}>
             {PRIORITY_DUE_INFO[form.priority]}
           </p>
           <div className="priority-due-guide" aria-label="Priority due date guide">

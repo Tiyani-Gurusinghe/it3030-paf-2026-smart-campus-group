@@ -72,7 +72,7 @@ function NotificationPanelPage() {
                 background: notification.read ? "transparent" : "var(--bg-hover)",
               }}
             >
-              <span className="notification-icon">NT</span>
+              <span className="notification-icon"><img src="/notification.png" alt="" className="notification-bell-icon" /></span>
               <div className="notification-body">
                 <p className="notification-message">{notification.message}</p>
                 <span className="notification-time">
