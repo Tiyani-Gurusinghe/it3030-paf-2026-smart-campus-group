@@ -19,8 +19,8 @@ const TECHNICIAN_NAV = [
 ];
 
 const ADMIN_NAV = [
-  { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
   { to: "/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
   { to: "/resources", icon: "🏢", label: "Facilities" },
   { to: "/bookings", icon: "📅", label: "Bookings" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
