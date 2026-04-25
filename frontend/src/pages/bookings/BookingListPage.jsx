@@ -217,14 +217,12 @@ const BookingListPage = () => {
             ) : (
                 <div className="ticket-grid">
                     {bookings.map(booking => (
-                        <div key={booking.id} className="card ticket-card" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div className="card-header">
+                        <div key={booking.id} className="card ticket-card booking-card">
+                            <div className="booking-card-header">
                                 <span className={`status-badge status-${getStatusClass(booking.status)}`}>
                                     {getStatusLabel(booking.status)}
                                 </span>
-                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                                    #{booking.id}
-                                </span>
+                                <span className="booking-card-id">#{booking.id}</span>
                             </div>
 
                             <h3 className="card-title">{booking.resourceName}</h3>

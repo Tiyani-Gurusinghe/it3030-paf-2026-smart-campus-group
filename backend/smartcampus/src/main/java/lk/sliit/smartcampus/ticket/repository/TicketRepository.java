@@ -55,4 +55,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByAssignedToIsNullOrderByCreatedAtDesc();
 
     List<Ticket> findByDueAtBeforeAndStatusInOrderByDueAtAsc(LocalDateTime time, List<TicketStatus> statuses);
+
+    long countByStatus(TicketStatus status);
+
+    long countByAssignedToIsNull();
+
+    long countByDueAtBeforeAndStatusIn(LocalDateTime time, List<TicketStatus> statuses);
+
+    List<Ticket> findTop5ByOrderByCreatedAtDesc();
 }

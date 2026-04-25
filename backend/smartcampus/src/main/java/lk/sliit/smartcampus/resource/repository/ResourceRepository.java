@@ -12,6 +12,7 @@ import java.util.List;
 
 import lk.sliit.smartcampus.resource.enums.ResourceCategory;
 import lk.sliit.smartcampus.resource.enums.FacultyType;
+import lk.sliit.smartcampus.resource.enums.ResourceStatus;
 
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
@@ -40,4 +41,6 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     @Query("SELECT COUNT(r) > 0 FROM Resource r WHERE r.name = :name AND r.category = :category AND r.type = :type AND LOWER(r.location) = LOWER(:location)")
     boolean existsByExactMatch(@Param("name") String name, @Param("category") ResourceCategory category, @Param("type") ResourceType type, @Param("location") String location);
+
+    long countByStatus(ResourceStatus status);
 }
