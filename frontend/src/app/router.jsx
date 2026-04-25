@@ -8,7 +8,9 @@ import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
 // Resources
-import DashboardPage from "../pages/dashboard/DashboardPage";
+import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
+import TechnicianDashboardPage from "../pages/dashboard/TechnicianDashboardPage";
+import UserDashboardPage from "../pages/dashboard/UserDashboardPage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
 import ResourceFormPage from "../pages/resources/ResourceFormPage";
 import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
@@ -55,9 +57,19 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <UserDashboardPage />,
       },
-      { path: "dashboard", element: <DashboardPage /> },
+      { path: "admin/dashboard", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminDashboardPage />
+        </ProtectedRoute>
+      )},
+      { path: "technician/dashboard", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianDashboardPage />
+        </ProtectedRoute>
+      )},
+      { path: "user/dashboard", element: <UserDashboardPage /> },
 
       // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },

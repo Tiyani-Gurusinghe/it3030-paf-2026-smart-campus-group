@@ -13,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByCampusId(String campusId);
+    boolean existsByEmailIgnoreCase(String email);
+    boolean existsByCampusId(String campusId);
 
     @EntityGraph(attributePaths = {"userRoles", "userRoles.role"})
     Optional<User> findByEmailIgnoreCase(String email);

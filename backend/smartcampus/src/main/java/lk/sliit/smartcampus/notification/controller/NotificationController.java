@@ -55,6 +55,8 @@ public class NotificationController {
                 request.getReferenceId()
         );
         return ResponseEntity.ok(notification);
+    }
+
     @GetMapping("/preferences")
     public ResponseEntity<List<NotificationPreferenceResponse>> getPreferences(
             @RequestHeader("X-User-Id") Long currentUserId,
