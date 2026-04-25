@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.resource.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -43,4 +44,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     boolean existsByExactMatch(@Param("name") String name, @Param("category") ResourceCategory category, @Param("type") ResourceType type, @Param("location") String location);
 
     long countByStatus(ResourceStatus status);
+
+    @Modifying
+    @Query("UPDATE Resource r SET r.parentResource = NULL WHERE r.parentResource.id = :parentId")
+    void detachChildren(@Param("parentId") Long parentId);
 }

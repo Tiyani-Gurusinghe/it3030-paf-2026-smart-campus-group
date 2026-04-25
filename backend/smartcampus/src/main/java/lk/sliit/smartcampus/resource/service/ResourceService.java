@@ -2,13 +2,19 @@ package lk.sliit.smartcampus.resource.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import lk.sliit.smartcampus.booking.repository.BookingRepository;
+import lk.sliit.smartcampus.notification.repository.NotificationRepository;
 import lk.sliit.smartcampus.resource.entity.Resource;
 import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.resource.enums.ResourceCategory;
 import lk.sliit.smartcampus.resource.enums.FacultyType;
 import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.ticket.entity.Ticket;
+import lk.sliit.smartcampus.ticket.repository.TicketHistoryRepository;
+import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 //import lk.sliit.smartcampus.resource.enums.ResourceStatus;
 
 import java.util.List;
@@ -18,6 +24,18 @@ public class ResourceService {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private TicketRepository ticketRepository;
+
+    @Autowired
+    private TicketHistoryRepository ticketHistoryRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public Resource createResource(Resource resource) {
         if (resourceRepository.existsByExactMatch(resource.getName(), resource.getCategory(), resource.getType(), resource.getLocation())) {
@@ -97,8 +115,22 @@ public class ResourceService {
         return resourceRepository.save(existingResource);
     }
 
+    @Transactional
     public void deleteResource(Long id) {
         Resource existingResource = getResourceById(id);
+
+        List<Long> ticketIds = ticketRepository.findByResourceId(id).stream()
+                .map(Ticket::getId)
+                .toList();
+
+        if (!ticketIds.isEmpty()) {
+            notificationRepository.deleteByTicketIdIn(ticketIds);
+            ticketHistoryRepository.deleteByTicketIdIn(ticketIds);
+            ticketRepository.deleteByResourceId(id);
+        }
+
+        bookingRepository.deleteByResourceId(id);
+        resourceRepository.detachChildren(id);
         resourceRepository.delete(existingResource);
     }
 }
