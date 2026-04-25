@@ -17,6 +17,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByResourceId(Long resourceId);
 
+    long countByStatus(BookingStatus status);
+
+    List<Booking> findTop5ByOrderByCreatedAtDesc();
+
     // Check for overlapping bookings for a specific resource
     // An overlap occurs if a booking exists with a start time before the new end time 
     // AND an end time after the new start time, AND the status is not REJECTED or CANCELLED.
