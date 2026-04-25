@@ -3,7 +3,6 @@ import { createBrowserRouter } from "react-router-dom";
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
-import { AuthProvider } from "../features/auth/context/AuthContext";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -45,11 +44,9 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <AuthProvider>
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      </AuthProvider>
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
     ),
     children: [
       {
