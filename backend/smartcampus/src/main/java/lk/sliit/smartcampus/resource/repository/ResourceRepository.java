@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.resource.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import lk.sliit.smartcampus.resource.enums.ResourceCategory;
 import lk.sliit.smartcampus.resource.enums.FacultyType;
+import lk.sliit.smartcampus.resource.enums.ResourceStatus;
 
 @Repository
 public interface ResourceRepository extends JpaRepository<Resource, Long> {
@@ -40,4 +42,10 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
 
     @Query("SELECT COUNT(r) > 0 FROM Resource r WHERE r.name = :name AND r.category = :category AND r.type = :type AND LOWER(r.location) = LOWER(:location)")
     boolean existsByExactMatch(@Param("name") String name, @Param("category") ResourceCategory category, @Param("type") ResourceType type, @Param("location") String location);
+
+    long countByStatus(ResourceStatus status);
+
+    @Modifying
+    @Query("UPDATE Resource r SET r.parentResource = NULL WHERE r.parentResource.id = :parentId")
+    void detachChildren(@Param("parentId") Long parentId);
 }
