@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getNotifications, getUnreadCount, markAllRead } from "../../api/notification/notificationApi";
 import { Link } from "react-router-dom";
+import useAuth from "../../features/auth/hooks/useAuth";
 
 const TYPE_ICONS = {
   TICKET_STATUS_CHANGED: "🔄",
@@ -19,10 +20,18 @@ function timeAgo(dateStr) {
 }
 
 export default function NotificationPanel() {
+  const { isAdmin, isTechnician } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef();
+
+  function getTicketPath(referenceId) {
+    if (!referenceId) return "/notifications";
+    if (isAdmin) return `/admin/tickets/${referenceId}`;
+    if (isTechnician) return `/technician/tickets/${referenceId}`;
+    return `/tickets/${referenceId}`;
+  }
 
   const refreshUnreadCount = async () => {
     const count = await getUnreadCount();
@@ -88,7 +97,7 @@ export default function NotificationPanel() {
               notifications.map((n) => (
                 <Link
                   key={n.id}
-                  to={n.referenceId ? `/tickets/${n.referenceId}` : "/notifications"}
+                  to={getTicketPath(n.referenceId)}
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => setOpen(false)}
                 >

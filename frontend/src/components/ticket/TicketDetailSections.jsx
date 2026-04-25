@@ -175,7 +175,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
     if (!window.confirm("Remove this attachment?")) return;
     try {
       await deleteAttachment(ticketId, attachmentId);
-      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+      setAttachments((prev) => prev.filter((a) => a !== attachmentId));
     } catch (err) {
       alert(err.message || "Failed to delete attachment");
     }
@@ -188,16 +188,16 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
       {!loading && attachments.length > 0 ? (
         <div className="attachments-grid">
           {attachments.map((a) => (
-            <div key={a.id} className="attachment-thumb">
+            <div key={a} className="attachment-thumb">
               <img
-                src={a.fileUrl}
+                src={a}
                 alt="Attachment"
-                onClick={() => setLightbox(a.fileUrl)}
+                onClick={() => setLightbox(a)}
               />
               {canUpload && (
                 <button
                   className="attachment-delete-btn"
-                  onClick={() => handleDelete(a.id)}
+                  onClick={() => handleDelete(a)}
                   title="Remove"
                 >✕</button>
               )}

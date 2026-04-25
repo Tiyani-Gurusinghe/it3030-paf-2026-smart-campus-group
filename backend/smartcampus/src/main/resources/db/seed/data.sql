@@ -1,4 +1,4 @@
-USE smart_campus_ops;
+USE smartcampusdb;
 
 -- Roles
 INSERT INTO roles (name) VALUES

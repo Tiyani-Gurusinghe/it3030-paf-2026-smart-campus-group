@@ -3,60 +3,69 @@ package lk.sliit.smartcampus.ticket.service;
 import lk.sliit.smartcampus.common.enums.RoleType;
 import lk.sliit.smartcampus.exception.BadRequestException;
 import lk.sliit.smartcampus.exception.ResourceNotFoundException;
+import lk.sliit.smartcampus.resource.enums.ResourceType;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
-import lk.sliit.smartcampus.ticket.entity.TicketResourceType;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 import lk.sliit.smartcampus.ticket.repository.ResourceTypeSkillRepository;
 import lk.sliit.smartcampus.ticket.repository.TechnicianSkillRepository;
-import lk.sliit.smartcampus.ticket.repository.TicketAttachmentRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class TicketValidationService {
+    private static final int MAX_FILES = 3;
+    private static final long MAX_FILE_BYTES = 5L * 1024L * 1024L;
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+    );
 
     private final TicketRepository ticketRepository;
-    private final TicketAttachmentRepository ticketAttachmentRepository;
     private final TechnicianSkillRepository technicianSkillRepository;
     private final ResourceTypeSkillRepository resourceTypeSkillRepository;
     private final JdbcTemplate jdbcTemplate;
 
-    public TicketValidationService(TicketRepository ticketRepository,
-                                   TicketAttachmentRepository ticketAttachmentRepository,
-                                   TechnicianSkillRepository technicianSkillRepository,
-                                   ResourceTypeSkillRepository resourceTypeSkillRepository,
-                                   JdbcTemplate jdbcTemplate) {
+    public TicketValidationService(
+            TicketRepository ticketRepository,
+            TechnicianSkillRepository technicianSkillRepository,
+            ResourceTypeSkillRepository resourceTypeSkillRepository,
+            JdbcTemplate jdbcTemplate) {
         this.ticketRepository = ticketRepository;
-        this.ticketAttachmentRepository = ticketAttachmentRepository;
         this.technicianSkillRepository = technicianSkillRepository;
         this.resourceTypeSkillRepository = resourceTypeSkillRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public void validateCreateRequest(TicketRequest request) {
-        validateTitleAndDescription(request.getTitle(), request.getDescription());
+        validateText(request);
         validateResourceExistsAndActive(request.getResourceId());
-        validateSkillAllowedForResourceType(request.getResourceId(), request.getRequiredSkillId());
+        validateSkillAllowedForResourceType(
+                request.getResourceId(),
+                request.getRequiredSkillId()
+        );
     }
 
-    public void validateTitleAndDescription(String title, String description) {
-        if (title == null || title.isBlank()) {
+    private void validateText(TicketRequest request) {
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new BadRequestException("Title is required");
         }
-        if (title.length() > 120) {
-            throw new BadRequestException("Title must be at most 120 characters");
-        }
-        if (description == null || description.isBlank()) {
+
+        if (request.getDescription() == null || request.getDescription().isBlank()) {
             throw new BadRequestException("Description is required");
         }
-        if (description.length() > 2000) {
-            throw new BadRequestException("Description must be at most 2000 characters");
+
+        if (request.getDescription().length() > 1000) {
+            throw new BadRequestException("Description max length is 1000");
         }
     }
 
@@ -68,7 +77,7 @@ public class TicketValidationService {
 
     public void validateResourceExistsAndActive(Long resourceId) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT id, status FROM resources WHERE id = ?",
+                "SELECT id,status FROM resources WHERE id=?",
                 resourceId
         );
 
@@ -77,6 +86,7 @@ public class TicketValidationService {
         }
 
         String status = String.valueOf(rows.get(0).get("status"));
+
         if (!"ACTIVE".equalsIgnoreCase(status)) {
             throw new BadRequestException("Selected resource is not active");
         }
@@ -84,7 +94,7 @@ public class TicketValidationService {
 
     public void validateSkillAllowedForResourceType(Long resourceId, Long skillId) {
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT resource_type FROM resources WHERE id = ?",
+                "SELECT resource_type FROM resources WHERE id=?",
                 resourceId
         );
 
@@ -92,52 +102,68 @@ public class TicketValidationService {
             throw new ResourceNotFoundException("Resource not found: " + resourceId);
         }
 
-        String resourceTypeValue = String.valueOf(rows.get(0).get("resource_type"));
+        String type = String.valueOf(rows.get(0).get("resource_type"));
 
-        TicketResourceType resourceType;
-        try {
-            resourceType = TicketResourceType.valueOf(resourceTypeValue);
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid resource type found in database: " + resourceTypeValue);
-        }
+        ResourceType resourceType = ResourceType.valueOf(type);
 
-        boolean allowed = resourceTypeSkillRepository.existsByResourceTypeAndSkillId(resourceType, skillId);
+        boolean allowed =
+                resourceTypeSkillRepository.existsByResourceTypeAndSkillId(
+                        resourceType,
+                        skillId
+                );
+
         if (!allowed) {
-            throw new BadRequestException("Selected skill is not allowed for this resource type");
+            throw new BadRequestException(
+                    "Selected skill is not allowed for this resource type"
+            );
         }
     }
 
     public void validateTechnicianHasSkill(Long technicianId, Long skillId) {
-        boolean hasSkill = technicianSkillRepository.existsByUserIdAndSkillId(technicianId, skillId);
+        boolean hasSkill =
+                technicianSkillRepository.existsByUserIdAndSkillId(
+                        technicianId,
+                        skillId
+                );
+
         if (!hasSkill) {
-            throw new BadRequestException("Assigned technician does not have the required skill");
+            throw new BadRequestException(
+                    "Assigned technician does not have the required skill"
+            );
         }
     }
 
-    public void validateAttachmentUpload(Long ticketId, List<MultipartFile> files) {
-        validateTicketExists(ticketId);
-
+    public void validateFiles(List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
-            throw new BadRequestException("No files provided");
+            return;
         }
 
-        long existing = ticketAttachmentRepository.countByTicketId(ticketId);
-        if (existing + files.size() > 3) {
-            throw new BadRequestException("A ticket can have at most 3 attachments");
+        if (files.size() > MAX_FILES) {
+            throw new BadRequestException("Maximum 3 files allowed");
         }
 
         for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) {
-                continue;
+            if (file.isEmpty()) continue;
+
+            String type = file.getContentType() == null
+                    ? ""
+                    : file.getContentType().toLowerCase(Locale.ROOT).trim();
+
+            if (!ALLOWED_IMAGE_TYPES.contains(type)) {
+                throw new BadRequestException("Only JPEG, PNG, GIF, or WEBP images are allowed");
             }
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                throw new BadRequestException("Only image files are allowed. Got: " + contentType);
+
+            if (file.getSize() > MAX_FILE_BYTES) {
+                throw new BadRequestException("Each file must be 5MB or smaller");
             }
         }
     }
 
-    public void validateStatusTransition(Ticket ticket, TicketStatus newStatus, RoleType roleType) {
+    public void validateStatusTransition(
+            Ticket ticket,
+            TicketStatus newStatus,
+            RoleType roleType
+    ) {
         TicketStatus current = ticket.getStatus();
 
         if (current == newStatus) {
@@ -148,35 +174,35 @@ public class TicketValidationService {
             case OPEN -> validateFromOpen(newStatus, roleType);
             case IN_PROGRESS -> validateFromInProgress(newStatus, roleType);
             case RESOLVED -> validateFromResolved(newStatus, roleType);
-            case CLOSED, REJECTED -> throw new BadRequestException("Closed or rejected tickets cannot be changed");
-            default -> throw new BadRequestException("Invalid current ticket status");
+            case CLOSED, REJECTED ->
+                    throw new BadRequestException("Closed/rejected ticket cannot change");
         }
     }
 
-    private void validateFromOpen(TicketStatus newStatus, RoleType roleType) {
-        if (newStatus == TicketStatus.IN_PROGRESS && (roleType == RoleType.ADMIN || roleType == RoleType.TECHNICIAN)) {
-            return;
-        }
-        if (newStatus == TicketStatus.REJECTED && roleType == RoleType.ADMIN) {
-            return;
-        }
+    private void validateFromOpen(TicketStatus next, RoleType role) {
+        if (next == TicketStatus.IN_PROGRESS &&
+                (role == RoleType.ADMIN || role == RoleType.TECHNICIAN)) return;
+
+        if (next == TicketStatus.REJECTED &&
+                role == RoleType.ADMIN) return;
+
         throw new BadRequestException("Invalid status transition from OPEN");
     }
 
-    private void validateFromInProgress(TicketStatus newStatus, RoleType roleType) {
-        if (newStatus == TicketStatus.RESOLVED && (roleType == RoleType.ADMIN || roleType == RoleType.TECHNICIAN)) {
-            return;
-        }
-        if (newStatus == TicketStatus.REJECTED && roleType == RoleType.ADMIN) {
-            return;
-        }
+    private void validateFromInProgress(TicketStatus next, RoleType role) {
+        if (next == TicketStatus.RESOLVED &&
+                (role == RoleType.ADMIN || role == RoleType.TECHNICIAN)) return;
+
+        if (next == TicketStatus.REJECTED &&
+                role == RoleType.ADMIN) return;
+
         throw new BadRequestException("Invalid status transition from IN_PROGRESS");
     }
 
-    private void validateFromResolved(TicketStatus newStatus, RoleType roleType) {
-        if (newStatus == TicketStatus.CLOSED && roleType == RoleType.ADMIN) {
-            return;
-        }
+    private void validateFromResolved(TicketStatus next, RoleType role) {
+        if (next == TicketStatus.CLOSED &&
+                role == RoleType.ADMIN) return;
+
         throw new BadRequestException("Invalid status transition from RESOLVED");
     }
 }

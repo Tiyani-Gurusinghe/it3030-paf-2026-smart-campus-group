@@ -6,7 +6,6 @@ import useAuth from "../../features/auth/hooks/useAuth";
 
 const STATUS_OPTIONS = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED", "REJECTED"];
 const PRIORITY_OPTIONS = ["LOW", "MEDIUM", "HIGH"];
-const CATEGORY_OPTIONS = ["ELECTRICAL", "NETWORK", "PROJECTOR", "FURNITURE", "CLEANING", "OTHER"];
 
 function SkeletonCards() {
   return (
@@ -22,7 +21,7 @@ export default function TicketsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [myTickets, setMyTickets] = useState(false);
-  const [filters, setFilters] = useState({ status: "", priority: "", category: "" });
+  const [filters, setFilters] = useState({ status: "", priority: "" });
 
   useEffect(() => {
     async function loadTickets() {
@@ -32,7 +31,6 @@ export default function TicketsPage() {
         const activeFilters = {
           ...(filters.status ? { status: filters.status } : {}),
           ...(filters.priority ? { priority: filters.priority } : {}),
-          ...(filters.category ? { category: filters.category } : {}),
           ...(myTickets && user?.id ? { reportedBy: user.id } : {}),
         };
         const data = await getTickets(activeFilters);
@@ -63,11 +61,11 @@ export default function TicketsPage() {
   }
 
   function clearFilters() {
-    setFilters({ status: "", priority: "", category: "" });
+    setFilters({ status: "", priority: "" });
     setMyTickets(false);
   }
 
-  const hasActiveFilters = filters.status || filters.priority || filters.category || myTickets;
+  const hasActiveFilters = filters.status || filters.priority || myTickets;
 
   return (
     <div className="page">
@@ -105,14 +103,6 @@ export default function TicketsPage() {
             {PRIORITY_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
 
-          <select
-            className="filter-select"
-            value={filters.category}
-            onChange={(e) => handleFilterChange("category", e.target.value)}
-          >
-            <option value="">All Categories</option>
-            {CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
         </div>
 
         <div className="filter-actions">
@@ -132,7 +122,13 @@ export default function TicketsPage() {
 
       {error && <div className="error-box"><span>⚠️</span> {error}</div>}
       {loading && <SkeletonCards />}
-      {!loading && !error && <TicketList tickets={tickets} onDelete={handleDelete} />}
+      {!loading && !error && (
+        <TicketList
+          tickets={tickets}
+          onDelete={handleDelete}
+          emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
+        />
+      )}
     </div>
   );
 }

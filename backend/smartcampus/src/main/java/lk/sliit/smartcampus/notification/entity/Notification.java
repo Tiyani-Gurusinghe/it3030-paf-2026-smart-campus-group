@@ -14,17 +14,20 @@ public class Notification {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "ticket_id")
+    private Long ticketId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private NotificationType type;
 
+    @Column(nullable = false, length = 150)
+    private String title;
+
     @Column(nullable = false, length = 500)
     private String message;
 
-    @Column(name = "reference_id")
-    private Long referenceId;
-
-    @Column(name = "is_read")
+    @Column(name = "is_read", nullable = false)
     private Boolean read;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -43,14 +46,17 @@ public class Notification {
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
+    public Long getTicketId() { return ticketId; }
+    public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+
     public NotificationType getType() { return type; }
     public void setType(NotificationType type) { this.type = type; }
 
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
-
-    public Long getReferenceId() { return referenceId; }
-    public void setReferenceId(Long referenceId) { this.referenceId = referenceId; }
 
     public boolean isRead() { return read; }
     public void setRead(boolean read) { this.read = read; }
