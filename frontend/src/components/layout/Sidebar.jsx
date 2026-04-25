@@ -48,14 +48,13 @@ function Sidebar() {
       </div>
       <div className="sidebar-section-label">Menu</div>
       <nav>
-        {navItems.map(({ to, icon, label }) => (
+        {navItems.map(({ to, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === "/"}
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            <span className="sidebar-icon">{icon}</span>
             {label}
           </NavLink>
         ))}

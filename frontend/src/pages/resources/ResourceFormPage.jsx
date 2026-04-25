@@ -546,7 +546,7 @@ const ResourceFormPage = () => {
                                         checked={formData.configType === 'FIXED'} 
                                         onChange={handleChange} 
                                     />
-                                    🔒 Fixed (Ready-to-use, cannot attach extra assets)
+                                    Fixed (Ready-to-use, cannot attach extra assets)
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'normal' }}>
                                     <input 
@@ -556,7 +556,7 @@ const ResourceFormPage = () => {
                                         checked={formData.configType === 'FLEXIBLE'} 
                                         onChange={handleChange} 
                                     />
-                                    ⚙️ Flexible (Supports assigning additional inventory)
+                                    Flexible (Supports assigning additional inventory)
                                 </label>
                             </div>
                             

@@ -55,7 +55,7 @@ function NotificationPanelPage() {
         )}
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
 
       {loading ? (
         <div className="skeleton-grid">
@@ -81,7 +81,7 @@ function NotificationPanelPage() {
                 background: notification.read ? "transparent" : "var(--bg-hover)",
               }}
             >
-              <span className="notification-icon">{TYPE_ICONS[notification.type] ?? "📢"}</span>
+              <span className="notification-icon"><img src="/notification.png" alt="" className="notification-bell-icon" /></span>
               <div className="notification-body">
                 <p className="notification-title" style={{ fontWeight: 600, color: "var(--text-main)", marginBottom: 4 }}>{notification.title}</p>
                 <p className="notification-message">{notification.message}</p>

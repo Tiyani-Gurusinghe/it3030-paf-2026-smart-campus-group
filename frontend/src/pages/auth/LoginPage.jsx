@@ -80,7 +80,7 @@ function LoginPage() {
 
         <div className="login-header">
           <div className="login-logo">
-            <div className="login-logo-icon">🏛️</div>
+            <div className="login-logo-icon">SC</div>
             <h1 className="login-title">Smart Campus</h1>
             <p className="login-subtitle">Sign in to continue to your SLIIT workspace</p>
           </div>
@@ -89,7 +89,7 @@ function LoginPage() {
 
         {error && (
           <div className="error-box">
-            <span>⚠️</span> {error}
+            <span>Error</span> {error}
           </div>
         )}
 
@@ -126,7 +126,7 @@ function LoginPage() {
             disabled={loading}
             className="btn login-btn"
           >
-            {loading ? "⏳ Signing in..." : "Sign In →"}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
 

@@ -6,6 +6,7 @@ import SignupPage from "../pages/auth/SignupPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
+import HomePage from "../pages/home/HomePage";
 
 // Resources
 import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
@@ -41,6 +42,7 @@ import RouteErrorPage from "../pages/common/RouteErrorPage";
 
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
+  { path: "/", element: <HomePage />, errorElement: <RouteErrorPage /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteErrorPage /> },
   { path: "/signup", element: <SignupPage />, errorElement: <RouteErrorPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage />, errorElement: <RouteErrorPage /> },

@@ -210,7 +210,7 @@ const BookingListPage = () => {
 
             {bookings.length === 0 ? (
                 <div className="empty-state card">
-                    <div className="empty-state-icon">📅</div>
+                    <div className="empty-state-icon">No bookings</div>
                     <h3>No bookings found</h3>
                     <p>You haven't made any resource reservations yet.</p>
                 </div>

@@ -49,6 +49,9 @@ public class Ticket {
     @Column(name = "due_at")
     private LocalDateTime dueAt;
 
+    @Column(name = "original_due_at")
+    private LocalDateTime originalDueAt;
+
     @Column(name = "first_responded_at")
     private LocalDateTime firstRespondedAt;
 
@@ -57,6 +60,15 @@ public class Ticket {
 
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
+
+    @Column(name = "due_extended_at")
+    private LocalDateTime dueExtendedAt;
+
+    @Column(name = "due_extended_by")
+    private Long dueExtendedBy;
+
+    @Column(name = "due_extension_note", columnDefinition = "TEXT")
+    private String dueExtensionNote;
 
     @Column(name = "resolution_notes", columnDefinition = "TEXT")
     private String resolutionNotes;
@@ -146,6 +158,10 @@ public class Ticket {
         return dueAt;
     }
 
+    public LocalDateTime getOriginalDueAt() {
+        return originalDueAt;
+    }
+
     public LocalDateTime getFirstRespondedAt() {
         return firstRespondedAt;
     }
@@ -156,6 +172,18 @@ public class Ticket {
 
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public LocalDateTime getDueExtendedAt() {
+        return dueExtendedAt;
+    }
+
+    public Long getDueExtendedBy() {
+        return dueExtendedBy;
+    }
+
+    public String getDueExtensionNote() {
+        return dueExtensionNote;
     }
 
     public String getResolutionNotes() {
@@ -230,6 +258,10 @@ public class Ticket {
         this.dueAt = dueAt;
     }
 
+    public void setOriginalDueAt(LocalDateTime originalDueAt) {
+        this.originalDueAt = originalDueAt;
+    }
+
     public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
         this.firstRespondedAt = firstRespondedAt;
     }
@@ -240,6 +272,18 @@ public class Ticket {
 
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public void setDueExtendedAt(LocalDateTime dueExtendedAt) {
+        this.dueExtendedAt = dueExtendedAt;
+    }
+
+    public void setDueExtendedBy(Long dueExtendedBy) {
+        this.dueExtendedBy = dueExtendedBy;
+    }
+
+    public void setDueExtensionNote(String dueExtensionNote) {
+        this.dueExtensionNote = dueExtensionNote;
     }
 
     public void setResolutionNotes(String resolutionNotes) {
