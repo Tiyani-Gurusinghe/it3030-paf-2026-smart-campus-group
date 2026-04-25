@@ -17,6 +17,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByResourceId(Long resourceId);
 
+    void deleteByResourceId(Long resourceId);
+
     long countByStatus(BookingStatus status);
 
     List<Booking> findTop5ByOrderByCreatedAtDesc();
