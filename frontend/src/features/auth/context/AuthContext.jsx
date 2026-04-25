@@ -39,9 +39,9 @@ export function getPrimaryRole(roles = []) {
 
 export function getLandingRoute(roles = []) {
   const primary = getPrimaryRole(roles);
-  if (primary === "ADMIN") return "/admin/tickets";
-  if (primary === "TECHNICIAN") return "/technician/tickets";
-  return "/tickets/my";
+  if (primary === "ADMIN") return "/admin/dashboard";
+  if (primary === "TECHNICIAN") return "/technician/dashboard";
+  return "/user/dashboard";
 }
 
 function getStoredUser() {
