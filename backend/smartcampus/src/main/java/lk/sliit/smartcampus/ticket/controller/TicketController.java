@@ -3,9 +3,11 @@ package lk.sliit.smartcampus.ticket.controller;
 import jakarta.validation.Valid;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketDueDateUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -92,6 +94,22 @@ public class TicketController {
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketStatusUpdateRequest request) {
         return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
+    }
+
+    @PatchMapping("/{id}/resolution")
+    public ResponseEntity<TicketResponse> updateTicketResolution(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketResolutionUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.updateResolutionNotes(id, request, currentUserId));
+    }
+
+    @PatchMapping("/{id}/due-date")
+    public ResponseEntity<TicketResponse> updateTicketDueDate(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketDueDateUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.extendDueDate(id, request, currentUserId));
     }
 
     @DeleteMapping("/{id}")

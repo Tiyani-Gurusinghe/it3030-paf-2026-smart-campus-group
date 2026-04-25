@@ -17,7 +17,7 @@ function isDueOverdue(dueAt) {
 
 export default function TicketCard({ ticket, linkBase = "/tickets" }) {
   const priority = PRIORITY_LEVEL[ticket.priority] ?? "medium";
-  const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
 
   return (
     <div className="card ticket-card" title={ticket.title}>
@@ -52,26 +52,31 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
           <strong>Assigned To</strong>
           {ticket.assignedToName ? (
             <span className="assignee-badge">
-              🧑‍🔧 {ticket.assignedToName}
+              {ticket.assignedToName}
             </span>
           ) : (
             <span className="unassigned-badge">
-              ⚠️ Unassigned
+              Unassigned
             </span>
           )}
         </div>
         {ticket.dueAt && (
           <div className={`ticket-meta-item ${overdue ? "text-danger" : ""}`}>
             <strong>Due</strong>
-            {overdue && <span className="due-alert">⚠️ </span>}
+            {overdue && <span className="due-alert">Overdue: </span>}
             {formatDate(ticket.dueAt)}
+            {ticket.dueExtendedAt && (
+              <span className="assignee-badge" style={{ marginLeft: 6 }}>
+                Extended
+              </span>
+            )}
           </div>
         )}
       </div>
 
       <div className="card-actions">
         <Link to={`${linkBase}/${ticket.id}`} className="btn secondary">
-          View →
+          View
         </Link>
       </div>
     </div>

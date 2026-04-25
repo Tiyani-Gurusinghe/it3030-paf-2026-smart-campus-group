@@ -14,8 +14,10 @@ import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketDueDateUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
@@ -283,7 +285,9 @@ public class TicketService {
         ticket.setPreferredContact(request.getPreferredContact());
         ticket.setReportedBy(currentUserId);
         ticket.setStatus(TicketStatus.OPEN);
-        ticket.setDueAt(calculateDueDate(request.getPriority()));
+        LocalDateTime dueAt = calculateDueDate(request.getPriority());
+        ticket.setDueAt(dueAt);
+        ticket.setOriginalDueAt(dueAt);
         ticket.setAttachmentUrls("[]");
 
         Long assignedTechnicianId = findLeastBusyTechnician(request.getRequiredSkillId());
@@ -421,6 +425,68 @@ public class TicketService {
         return updateStatus(ticketId, statusRequest, currentUserId);
     }
 
+    @Transactional
+    public TicketResponse updateResolutionNotes(Long ticketId,
+                                                TicketResolutionUpdateRequest request,
+                                                Long currentUserId) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User currentUser = findUserByIdOrThrow(currentUserId);
+
+        boolean isAdmin = currentUser.hasRole(RoleType.ADMIN);
+        boolean isAssignedTechnician = currentUser.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUser.getId());
+
+        if (!isAdmin && !isAssignedTechnician) {
+            throw new UnauthorizedException("Only assigned technician or admin can update resolution notes");
+        }
+
+        if (ticket.getStatus() == TicketStatus.CLOSED || ticket.getStatus() == TicketStatus.REJECTED) {
+            throw new BadRequestException("Resolution notes cannot be updated for CLOSED or REJECTED tickets");
+        }
+
+        ticket.setResolutionNotes(request.getResolutionNotes().trim());
+        return toResponse(ticketRepository.save(ticket));
+    }
+
+    @Transactional
+    public TicketResponse extendDueDate(Long ticketId,
+                                        TicketDueDateUpdateRequest request,
+                                        Long currentUserId) {
+        Ticket ticket = findByIdOrThrow(ticketId);
+        User currentUser = findUserByIdOrThrow(currentUserId);
+
+        boolean isAdmin = currentUser.hasRole(RoleType.ADMIN);
+        boolean isAssignedTechnician = currentUser.hasRole(RoleType.TECHNICIAN)
+                && ticket.getAssignedTo() != null
+                && ticket.getAssignedTo().equals(currentUser.getId());
+
+        if (!isAdmin && !isAssignedTechnician) {
+            throw new UnauthorizedException("Only admin or assigned technician can extend the due date");
+        }
+
+        if (ticket.getStatus() == TicketStatus.RESOLVED
+                || ticket.getStatus() == TicketStatus.CLOSED
+                || ticket.getStatus() == TicketStatus.REJECTED) {
+            throw new BadRequestException("Due date can only be extended for OPEN or IN_PROGRESS tickets");
+        }
+
+        LocalDateTime currentDueAt = ticket.getDueAt();
+        if (currentDueAt != null && !request.getDueAt().isAfter(currentDueAt)) {
+            throw new BadRequestException("New due date must be later than the current due date");
+        }
+
+        if (ticket.getOriginalDueAt() == null) {
+            ticket.setOriginalDueAt(currentDueAt);
+        }
+        ticket.setDueAt(request.getDueAt());
+        ticket.setDueExtendedAt(LocalDateTime.now());
+        ticket.setDueExtendedBy(currentUserId);
+        ticket.setDueExtensionNote(request.getNote().trim());
+
+        return toResponse(ticketRepository.save(ticket));
+    }
+
     public void deleteTicket(Long id, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(id);
         validateTicketModificationPermission(ticket, currentUserId);
@@ -437,6 +503,8 @@ public class TicketService {
         boolean isAssignedTechnician = currentUser.hasRole(RoleType.TECHNICIAN)
                 && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUser.getId());
+        boolean isReporter = ticket.getReportedBy() != null
+                && ticket.getReportedBy().equals(currentUser.getId());
 
         if (next == null) {
             throw new BadRequestException("Status is required");
@@ -453,16 +521,16 @@ public class TicketService {
             return;
         }
 
-        if (current == TicketStatus.IN_PROGRESS && next == TicketStatus.RESOLVED) {
-            if (!isAdmin && !isAssignedTechnician) {
-                throw new UnauthorizedException("Only assigned technician or admin can move IN_PROGRESS to RESOLVED");
+        if ((current == TicketStatus.OPEN || current == TicketStatus.IN_PROGRESS) && next == TicketStatus.RESOLVED) {
+            if (!isAdmin && !isAssignedTechnician && !isReporter) {
+                throw new UnauthorizedException("Only reporter, assigned technician, or admin can resolve this ticket");
             }
             return;
         }
 
         if (current == TicketStatus.RESOLVED && next == TicketStatus.CLOSED) {
-            if (!isAdmin) {
-                throw new UnauthorizedException("Only admin can move RESOLVED to CLOSED");
+            if (!isAdmin && !isReporter) {
+                throw new UnauthorizedException("Only reporter or admin can close a resolved ticket");
             }
             return;
         }
@@ -503,9 +571,9 @@ public class TicketService {
     private LocalDateTime calculateDueDate(TicketPriority priority) {
         LocalDateTime now = LocalDateTime.now();
         return switch (priority) {
-            case HIGH -> now.plusHours(4);
-            case MEDIUM -> now.plusDays(1);
-            case LOW -> now.plusDays(3);
+            case HIGH -> now.plusDays(1);
+            case MEDIUM -> now.plusDays(5);
+            case LOW -> now.plusDays(14);
         };
     }
 
@@ -552,9 +620,14 @@ public class TicketService {
         r.setCreatedAt(ticket.getCreatedAt());
         r.setUpdatedAt(ticket.getUpdatedAt());
         r.setDueAt(ticket.getDueAt());
+        r.setOriginalDueAt(ticket.getOriginalDueAt());
         r.setFirstRespondedAt(ticket.getFirstRespondedAt());
         r.setResolvedAt(ticket.getResolvedAt());
         r.setClosedAt(ticket.getClosedAt());
+        r.setDueExtendedAt(ticket.getDueExtendedAt());
+        r.setDueExtendedBy(ticket.getDueExtendedBy());
+        r.setDueExtendedByName(resolveUserName(ticket.getDueExtendedBy()));
+        r.setDueExtensionNote(ticket.getDueExtensionNote());
         r.setResolutionNotes(ticket.getResolutionNotes());
         r.setRejectedReason(ticket.getRejectedReason());
         r.setTimeToFirstResponseMinutes(calculateMinutes(ticket.getCreatedAt(), ticket.getFirstRespondedAt()));
