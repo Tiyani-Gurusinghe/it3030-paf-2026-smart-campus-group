@@ -208,6 +208,7 @@ public class TicketService {
             notificationService.createNotification(
                     currentUserId,
                     NotificationType.TICKET_ASSIGNED,
+                    "Ticket Assigned",
                     "Your ticket \"" + saved.getTitle() + "\" has been assigned automatically.",
                     saved.getId()
             );
@@ -327,6 +328,7 @@ public class TicketService {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.TICKET_STATUS_CHANGED,
+                    "Ticket Status Changed",
                     "Ticket \"" + ticket.getTitle() + "\" changed to " + nextStatus,
                     ticketId
             );

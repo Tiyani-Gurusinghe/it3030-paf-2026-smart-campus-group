@@ -64,6 +64,9 @@ public class Ticket {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "attachment_urls", columnDefinition = "json")
+    private String attachmentUrls;
+
     public Ticket() {
     }
 
@@ -225,5 +228,13 @@ public class Ticket {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getAttachmentUrls() {
+        return attachmentUrls;
+    }
+
+    public void setAttachmentUrls(String attachmentUrls) {
+        this.attachmentUrls = attachmentUrls;
     }
 }

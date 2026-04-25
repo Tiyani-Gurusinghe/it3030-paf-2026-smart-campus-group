@@ -72,6 +72,7 @@ public class TicketCommentService {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.NEW_COMMENT,
+                    "New Comment",
                     author.getFullName() + " commented on your ticket: \"" + ticket.getTitle() + "\"",
                     ticketId
             );
