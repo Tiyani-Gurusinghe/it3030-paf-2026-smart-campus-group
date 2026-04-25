@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
+import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
+import UserTicketActions from "../../components/ticket/UserTicketActions";
 import {
   CommentsSection,
   AttachmentsSection,
@@ -54,7 +56,7 @@ export default function TicketDetailsPage() {
     );
   }
 
-  const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
   const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
   const hasPreferredContact = hasDisplayValue(ticket.preferredContactDetails);
 
@@ -121,6 +123,10 @@ export default function TicketDetailsPage() {
           </div>
         </div>
 
+        <TicketSlaPanel ticket={ticket} />
+
+        <hr className="details-section-divider" />
+
         {/* Description */}
         <div className="details-section">
           <div className="details-section-label">Description</div>
@@ -128,6 +134,15 @@ export default function TicketDetailsPage() {
         </div>
 
         <hr className="details-section-divider" />
+
+        <UserTicketActions
+          ticket={ticket}
+          onUpdated={(updated) => setTicket(updated)}
+        />
+
+        {["OPEN", "IN_PROGRESS", "RESOLVED"].includes(ticket.status) && (
+          <hr className="details-section-divider" />
+        )}
 
         {/* Resolution Notes (read-only for user) */}
         {ticket.resolutionNotes && (

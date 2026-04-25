@@ -5,6 +5,7 @@ import {
   closeTicket,
   getAssignableTechnicians,
 } from "../../api/ticket/ticketApi";
+import TicketDueDateExtensionPanel from "./TicketDueDateExtensionPanel";
 
 export default function TicketAssignmentPanel({ ticket, onUpdated }) {
   const [assignTo, setAssignTo] = useState(ticket.assignedTo ? String(ticket.assignedTo) : "");
@@ -183,6 +184,8 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
           </button>
         </div>
       )}
+
+      <TicketDueDateExtensionPanel ticket={ticket} onUpdated={onUpdated} />
 
       {/* Reject */}
       {!isRejectedOrClosed && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { updateTicketStatus, updateTicketResolution } from "../../api/ticket/ticketApi";
+import TicketDueDateExtensionPanel from "./TicketDueDateExtensionPanel";
 
 export default function TicketResolutionEditor({ ticket, onUpdated }) {
   const [notes, setNotes] = useState(ticket.resolutionNotes ?? "");
@@ -118,6 +119,8 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
           </div>
         </>
       )}
+
+      <TicketDueDateExtensionPanel ticket={ticket} onUpdated={onUpdated} />
     </div>
   );
 }

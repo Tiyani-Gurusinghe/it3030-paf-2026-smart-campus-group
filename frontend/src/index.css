@@ -629,6 +629,28 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+.field-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.priority-due-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.priority-due-guide span {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 8px;
+}
+
 label {
   display: block;
   font-size: 13px;
@@ -1137,18 +1159,95 @@ select option {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
-  z-index: 999;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
   cursor: zoom-out;
 }
 
-.lightbox-img {
-  max-width: 90vw;
-  max-height: 90vh;
+.lightbox-frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(1100px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
+  cursor: default;
+  overflow: hidden;
+}
+
+.lightbox-img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 48px);
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  line-height: 1;
+  padding: 0 0 4px;
+}
+
+.lightbox-nav-prev {
+  left: 12px;
+}
+
+.lightbox-nav-next {
+  right: 12px;
+}
+
+.lightbox-count {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
 }
 
 /* ==============================

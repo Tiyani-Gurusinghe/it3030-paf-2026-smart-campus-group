@@ -142,8 +142,10 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [lightbox, setLightbox] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   const fileRef = useRef();
+  const lightboxImage = lightboxIndex == null ? null : attachments[lightboxIndex];
+  const hasMultipleAttachments = attachments.length > 1;
 
   useEffect(() => {
     getAttachments(ticketId)
@@ -181,6 +183,20 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
     }
   }
 
+  function showPreviousAttachment() {
+    setLightboxIndex((current) => {
+      if (current == null) return current;
+      return current === 0 ? attachments.length - 1 : current - 1;
+    });
+  }
+
+  function showNextAttachment() {
+    setLightboxIndex((current) => {
+      if (current == null) return current;
+      return current === attachments.length - 1 ? 0 : current + 1;
+    });
+  }
+
   return (
     <div className="details-section">
       <div className="details-section-label">📎 Attachments ({loading ? "…" : `${attachments.length}/3`})</div>
@@ -192,7 +208,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
               <img
                 src={a}
                 alt="Attachment"
-                onClick={() => setLightbox(a)}
+                onClick={() => setLightboxIndex(attachments.indexOf(a))}
               />
               {canUpload && (
                 <button
@@ -231,9 +247,44 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
         </>
       )}
 
-      {lightbox && (
-        <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
-          <img src={lightbox} alt="Full size" className="lightbox-img" />
+      {lightboxImage && (
+        <div className="lightbox-overlay" onClick={() => setLightboxIndex(null)}>
+          <div className="lightbox-frame" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="lightbox-close"
+              onClick={() => setLightboxIndex(null)}
+              aria-label="Close attachment preview"
+            >
+              ✕
+            </button>
+            {hasMultipleAttachments && (
+              <button
+                type="button"
+                className="lightbox-nav lightbox-nav-prev"
+                onClick={showPreviousAttachment}
+                aria-label="Previous attachment"
+              >
+                ‹
+              </button>
+            )}
+            <img src={lightboxImage} alt="Attachment preview" className="lightbox-img" />
+            {hasMultipleAttachments && (
+              <button
+                type="button"
+                className="lightbox-nav lightbox-nav-next"
+                onClick={showNextAttachment}
+                aria-label="Next attachment"
+              >
+                ›
+              </button>
+            )}
+            {hasMultipleAttachments && (
+              <div className="lightbox-count">
+                {lightboxIndex + 1} / {attachments.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

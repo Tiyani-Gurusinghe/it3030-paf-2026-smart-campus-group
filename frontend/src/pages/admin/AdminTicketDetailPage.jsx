@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketAssignmentPanel from "../../components/ticket/TicketAssignmentPanel";
+import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import {
   CommentsSection,
   AttachmentsSection,
@@ -115,6 +116,10 @@ export default function AdminTicketDetailPage() {
             </div>
           )}
         </div>
+
+        <TicketSlaPanel ticket={ticket} />
+
+        <hr className="details-section-divider" />
 
         {/* Description */}
         <div className="details-section">

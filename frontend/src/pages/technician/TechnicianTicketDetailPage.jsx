@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketResolutionEditor from "../../components/ticket/TicketResolutionEditor";
+import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import {
   CommentsSection,
   AttachmentsSection,
@@ -85,6 +86,10 @@ export default function TechnicianTicketDetailPage() {
             <div className="detail-item-value">{formatDate(ticket.dueAt)}</div>
           </div>
         </div>
+
+        <TicketSlaPanel ticket={ticket} />
+
+        <hr className="details-section-divider" />
 
         {/* Description */}
         <div className="details-section">

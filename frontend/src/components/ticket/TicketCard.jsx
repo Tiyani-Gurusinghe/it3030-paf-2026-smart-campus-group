@@ -17,7 +17,7 @@ function isDueOverdue(dueAt) {
 
 export default function TicketCard({ ticket, linkBase = "/tickets" }) {
   const priority = PRIORITY_LEVEL[ticket.priority] ?? "medium";
-  const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
 
   return (
     <div className="card ticket-card" title={ticket.title}>
@@ -65,6 +65,11 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
             <strong>Due</strong>
             {overdue && <span className="due-alert">⚠️ </span>}
             {formatDate(ticket.dueAt)}
+            {ticket.dueExtendedAt && (
+              <span className="assignee-badge" style={{ marginLeft: 6 }}>
+                Extended
+              </span>
+            )}
           </div>
         )}
       </div>

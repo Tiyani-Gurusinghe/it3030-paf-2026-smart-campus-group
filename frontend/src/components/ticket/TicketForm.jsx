@@ -6,6 +6,11 @@ import { getSkillsForResource } from "../../api/ticket/ticketApi";
 const MAX_ATTACHMENTS = 3;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const CONTACT_REGEX = /^(\+?[0-9][0-9\s-]{6,18}|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
+const PRIORITY_DUE_INFO = {
+  HIGH: "High priority tickets are due in 1 day.",
+  MEDIUM: "Medium priority tickets are due in 5 days.",
+  LOW: "Low priority tickets are due in 14 days.",
+};
 
 const defaultForm = {
   resourceId: "",
@@ -279,6 +284,14 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
             <option value="MEDIUM">🟡 Medium</option>
             <option value="HIGH">🔴 High</option>
           </select>
+          <p className="field-hint">
+            {PRIORITY_DUE_INFO[form.priority]} Choose the urgency based on how quickly campus operations are affected.
+          </p>
+          <div className="priority-due-guide" aria-label="Priority due date guide">
+            <span>High: 1 day</span>
+            <span>Medium: 5 days</span>
+            <span>Low: 14 days</span>
+          </div>
         </div>
 
         <div className="form-field">
