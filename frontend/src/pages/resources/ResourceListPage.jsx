@@ -170,7 +170,12 @@ const canManage = isStaff;
             setShowDeleteModal(false);
             setResourceToDelete(null);
         } catch (err) {
-            setError("Failed to delete the resource. Please try again.");
+            const message =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                err.message ||
+                "Failed to delete the resource. Please try again.";
+            setError(message);
             console.error(err);
         }
     };

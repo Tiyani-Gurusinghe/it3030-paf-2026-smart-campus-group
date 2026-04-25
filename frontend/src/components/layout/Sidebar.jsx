@@ -39,6 +39,11 @@ function Sidebar() {
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-campus-card">
+        <span className="sidebar-campus-kicker">Sri Lanka Institute</span>
+        <strong>Campus Control</strong>
+        <span>{primaryRole.toLowerCase()} workspace</span>
+      </div>
       <div className="sidebar-section-label">Menu</div>
       <nav>
         {navItems.map(({ to, icon, label }) => (
