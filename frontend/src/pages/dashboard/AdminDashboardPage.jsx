@@ -22,7 +22,7 @@ const getStatusClass = (status) => {
   return "open";
 };
 
-function DashboardPage() {
+function AdminDashboardPage() {
   const { user, isAdmin } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(isAdmin);
@@ -83,23 +83,7 @@ function DashboardPage() {
     ];
   }, [summary]);
 
-  if (!isAdmin) {
-    return (
-      <div className="page">
-        <div className="dashboard-hero">
-          <div>
-            <span className="dashboard-kicker">Sri Lanka Institute of Information Technology</span>
-            <h1>Campus Dashboard</h1>
-            <p>
-              Welcome{user?.fullName ? `, ${user.fullName}` : ""}. Use the navigation to manage
-              your tickets, bookings, notifications, and campus resources.
-            </p>
-          </div>
-          <div className="dashboard-mark">SC</div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="page">
@@ -264,4 +248,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+export default AdminDashboardPage;

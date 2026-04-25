@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "../../features/auth/api/authApi";
 import useAuth from "../../features/auth/hooks/useAuth";
 import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
@@ -16,18 +17,39 @@ const TEST_EMAILS = [
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
-  const [email, setEmail] = useState("user@test.com");
+  const { login, isAuthenticated, getLandingRoute, user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await authApi.googleLogin(credentialResponse.credential);
+      const normalized = login(response.user, response.token);
+      const destination = computeLandingRoute(normalized.roles);
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data ||
+          err.message ||
+          "Google Login failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const userData = await authApi.login({ email });
-      const normalized = login(userData);
+      const response = await authApi.login({ email, password });
+      const normalized = login(response.user, response.token);
       const destination = computeLandingRoute(normalized.roles);
       navigate(destination, { replace: true });
     } catch (err) {
@@ -47,68 +69,109 @@ function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-page-glow" aria-hidden="true" />
-      <div className="login-card">
-        <div className="login-card-accent" aria-hidden="true" />
-
-        <div className="login-header">
-          <div className="login-logo">
-            <div className="login-logo-icon">SC</div>
-            <h1 className="login-title">Smart Campus</h1>
-            <p className="login-subtitle">Sign in to continue to your SLIIT workspace</p>
+    <div className="login-layout">
+      {/* Left side: Image banner matching home page */}
+      <div className="login-banner">
+        <img src="/home/library-collaboration.jpg" alt="Campus Learning Space" className="login-banner-image" />
+        <div className="login-banner-overlay" />
+        <div className="login-banner-content">
+          <Link to="/home" className="login-brand-link">
+            <span className="login-logo-icon">SC</span>
+            <div>
+              <h2>Smart Campus</h2>
+              <p>SLIIT Operations Hub</p>
+            </div>
+          </Link>
+          <div className="login-banner-text">
+            <h1>Manage your campus spaces.</h1>
+            <p>Access facilities, report issues, and book resources through a unified portal.</p>
           </div>
-          <div className="login-context-chip">SLIIT Portal</div>
         </div>
+      </div>
 
-        {error && (
-          <div className="error-box">
-            <span>Error</span> {error}
+      {/* Right side: Login form */}
+      <div className="login-form-container">
+        <div className="login-card-clean">
+          <div className="login-header-clean">
+            <h1 className="login-title-clean">Sign In</h1>
+            <p className="login-subtitle-clean">Continue to your workspace</p>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-field">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-              autoFocus
+          {error && (
+            <div className="error-box">
+              <span>Error</span> {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-field">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+                autoFocus
+              />
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="btn login-btn">
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <div className="login-divider">
+            <span>OR</span>
+          </div>
+
+          <div className="google-login-container">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError("Google Sign-In was unsuccessful. Try again later.")}
+              useOneTap
+              shape="rectangular"
+              theme="filled_black"
+              text="signin_with"
+              size="large"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn login-btn"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
+          <div className="login-signup-link">
+            Don't have an account? <Link to="/signup">Sign Up here</Link>
+          </div>
 
-        <div className="login-hints">
-          <p className="login-hints-label">Quick login (dev mode)</p>
-          <div className="login-hints-list">
-            {TEST_EMAILS.map(({ email: e, role, hint }) => (
-              <button
-                key={e}
-                className={`login-hint-btn ${email === e ? "selected" : ""}`}
-                onClick={() => setEmail(e)}
-                type="button"
-                title={hint}
-              >
-                <span className={`role-badge role-badge-${role.toLowerCase()}`}>{role}</span>
-                <span className="login-hint-meta">
-                  <span className="login-hint-email">{e}</span>
+          <div className="login-hints-clean">
+            <p>Quick login (dev mode)</p>
+            <div className="login-hints-grid">
+              {TEST_EMAILS.map(({ email: e, role, hint }) => (
+                <button
+                  key={e}
+                  className={`login-hint-btn-clean ${email === e ? "selected" : ""}`}
+                  onClick={() => setEmail(e)}
+                  type="button"
+                  title={hint}
+                >
+                  <span className={`role-badge role-badge-${role.toLowerCase()}`}>{role}</span>
                   <span className="login-hint-name">{hint}</span>
-                </span>
-              </button>
-            ))}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
