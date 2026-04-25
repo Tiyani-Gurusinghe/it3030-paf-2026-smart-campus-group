@@ -1251,8 +1251,29 @@ select option {
 }
 
 /* ==============================
-   BACK BUTTON
+   BACK BUTTON & FORM LAYOUT
    ============================== */
+
+.form-layout-wrapper {
+  max-width: 920px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.btn-back-floating {
+  position: absolute;
+  left: -80px;
+  top: 0;
+  margin-bottom: 0;
+}
+
+@media (max-width: 1120px) {
+  .btn-back-floating {
+    position: relative;
+    left: 0;
+    margin-bottom: 20px;
+  }
+}
 
 .btn-back {
   display: inline-flex;
