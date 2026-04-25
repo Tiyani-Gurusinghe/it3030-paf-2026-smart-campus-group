@@ -6,10 +6,18 @@ async function parseError(res) {
   throw new Error(data?.message || "Request failed");
 }
 
+function getHeaders() {
+  const token = localStorage.getItem("jwtToken");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+}
+
 export async function getNotifications() {
   const userId = localStorage.getItem("userId");
   if (!userId) return [];
-  const res = await fetch(`${BASE_URL}?userId=${userId}`);
+  const res = await fetch(`${BASE_URL}?userId=${userId}`, { headers: getHeaders() });
   if (!res.ok) await parseError(res);
   return res.json();
 }
@@ -17,7 +25,7 @@ export async function getNotifications() {
 export async function getUnreadCount() {
   const userId = localStorage.getItem("userId");
   if (!userId) return 0;
-  const res = await fetch(`${BASE_URL}/unread-count?userId=${userId}`);
+  const res = await fetch(`${BASE_URL}/unread-count?userId=${userId}`, { headers: getHeaders() });
   if (!res.ok) return 0;
   const data = await res.json();
   return data.unreadCount ?? 0;
@@ -26,5 +34,5 @@ export async function getUnreadCount() {
 export async function markAllRead() {
   const userId = localStorage.getItem("userId");
   if (!userId) return;
-  await fetch(`${BASE_URL}/mark-read?userId=${userId}`, { method: "PATCH" });
+  await fetch(`${BASE_URL}/mark-read?userId=${userId}`, { method: "PATCH", headers: getHeaders() });
 }

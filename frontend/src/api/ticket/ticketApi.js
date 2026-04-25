@@ -11,8 +11,10 @@ function getUserId() {
 
 function getHeaders(extra = {}) {
   const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = { "Content-Type": "application/json" };
   if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   return { ...headers, ...extra };
 }
 
