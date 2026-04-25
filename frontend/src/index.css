@@ -416,6 +416,12 @@ a {
   border-color: var(--status-rejected-border);
 }
 
+.status-pending {
+  background: var(--status-progress-bg);
+  color: var(--status-progress-text);
+  border-color: var(--status-progress-border);
+}
+
 /* ==============================
    BUTTONS
    ============================== */
