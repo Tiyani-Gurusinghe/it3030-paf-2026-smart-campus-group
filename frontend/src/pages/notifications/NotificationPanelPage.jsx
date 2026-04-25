@@ -2,6 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getNotifications, markAllRead } from "../../api/notification/notificationApi";
 
+const TYPE_ICONS = {
+  TICKET_STATUS_CHANGED: "🔄",
+  NEW_COMMENT: "💬",
+  TICKET_ASSIGNED: "👤",
+  TICKET_UPDATED: "📝",
+  BOOKING_APPROVED: "✅",
+  BOOKING_REJECTED: "❌",
+};
+
 function NotificationPanelPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +37,7 @@ function NotificationPanelPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Notifications</h1>
-          <p className="page-subtitle">Recent updates for your tickets and assignments.</p>
+          <p className="page-subtitle">Recent updates for your tickets, bookings, and assignments.</p>
         </div>
         {notifications.length > 0 && (
           <button className="btn secondary" onClick={handleMarkAllRead}>
@@ -63,8 +72,9 @@ function NotificationPanelPage() {
                 background: notification.read ? "transparent" : "var(--bg-hover)",
               }}
             >
-              <span className="notification-icon">🔔</span>
+              <span className="notification-icon">{TYPE_ICONS[notification.type] ?? "📢"}</span>
               <div className="notification-body">
+                <p className="notification-title" style={{ fontWeight: 600, color: "var(--text-main)", marginBottom: 4 }}>{notification.title}</p>
                 <p className="notification-message">{notification.message}</p>
                 <span className="notification-time">
                   {new Date(notification.createdAt).toLocaleString()}
