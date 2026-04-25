@@ -4,9 +4,13 @@ import jakarta.validation.Valid;
 import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRejectRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
+import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.service.TicketService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/tickets")
@@ -18,7 +22,14 @@ public class AdminTicketController {
         this.ticketService = ticketService;
     }
 
-    @PatchMapping("/{id}/assign")
+    @GetMapping("/{id}/technicians")
+    public ResponseEntity<List<TechnicianOptionResponse>> getAssignableTechnicians(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(ticketService.getAssignableTechnicians(id, currentUserId));
+    }
+
+    @PatchMapping("/{id}/assignment")
     public ResponseEntity<TicketResponse> assignTicket(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long currentUserId,
@@ -26,8 +37,24 @@ public class AdminTicketController {
         return ResponseEntity.ok(ticketService.assignTicket(id, currentUserId, request));
     }
 
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<TicketResponse> assignTicketLegacy(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketAssignRequest request) {
+        return ResponseEntity.ok(ticketService.assignTicket(id, currentUserId, request));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TicketResponse> updateTicketStatus(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketStatusUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
+    }
+
     @PatchMapping("/{id}/reject")
-    public ResponseEntity<TicketResponse> rejectTicket(
+    public ResponseEntity<TicketResponse> rejectTicketLegacy(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketRejectRequest request) {
@@ -35,7 +62,7 @@ public class AdminTicketController {
     }
 
     @PatchMapping("/{id}/close")
-    public ResponseEntity<TicketResponse> closeTicket(
+    public ResponseEntity<TicketResponse> closeTicketLegacy(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long currentUserId) {
         return ResponseEntity.ok(ticketService.closeTicket(id, currentUserId));

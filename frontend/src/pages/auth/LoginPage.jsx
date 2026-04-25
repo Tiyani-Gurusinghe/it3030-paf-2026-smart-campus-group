@@ -2,19 +2,23 @@ import { useState } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "../../features/auth/api/authApi";
-import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 import useAuth from "../../features/auth/hooks/useAuth";
+import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
 
 const TEST_EMAILS = [
-  { email: "user2@test.com", role: "USER", hint: "Normal user" },
-  { email: "alice@test.com", role: "TECHNICIAN", hint: "Technician" },
-  { email: "admin2@test.com", role: "ADMIN", hint: "Admin" },
+  { email: "admin@test.com", role: "ADMIN", hint: "Admin User" },
+  { email: "user@test.com", role: "USER", hint: "Normal User" },
+  { email: "alice@test.com", role: "TECHNICIAN", hint: "Alice Technician" },
+  { email: "bob@test.com", role: "TECHNICIAN", hint: "Bob Electrician" },
+  { email: "charlie@test.com", role: "TECHNICIAN", hint: "Charlie HVAC" },
+  { email: "nimal@test.com", role: "USER", hint: "Nimal Perera" },
+  { email: "ayesha@test.com", role: "USER", hint: "Ayesha Silva" },
 ];
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, getLandingRoute } = useAuth();
-  const [email, setEmail] = useState("");
+  const { login, isAuthenticated, getLandingRoute, user } = useAuth();
+  const [email, setEmail] = useState("user@test.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -65,16 +69,22 @@ function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to={getLandingRoute()} replace />;
+    return <Navigate to={computeLandingRoute(user?.roles ?? [])} replace />;
   }
 
   return (
     <div className="login-page">
+      <div className="login-page-glow" aria-hidden="true" />
       <div className="login-card">
-        <div className="login-logo">
-          <div className="login-logo-icon">🏛️</div>
-          <h1 className="login-title">Smart Campus</h1>
-          <p className="login-subtitle">Sign in to your account</p>
+        <div className="login-card-accent" aria-hidden="true" />
+
+        <div className="login-header">
+          <div className="login-logo">
+            <div className="login-logo-icon">🏛️</div>
+            <h1 className="login-title">Smart Campus</h1>
+            <p className="login-subtitle">Sign in to continue to your SLIIT workspace</p>
+          </div>
+          <div className="login-context-chip">SLIIT Portal</div>
         </div>
 
         {error && (
@@ -140,6 +150,27 @@ function LoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
             Don't have an account? <Link to="/signup" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>Sign Up here</Link>
+        </div>
+
+        <div className="login-hints">
+          <p className="login-hints-label">Quick login (dev mode)</p>
+          <div className="login-hints-list">
+            {TEST_EMAILS.map(({ email: e, role, hint }) => (
+              <button
+                key={e}
+                className={`login-hint-btn ${email === e ? "selected" : ""}`}
+                onClick={() => setEmail(e)}
+                type="button"
+                title={hint}
+              >
+                <span className={`role-badge role-badge-${role.toLowerCase()}`}>{role}</span>
+                <span className="login-hint-meta">
+                  <span className="login-hint-email">{e}</span>
+                  <span className="login-hint-name">{hint}</span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

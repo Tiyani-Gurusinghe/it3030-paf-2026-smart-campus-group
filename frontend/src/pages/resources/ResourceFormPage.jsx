@@ -26,7 +26,6 @@ const ResourceFormPage = () => {
         availableFrom: '08:00:00',
         availableTo: '17:00:00',
         status: 'ACTIVE',
-        status: 'ACTIVE',
         faculties: [],
         floor: '',
         configType: 'NONE'
@@ -88,7 +87,7 @@ const ResourceFormPage = () => {
             setStandaloneInventory([]);
             setSelectedInventoryIds([]);
         }
-    }, [formData.category, formData.configType, id]);
+    }, [formData.category, formData.configType, formData.type, id]);
 
     useEffect(() => {
         if (id) {
@@ -151,6 +150,18 @@ const ResourceFormPage = () => {
         });
     };
 
+    const clearValidationError = (fieldName) => {
+        if (validationErrors[fieldName]) {
+            setValidationErrors(prev => {
+                const next = { ...prev };
+                delete next[fieldName];
+                return next;
+            });
+        }
+    };
+
+    const isWholeNumber = (value) => /^\d+$/.test(String(value));
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         
@@ -168,22 +179,98 @@ const ResourceFormPage = () => {
             return newData;
         });
 
-        // Clear specific validation error if exists
-        if (validationErrors[name]) {
-            setValidationErrors(prev => ({...prev, [name]: null}));
+        clearValidationError(name);
+    };
+
+    const handleIntegerChange = (fieldName, value) => {
+        if (value !== '' && !isWholeNumber(value)) return;
+        setFormData(prev => ({ ...prev, [fieldName]: value }));
+        clearValidationError(fieldName);
+    };
+
+    const handleLabEquipmentChange = (fieldName, value) => {
+        if (value !== '' && !isWholeNumber(value)) return;
+        setLabEquipment(prev => ({ ...prev, [fieldName]: value }));
+        clearValidationError(fieldName);
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        const trimmedName = formData.name.trim();
+        const trimmedLocation = formData.location.trim();
+
+        if (!trimmedName) {
+            errors.name = 'Resource name is required.';
+        } else if (trimmedName.length < 3) {
+            errors.name = 'Resource name must be at least 3 characters.';
         }
+
+        if (!trimmedLocation) {
+            errors.location = 'Location is required.';
+        }
+
+        if (formData.capacity !== '') {
+            if (!isWholeNumber(formData.capacity)) {
+                errors.capacity = isInventory ? 'Quantity must contain numbers only.' : 'Capacity must contain numbers only.';
+            } else if (Number(formData.capacity) < 1) {
+                errors.capacity = isInventory ? 'Quantity must be at least 1.' : 'Capacity must be at least 1.';
+            }
+        }
+
+        if (formData.category === 'SPACE' && formData.type === 'LAB') {
+            if (labEquipment.pcCount !== '') {
+                if (!isWholeNumber(labEquipment.pcCount)) {
+                    errors.pcCount = 'PC count must contain numbers only.';
+                } else if (Number(labEquipment.pcCount) < 0) {
+                    errors.pcCount = 'PC count cannot be negative.';
+                }
+            }
+
+            if (labEquipment.smartBoardCount !== '') {
+                if (!isWholeNumber(labEquipment.smartBoardCount)) {
+                    errors.smartBoardCount = 'Smart board count must contain numbers only.';
+                } else if (Number(labEquipment.smartBoardCount) < 0) {
+                    errors.smartBoardCount = 'Smart board count cannot be negative.';
+                }
+            }
+        }
+
+        if (!formData.availableFrom) {
+            errors.availableFrom = 'Start time is required.';
+        }
+
+        if (!formData.availableTo) {
+            errors.availableTo = 'End time is required.';
+        }
+
+        if (formData.availableFrom && formData.availableTo && formData.availableFrom >= formData.availableTo) {
+            errors.availableTo = 'Available To must be later than Available From.';
+        }
+
+        return errors;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError(null);
         setValidationErrors({});
+
+        const clientErrors = validateForm();
+        if (Object.keys(clientErrors).length > 0) {
+            setValidationErrors(clientErrors);
+            setError('Please correct the highlighted fields before submitting.');
+            return;
+        }
+
+        setLoading(true);
 
         try {
             const payload = {
                 ...formData,
-                capacity: formData.capacity ? parseInt(formData.capacity) : null,
+                name: formData.name.trim(),
+                location: formData.location.trim(),
+                floor: formData.floor.trim(),
+                capacity: formData.capacity ? Number(formData.capacity) : null,
                 parentResource: formData.parentResourceId ? { id: formData.parentResourceId } : null
             };
 
@@ -217,12 +304,12 @@ const ResourceFormPage = () => {
                 const spaceId = savedResource.id;
                 
                 // Process PCs
-                if (labEquipment.pcCount && parseInt(labEquipment.pcCount) > 0) {
+                if (labEquipment.pcCount && Number(labEquipment.pcCount) > 0) {
                      const pcPayload = {
                           name: `${formData.name} PCs`,
                           category: 'EQUIPMENT',
                           type: 'PC',
-                          capacity: parseInt(labEquipment.pcCount),
+                          capacity: Number(labEquipment.pcCount),
                           status: 'ACTIVE',
                           location: formData.location || 'Inside Lab',
                           configType: 'NONE',
@@ -230,17 +317,17 @@ const ResourceFormPage = () => {
                      };
                      if (labEquipment.pcId) await resourceApi.updateResource(labEquipment.pcId, pcPayload);
                      else await resourceApi.createResource(pcPayload);
-                } else if (labEquipment.pcId && (!labEquipment.pcCount || parseInt(labEquipment.pcCount) === 0)) {
+                } else if (labEquipment.pcId && (!labEquipment.pcCount || Number(labEquipment.pcCount) === 0)) {
                      await resourceApi.deleteResource(labEquipment.pcId);
                 }
 
                 // Process Smart Boards
-                if (labEquipment.smartBoardCount && parseInt(labEquipment.smartBoardCount) > 0) {
+                if (labEquipment.smartBoardCount && Number(labEquipment.smartBoardCount) > 0) {
                      const sbPayload = {
                           name: `${formData.name} Smart Board`,
                           category: 'EQUIPMENT',
                           type: 'SMART_BOARD',
-                          capacity: parseInt(labEquipment.smartBoardCount),
+                          capacity: Number(labEquipment.smartBoardCount),
                           status: 'ACTIVE',
                           location: formData.location || 'Inside Lab',
                           configType: 'NONE',
@@ -248,7 +335,7 @@ const ResourceFormPage = () => {
                      };
                      if (labEquipment.smartBoardId) await resourceApi.updateResource(labEquipment.smartBoardId, sbPayload);
                      else await resourceApi.createResource(sbPayload);
-                } else if (labEquipment.smartBoardId && (!labEquipment.smartBoardCount || parseInt(labEquipment.smartBoardCount) === 0)) {
+                } else if (labEquipment.smartBoardId && (!labEquipment.smartBoardCount || Number(labEquipment.smartBoardCount) === 0)) {
                      await resourceApi.deleteResource(labEquipment.smartBoardId);
                 }
             }
@@ -269,6 +356,8 @@ const ResourceFormPage = () => {
     };
 
     if (pageLoading) return <div className="page"><div className="empty-state">Loading resource details...</div></div>;
+
+    const isInventory = formData.category === 'EQUIPMENT' || formData.category === 'UTILITY';
 
     return (
         <div className="page ticket-form">
@@ -413,20 +502,30 @@ const ResourceFormPage = () => {
                                  <div style={{flex: 1}}>
                                      <label style={{ fontSize: '13px', fontWeight: 'normal' }}>Total PCs Assigned</label>
                                      <input 
-                                         type="number" 
+                                         type="text"
+                                         inputMode="numeric"
+                                         pattern="[0-9]*"
+                                         min="0"
                                          value={labEquipment.pcCount} 
-                                         onChange={(e) => setLabEquipment({...labEquipment, pcCount: e.target.value})} 
+                                         onChange={(e) => handleLabEquipmentChange('pcCount', e.target.value)}
                                          placeholder="e.g. 60"
+                                         style={validationErrors.pcCount ? { borderColor: 'var(--priority-high)' } : {}}
                                      />
+                                     {validationErrors.pcCount && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.pcCount}</span>}
                                  </div>
                                  <div style={{flex: 1}}>
                                      <label style={{ fontSize: '13px', fontWeight: 'normal' }}>Total Smart Boards Assigned</label>
                                      <input 
-                                         type="number" 
+                                         type="text"
+                                         inputMode="numeric"
+                                         pattern="[0-9]*"
+                                         min="0"
                                          value={labEquipment.smartBoardCount} 
-                                         onChange={(e) => setLabEquipment({...labEquipment, smartBoardCount: e.target.value})} 
+                                         onChange={(e) => handleLabEquipmentChange('smartBoardCount', e.target.value)}
                                          placeholder="e.g. 2"
+                                         style={validationErrors.smartBoardCount ? { borderColor: 'var(--priority-high)' } : {}}
                                      />
+                                     {validationErrors.smartBoardCount && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.smartBoardCount}</span>}
                                  </div>
                              </div>
                              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>
@@ -482,27 +581,30 @@ const ResourceFormPage = () => {
                     )}
 
                     <div className="form-field">
-                        <label>Location *</label>
+                        <label>{isInventory ? 'Storage / Current Location *' : 'Location *'}</label>
                         <input 
                             required 
                             type="text" 
                             name="location" 
                             value={formData.location} 
                             onChange={handleChange}
-                            placeholder="e.g. Block A, Floor 2"
+                            placeholder={isInventory ? "e.g. Storage Room B" : "e.g. Block A, Floor 2"}
                             style={validationErrors.location ? { borderColor: 'var(--priority-high)' } : {}}
                         />
                         {validationErrors.location && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.location}</span>}
                     </div>
 
                     <div className="form-field">
-                        <label>Capacity</label>
+                        <label>{isInventory ? 'Quantity Count' : 'Capacity'}</label>
                         <input 
-                            type="number" 
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            min="1"
                             name="capacity" 
                             value={formData.capacity} 
-                            onChange={handleChange}
-                            placeholder="Number of seats/items"
+                            onChange={(e) => handleIntegerChange('capacity', e.target.value)}
+                            placeholder={isInventory ? "e.g. 50" : "Number of seats/items"}
                             style={validationErrors.capacity ? { borderColor: 'var(--priority-high)' } : {}}
                         />
                         {validationErrors.capacity && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.capacity}</span>}
@@ -522,11 +624,29 @@ const ResourceFormPage = () => {
                 <div className="form-grid">
                     <div className="form-field">
                         <label>Available From</label>
-                        <input required type="time" step="1" name="availableFrom" value={formData.availableFrom || ''} onChange={handleChange} />
+                        <input
+                            required
+                            type="time"
+                            step="1"
+                            name="availableFrom"
+                            value={formData.availableFrom || ''}
+                            onChange={handleChange}
+                            style={validationErrors.availableFrom ? { borderColor: 'var(--priority-high)' } : {}}
+                        />
+                        {validationErrors.availableFrom && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.availableFrom}</span>}
                     </div>
                     <div className="form-field">
                         <label>Available To</label>
-                        <input required type="time" step="1" name="availableTo" value={formData.availableTo || ''} onChange={handleChange} />
+                        <input
+                            required
+                            type="time"
+                            step="1"
+                            name="availableTo"
+                            value={formData.availableTo || ''}
+                            onChange={handleChange}
+                            style={validationErrors.availableTo ? { borderColor: 'var(--priority-high)' } : {}}
+                        />
+                        {validationErrors.availableTo && <span style={{color: 'var(--priority-high)', fontSize: '11px'}}>{validationErrors.availableTo}</span>}
                     </div>
                 </div>
 

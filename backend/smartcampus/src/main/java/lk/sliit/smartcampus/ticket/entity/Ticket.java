@@ -14,18 +14,21 @@ public class Ticket {
     @Column(nullable = false, length = 120)
     private String title;
 
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = false, length = 120)
+    private String location;
+
+    @Column(nullable = false, length = 30)
+    private String category;
+
+    @Column(nullable = false, length = 1000)
     private String description;
-
-    @Column(name = "resource_id", nullable = false)
-    private Long resourceId;
-
-    @Column(name = "required_skill_id", nullable = false)
-    private Long requiredSkillId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketPriority priority;
+
+    @Column(name = "preferred_contact", nullable = false, length = 120)
+    private String preferredContact;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -37,20 +40,17 @@ public class Ticket {
     @Column(name = "assigned_to")
     private Long assignedTo;
 
-    @Column(name = "resolution_notes", length = 4000)
-    private String resolutionNotes;
+    @Column(name = "resource_id", nullable = false)
+    private Long resourceId;
 
-    @Column(name = "rejected_reason", length = 4000)
-    private String rejectedReason;
+    @Column(name = "required_skill_id", nullable = false)
+    private Long requiredSkillId;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "due_at")
+    private LocalDateTime dueAt;
 
-    @Column(name = "first_response_at")
-    private LocalDateTime firstResponseAt;
-
-    @Column(name = "first_responded_by")
-    private Long firstRespondedBy;
+    @Column(name = "first_responded_at")
+    private LocalDateTime firstRespondedAt;
 
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
@@ -58,14 +58,22 @@ public class Ticket {
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
 
-    @Column(name = "due_at")
-    private LocalDateTime dueAt;
+    @Column(name = "resolution_notes", columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(name = "rejected_reason", columnDefinition = "TEXT")
+    private String rejectedReason;
+
+    @Column(name = "attachment_urls", columnDefinition = "json")
+    private String attachmentUrls;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "attachment_urls", columnDefinition = "json")
-    private String attachmentUrls;
+
 
     public Ticket() {
     }
@@ -94,20 +102,24 @@ public class Ticket {
         return title;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    public Long getResourceId() {
-        return resourceId;
-    }
-
-    public Long getRequiredSkillId() {
-        return requiredSkillId;
-    }
-
     public TicketPriority getPriority() {
         return priority;
+    }
+
+    public String getPreferredContact() {
+        return preferredContact;
     }
 
     public TicketStatus getStatus() {
@@ -122,24 +134,20 @@ public class Ticket {
         return assignedTo;
     }
 
-    public String getResolutionNotes() {
-        return resolutionNotes;
+    public Long getResourceId() {
+        return resourceId;
     }
 
-    public String getRejectedReason() {
-        return rejectedReason;
+    public Long getRequiredSkillId() {
+        return requiredSkillId;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getDueAt() {
+        return dueAt;
     }
 
-    public LocalDateTime getFirstResponseAt() {
-        return firstResponseAt;
-    }
-
-    public Long getFirstRespondedBy() {
-        return firstRespondedBy;
+    public LocalDateTime getFirstRespondedAt() {
+        return firstRespondedAt;
     }
 
     public LocalDateTime getResolvedAt() {
@@ -150,8 +158,20 @@ public class Ticket {
         return closedAt;
     }
 
-    public LocalDateTime getDueAt() {
-        return dueAt;
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public String getAttachmentUrls() {
+        return attachmentUrls;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
@@ -166,20 +186,24 @@ public class Ticket {
         this.title = title;
     }
 
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public void setResourceId(Long resourceId) {
-        this.resourceId = resourceId;
-    }
-
-    public void setRequiredSkillId(Long requiredSkillId) {
-        this.requiredSkillId = requiredSkillId;
-    }
-
     public void setPriority(TicketPriority priority) {
         this.priority = priority;
+    }
+
+    public void setPreferredContact(String preferredContact) {
+        this.preferredContact = preferredContact;
     }
 
     public void setStatus(TicketStatus status) {
@@ -194,24 +218,20 @@ public class Ticket {
         this.assignedTo = assignedTo;
     }
 
-    public void setResolutionNotes(String resolutionNotes) {
-        this.resolutionNotes = resolutionNotes;
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
     }
 
-    public void setRejectedReason(String rejectedReason) {
-        this.rejectedReason = rejectedReason;
+    public void setRequiredSkillId(Long requiredSkillId) {
+        this.requiredSkillId = requiredSkillId;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setDueAt(LocalDateTime dueAt) {
+        this.dueAt = dueAt;
     }
 
-    public void setFirstResponseAt(LocalDateTime firstResponseAt) {
-        this.firstResponseAt = firstResponseAt;
-    }
-
-    public void setFirstRespondedBy(Long firstRespondedBy) {
-        this.firstRespondedBy = firstRespondedBy;
+    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
+        this.firstRespondedAt = firstRespondedAt;
     }
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
@@ -222,19 +242,23 @@ public class Ticket {
         this.closedAt = closedAt;
     }
 
-    public void setDueAt(LocalDateTime dueAt) {
-        this.dueAt = dueAt;
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getAttachmentUrls() {
-        return attachmentUrls;
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 
     public void setAttachmentUrls(String attachmentUrls) {
         this.attachmentUrls = attachmentUrls;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

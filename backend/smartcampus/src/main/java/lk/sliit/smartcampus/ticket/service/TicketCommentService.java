@@ -7,32 +7,31 @@ import lk.sliit.smartcampus.notification.service.NotificationService;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
 import lk.sliit.smartcampus.ticket.entity.Ticket;
-import lk.sliit.smartcampus.ticket.entity.TicketComment;
-import lk.sliit.smartcampus.ticket.repository.TicketCommentRepository;
+import lk.sliit.smartcampus.ticket.entity.TicketHistory;
+import lk.sliit.smartcampus.ticket.repository.TicketHistoryRepository;
 import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class TicketCommentService {
 
-    private final TicketCommentRepository commentRepository;
+    private final TicketHistoryRepository historyRepository;
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final TicketService ticketService;
 
-    public TicketCommentService(TicketCommentRepository commentRepository,
+    public TicketCommentService(TicketHistoryRepository historyRepository,
                                 TicketRepository ticketRepository,
                                 UserRepository userRepository,
                                 NotificationService notificationService,
                                 TicketService ticketService) {
-        this.commentRepository = commentRepository;
+        this.historyRepository = historyRepository;
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
@@ -45,10 +44,10 @@ public class TicketCommentService {
 
         ticketService.validateTicketVisibility(ticket, currentUserId);
 
-        return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
+        return historyRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
                 .stream()
-                .filter(c -> c.getDeletedAt() == null)
-                .map(c -> toResponse(c, resolveUserName(c.getUserId())))
+                .filter(h -> "NOTE".equals(h.getActionType()))
+                .map(h -> toResponse(h, resolveUserName(h.getActorUserId())))
                 .collect(Collectors.toList());
     }
 
@@ -61,18 +60,20 @@ public class TicketCommentService {
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
-        TicketComment comment = new TicketComment();
-        comment.setTicketId(ticketId);
-        comment.setUserId(userId);
-        comment.setContent(request.getContent());
+        TicketHistory history = new TicketHistory();
+        history.setTicketId(ticketId);
+        history.setActorUserId(userId);
+        history.setActionType("NOTE");
+        history.setNote(request.getContent());
 
-        TicketComment saved = commentRepository.save(comment);
+        TicketHistory saved = historyRepository.save(history);
+        ticketService.markFirstResponseIfApplicable(ticket, userId);
 
         if (ticket.getReportedBy() != null && !ticket.getReportedBy().equals(userId)) {
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.NEW_COMMENT,
-                    "New Comment",
+                    "New comment on your ticket",
                     author.getFullName() + " commented on your ticket: \"" + ticket.getTitle() + "\"",
                     ticketId
             );
@@ -87,21 +88,23 @@ public class TicketCommentService {
 
         ticketService.validateTicketVisibility(ticket, requesterId);
 
-        TicketComment comment = commentRepository.findById(commentId)
+        TicketHistory history = historyRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
-        if (!comment.getTicketId().equals(ticketId) || comment.getDeletedAt() != null) {
+        if (!history.getTicketId().equals(ticketId) || !"NOTE".equals(history.getActionType())) {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
 
         boolean isAdmin = ticketService.isAdmin(requesterId);
 
-        if (!isAdmin && !comment.getUserId().equals(requesterId)) {
+        if (!isAdmin && !history.getActorUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only edit your own comments");
         }
 
-        comment.setContent(request.getContent());
-        return toResponse(commentRepository.save(comment), resolveUserName(comment.getUserId()));
+        history.setNote(request.getContent());
+        TicketHistory saved = historyRepository.save(history);
+
+        return toResponse(saved, resolveUserName(saved.getActorUserId()));
     }
 
     public void deleteComment(Long ticketId, Long commentId, Long requesterId) {
@@ -110,33 +113,32 @@ public class TicketCommentService {
 
         ticketService.validateTicketVisibility(ticket, requesterId);
 
-        TicketComment comment = commentRepository.findById(commentId)
+        TicketHistory history = historyRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found: " + commentId));
 
-        if (!comment.getTicketId().equals(ticketId) || comment.getDeletedAt() != null) {
+        if (!history.getTicketId().equals(ticketId) || !"NOTE".equals(history.getActionType())) {
             throw new ResourceNotFoundException("Comment does not belong to this ticket");
         }
 
         boolean isAdmin = ticketService.isAdmin(requesterId);
 
-        if (!isAdmin && !comment.getUserId().equals(requesterId)) {
+        if (!isAdmin && !history.getActorUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only delete your own comments");
         }
 
-        comment.setDeletedAt(LocalDateTime.now());
-        commentRepository.save(comment);
+        historyRepository.delete(history);
     }
 
-    private TicketCommentResponse toResponse(TicketComment c, String authorName) {
-        TicketCommentResponse r = new TicketCommentResponse();
-        r.setId(c.getId());
-        r.setTicketId(c.getTicketId());
-        r.setUserId(c.getUserId());
-        r.setAuthorName(authorName);
-        r.setContent(c.getContent());
-        r.setCreatedAt(c.getCreatedAt());
-        r.setUpdatedAt(c.getUpdatedAt());
-        return r;
+    private TicketCommentResponse toResponse(TicketHistory history, String authorName) {
+        TicketCommentResponse response = new TicketCommentResponse();
+        response.setId(history.getId());
+        response.setTicketId(history.getTicketId());
+        response.setUserId(history.getActorUserId());
+        response.setAuthorName(authorName);
+        response.setContent(history.getNote());
+        response.setCreatedAt(history.getCreatedAt());
+        response.setUpdatedAt(history.getCreatedAt());
+        return response;
     }
 
     private String resolveUserName(Long userId) {

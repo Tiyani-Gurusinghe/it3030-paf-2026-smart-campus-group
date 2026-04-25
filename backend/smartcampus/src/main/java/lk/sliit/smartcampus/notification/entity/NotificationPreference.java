@@ -1,36 +1,34 @@
-package lk.sliit.smartcampus.ticket.entity;
+package lk.sliit.smartcampus.notification.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comments")
-public class TicketComment {
+@Table(
+        name = "notification_preferences",
+        uniqueConstraints = @UniqueConstraint(name = "uk_notification_pref_user_type", columnNames = {"user_id", "type"})
+)
+public class NotificationPreference {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "ticket_id", nullable = false)
-    private Long ticketId;
-
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(nullable = false, length = 2000)
-    private String content;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private NotificationType type;
+
+    @Column(nullable = false)
+    private boolean enabled;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
-    public TicketComment() {
-    }
 
     @PrePersist
     public void prePersist() {
@@ -48,16 +46,16 @@ public class TicketComment {
         return id;
     }
 
-    public Long getTicketId() {
-        return ticketId;
-    }
-
     public Long getUserId() {
         return userId;
     }
 
-    public String getContent() {
-        return content;
+    public NotificationType getType() {
+        return type;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -68,24 +66,20 @@ public class TicketComment {
         return updatedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public void setTicketId(Long ticketId) {
-        this.ticketId = ticketId;
     }
 
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setType(NotificationType type) {
+        this.type = type;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
@@ -94,9 +88,5 @@ public class TicketComment {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public void setDeletedAt(LocalDateTime deletedAt) {
-        this.deletedAt = deletedAt;
     }
 }

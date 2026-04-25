@@ -1,22 +1,24 @@
 package lk.sliit.smartcampus.ticket.entity;
 
+import lk.sliit.smartcampus.resource.enums.ResourceType;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 public class ResourceTypeSkillId implements Serializable {
 
-    private TicketResourceType resourceType;
+    private ResourceType resourceType;
     private Long skillId;
 
     public ResourceTypeSkillId() {
     }
 
-    public ResourceTypeSkillId(TicketResourceType resourceType, Long skillId) {
+    public ResourceTypeSkillId(ResourceType resourceType, Long skillId) {
         this.resourceType = resourceType;
         this.skillId = skillId;
     }
 
-    public TicketResourceType getResourceType() {
+    public ResourceType getResourceType() {
         return resourceType;
     }
 
@@ -24,7 +26,7 @@ public class ResourceTypeSkillId implements Serializable {
         return skillId;
     }
 
-    public void setResourceType(TicketResourceType resourceType) {
+    public void setResourceType(ResourceType resourceType) {
         this.resourceType = resourceType;
     }
 
@@ -38,7 +40,7 @@ public class ResourceTypeSkillId implements Serializable {
         if (!(o instanceof ResourceTypeSkillId)) return false;
         ResourceTypeSkillId that = (ResourceTypeSkillId) o;
         return resourceType == that.resourceType &&
-               Objects.equals(skillId, that.skillId);
+                Objects.equals(skillId, that.skillId);
     }
 
     @Override

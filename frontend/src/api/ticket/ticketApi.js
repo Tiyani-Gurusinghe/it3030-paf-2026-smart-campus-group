@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8080";
+const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
 const TECH_BASE = `${BASE}/api/technician/tickets`;
 const ADMIN_BASE = `${BASE}/api/admin/tickets`;
@@ -76,6 +76,19 @@ export async function createTicket(payload) {
 }
 
 /**
+ * Update an existing ticket (USER).
+ * Backend expects the full TicketRequest shape.
+ */
+export async function updateTicket(id, payload) {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
+    method: "PUT",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
+/**
  * Get current user's own tickets (USER).
  * Filters: { status, page, size }
  */
@@ -85,6 +98,14 @@ export async function getMyTickets(filters = {}) {
   params.set("page", String(filters.page ?? 0));
   params.set("size", String(filters.size ?? 10));
   const res = await fetch(`${TICKET_BASE}/my?${params}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
+export async function getSkillsForResource(resourceId) {
+  const params = new URLSearchParams({ resourceId: String(resourceId) });
+  const res = await fetch(`${TICKET_BASE}/skills?${params}`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
@@ -185,6 +206,13 @@ export async function closeTicket(id) {
   return handleResponse(res);
 }
 
+export async function getAssignableTechnicians(ticketId) {
+  const res = await fetch(`${ADMIN_BASE}/${ticketId}/technicians`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(res);
+}
+
 export async function deleteTicket(id) {
   const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "DELETE",
@@ -257,14 +285,12 @@ export async function uploadAttachments(ticketId, files) {
   return handleResponse(res);
 }
 
-export async function deleteAttachment(ticketId, attachmentId) {
-  const res = await fetch(
-    `${TICKET_BASE}/${ticketId}/attachments/${attachmentId}`,
-    {
-      method: "DELETE",
-      headers: getHeaders(),
-    }
-  );
+export async function deleteAttachment(ticketId, url) {
+  const params = new URLSearchParams({ url });
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments?${params}`, {
+    method: "DELETE",
+    headers: getHeaders(),
+  });
   return handleResponse(res);
 }
 

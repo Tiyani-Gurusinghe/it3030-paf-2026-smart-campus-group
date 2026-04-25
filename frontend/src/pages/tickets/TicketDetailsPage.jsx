@@ -20,6 +20,10 @@ function isDueOverdue(dueAt) {
   return new Date(dueAt) < new Date();
 }
 
+function hasDisplayValue(value) {
+  return typeof value === "string" ? value.trim().length > 0 : value != null;
+}
+
 export default function TicketDetailsPage() {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
@@ -51,6 +55,8 @@ export default function TicketDetailsPage() {
   }
 
   const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
+  const hasPreferredContact = hasDisplayValue(ticket.preferredContactDetails);
 
   return (
     <div className="page">
@@ -91,14 +97,18 @@ export default function TicketDetailsPage() {
               {ticket.assignedToName ?? <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Unassigned</span>}
             </div>
           </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Required Skill</div>
-            <div className="detail-item-value">{ticket.requiredSkillName ?? "—"}</div>
-          </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Preferred Contact</div>
-            <div className="detail-item-value">{ticket.preferredContactDetails ?? "—"}</div>
-          </div>
+          {hasRequiredSkill && (
+            <div className="detail-item">
+              <div className="detail-item-label">Required Skill</div>
+              <div className="detail-item-value">{ticket.requiredSkillName}</div>
+            </div>
+          )}
+          {hasPreferredContact && (
+            <div className="detail-item">
+              <div className="detail-item-label">Preferred Contact</div>
+              <div className="detail-item-value">{ticket.preferredContactDetails}</div>
+            </div>
+          )}
           <div className={`detail-item ${overdue ? "overdue-item" : ""}`}>
             <div className="detail-item-label">Due At {overdue && "⚠️"}</div>
             <div className="detail-item-value" style={overdue ? { color: "var(--color-danger)" } : {}}>

@@ -5,7 +5,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, ticket_history, tickets, 
                      bookings, resource_faculties, resource_type_skills, 
-                     technician_skills, resources, user_roles, users, roles, skills;
+                     technician_skills, resources, user_roles, users, roles, skills, notification_preferences;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 1. Roles
@@ -89,16 +89,19 @@ CREATE TABLE bookings (
     user_id BIGINT NOT NULL,
     resource_id BIGINT NOT NULL,
     booking_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
+    start_time DATETIME(6) NOT NULL,
+    end_time DATETIME(6) NOT NULL,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
+ALTER TABLE bookings
+ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 -- 10. Tickets
+
 
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -134,6 +137,7 @@ CREATE TABLE tickets (
         FOREIGN KEY (required_skill_id) REFERENCES skills(id)
 );
 
+
 -- =========================================================
 -- 11. TICKET HISTORY
 -- One table for:
@@ -162,6 +166,23 @@ CREATE TABLE ticket_history (
         FOREIGN KEY (previous_assignee) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_ticket_history_new_assignee
         FOREIGN KEY (new_assignee) REFERENCES users(id) ON DELETE SET NULL
+);
+ALTER TABLE tickets ADD COLUMN resolution_notes TEXT NULL;
+ALTER TABLE tickets ADD COLUMN rejected_reason TEXT NULL;
+ALTER TABLE tickets ADD COLUMN first_responded_at DATETIME NULL;
+ALTER TABLE tickets ADD COLUMN resolved_at DATETIME NULL;
+
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notification_preferences_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_notification_pref_user_type UNIQUE (user_id, type)
 );
 
 -- =========================================================

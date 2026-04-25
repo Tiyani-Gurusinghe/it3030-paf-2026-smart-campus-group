@@ -92,15 +92,18 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(
     () => {
-      const roleStr = getPrimaryRole(user?.roles || []);
+      const roles = user?.roles ?? [];
+      const primary = getPrimaryRole(roles);
+      const roleStr = primary;
       return {
         user,
         roles: user?.roles || ["USER"],
         primaryRole: roleStr,
         isAuthenticated: !!user,
-        isAdmin: roleStr === "ADMIN",
-        isStaff: !!user && roleStr !== "USER" && roleStr !== "STUDENT",
-        getLandingRoute: () => getLandingRoute(user?.roles || []),
+        isAdmin: primary === "ADMIN",
+        isTechnician: primary === "TECHNICIAN",
+        isStaff: !!user && primary !== "USER" && primary !== "STUDENT",
+        getLandingRoute: () => getLandingRoute(roles),
         login,
         logout,
       };

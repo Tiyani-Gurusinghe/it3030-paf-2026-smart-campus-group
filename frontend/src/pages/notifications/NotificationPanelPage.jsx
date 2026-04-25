@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getNotifications, markAllRead } from "../../api/notification/notificationApi";
+import useAuth from "../../features/auth/hooks/useAuth";
 
 const TYPE_ICONS = {
   TICKET_STATUS_CHANGED: "🔄",
@@ -12,9 +13,17 @@ const TYPE_ICONS = {
 };
 
 function NotificationPanelPage() {
+  const { isAdmin, isTechnician } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  function getTicketPath(referenceId) {
+    if (!referenceId) return "/notifications";
+    if (isAdmin) return `/admin/tickets/${referenceId}`;
+    if (isTechnician) return `/technician/tickets/${referenceId}`;
+    return `/tickets/${referenceId}`;
+  }
 
   useEffect(() => {
     getNotifications()
@@ -61,7 +70,7 @@ function NotificationPanelPage() {
           {notifications.map((notification) => (
             <Link
               key={notification.id}
-              to={notification.referenceId ? `/tickets/${notification.referenceId}` : "/notifications"}
+              to={getTicketPath(notification.referenceId)}
               className="notification-item"
               style={{
                 display: "flex",

@@ -20,9 +20,11 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
   const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
 
   return (
-    <div className="card ticket-card">
+    <div className="card ticket-card" title={ticket.title}>
       <div className="ticket-card-top">
-        <h3>{ticket.title}</h3>
+        <h3 className="ticket-card-title" title={ticket.title}>
+          {ticket.title}
+        </h3>
         <StatusBadge status={ticket.status} />
       </div>
 
@@ -48,9 +50,13 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
         </div>
         <div className="ticket-meta-item">
           <strong>Assigned To</strong>
-          {ticket.assignedToName ?? (
-            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
-              Unassigned
+          {ticket.assignedToName ? (
+            <span className="assignee-badge">
+              🧑‍🔧 {ticket.assignedToName}
+            </span>
+          ) : (
+            <span className="unassigned-badge">
+              ⚠️ Unassigned
             </span>
           )}
         </div>
