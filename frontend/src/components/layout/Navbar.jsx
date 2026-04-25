@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../features/auth/hooks/useAuth";
 import NotificationPanel from "../notifications/NotificationPanel";
-import { useAuthContext } from "../../features/auth/context/AuthContext";
+import { googleLogout } from "@react-oauth/google";
 
 const ROLE_STYLES = {
   ADMIN: "role-badge-admin",
@@ -10,10 +10,13 @@ const ROLE_STYLES = {
 };
 
 function Navbar() {
-  const { user, logout } = useAuthContext();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   const handleLogout = () => {
+    googleLogout();
     logout();
+    navigate("/login", { replace: true });
   };
 
   const initials = user?.fullName
