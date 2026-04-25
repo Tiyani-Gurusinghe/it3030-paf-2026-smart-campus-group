@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { authApi } from "../../features/auth/api/authApi";
 import useAuth from "../../features/auth/hooks/useAuth";
 import { getLandingRoute as computeLandingRoute } from "../../features/auth/context/AuthContext";
@@ -16,18 +17,43 @@ const TEST_EMAILS = [
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuth();
-  const [email, setEmail] = useState("user@test.com");
+  const { login, isAuthenticated, getLandingRoute, user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  async function handleGoogleSuccess(credentialResponse) {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await authApi.googleLogin(credentialResponse.credential);
+      // The response is now LoginResponse { token, user }
+      const normalized = login(response.user, response.token);
+      const destination = computeLandingRoute(normalized.roles);
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          err?.response?.data ||
+          err.message ||
+          "Google Login failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const userData = await authApi.login({ email });
-      const normalized = login(userData);
+      const response = await authApi.login({ email, password });
+      // the fallback local login now also expects a token if backend implements it,
+      // but if not, we can just pass the user object.
+      // (Backend does return new LoginResponse(jwt, userDto) in the updated code!)
+      const normalized = login(response.user, response.token);
       const destination = computeLandingRoute(normalized.roles);
       navigate(destination, { replace: true });
     } catch (err) {
@@ -82,6 +108,19 @@ function LoginPage() {
             />
           </div>
 
+          <div className="form-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -90,6 +129,28 @@ function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', margin: '20px 0', color: '#666', fontSize: '14px' }}>
+            OR
+        </div>
+
+        <div className="google-login-container" style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {
+              setError("Google Sign-In was unsuccessful. Try again later.");
+            }}
+            useOneTap
+            shape="rectangular"
+            theme="filled_black"
+            text="signin_with"
+            size="large"
+          />
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
+            Don't have an account? <Link to="/signup" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>Sign Up here</Link>
+        </div>
 
         <div className="login-hints">
           <p className="login-hints-label">Quick login (dev mode)</p>

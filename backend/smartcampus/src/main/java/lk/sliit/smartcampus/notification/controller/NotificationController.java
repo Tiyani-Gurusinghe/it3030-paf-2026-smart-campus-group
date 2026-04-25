@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import lk.sliit.smartcampus.notification.dto.NotificationRequest;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -42,6 +43,18 @@ public class NotificationController {
     public ResponseEntity<Void> markAllRead(@RequestParam Long userId) {
         notificationService.markAllRead(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping
+    public ResponseEntity<Notification> createNotification(@RequestBody NotificationRequest request) {
+        Notification notification = notificationService.createNotification(
+                request.getUserId(),
+                request.getType(),
+                request.getTitle(),
+                request.getMessage(),
+                request.getReferenceId()
+        );
+        return ResponseEntity.ok(notification);
     }
 
     @GetMapping("/preferences")

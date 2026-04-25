@@ -2,29 +2,31 @@ import { NavLink } from "react-router-dom";
 import useAuth from "../../features/auth/hooks/useAuth";
 
 const USER_NAV = [
-  { to: "/tickets/my", label: "My Tickets" },
-  { to: "/tickets/create", label: "Create Ticket" },
-  { to: "/resources", label: "Facilities" },
-  { to: "/bookings", label: "Bookings" },
-  { to: "/notifications", label: "Notifications" },
-  { to: "/profile", label: "Profile" },
+  { to: "/user/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/tickets/my", icon: "🎫", label: "My Tickets" },
+  { to: "/tickets/create", icon: "➕", label: "Create Ticket" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
+  { to: "/notifications", icon: "🔔", label: "Notifications" },
+  { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
 const TECHNICIAN_NAV = [
-  { to: "/technician/tickets", label: "Assigned Tickets" },
-  { to: "/resources", label: "Facilities" },
-  { to: "/bookings", label: "Bookings" },
-  { to: "/notifications", label: "Notifications" },
-  { to: "/profile", label: "Profile" },
+  { to: "/technician/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/technician/tickets", icon: "🔧", label: "Assigned Tickets" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
+  { to: "/notifications", icon: "🔔", label: "Notifications" },
+  { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
 const ADMIN_NAV = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/admin/tickets", label: "All Tickets" },
-  { to: "/resources", label: "Facilities" },
-  { to: "/bookings", label: "Bookings" },
-  { to: "/notifications", label: "Notifications" },
-  { to: "/profile", label: "Profile" },
+  { to: "/admin/dashboard", icon: "⊞", label: "Dashboard" },
+  { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
+  { to: "/resources", icon: "🏢", label: "Facilities" },
+  { to: "/bookings", icon: "📅", label: "Bookings" },
+  { to: "/notifications", icon: "🔔", label: "Notifications" },
+  { to: "/profile", icon: "👤", label: "Profile" },
 ];
 
 function getNav(primaryRole) {

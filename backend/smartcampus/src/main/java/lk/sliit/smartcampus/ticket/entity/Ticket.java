@@ -85,6 +85,8 @@ public class Ticket {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+
+
     public Ticket() {
     }
 

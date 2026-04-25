@@ -3,12 +3,10 @@
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, tickets, 
+DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, ticket_history, tickets, 
                      bookings, resource_faculties, resource_type_skills, 
-                     technician_skills, resources, user_roles, users, roles, skills;
+                     technician_skills, resources, user_roles, users, roles, skills, notification_preferences;
 SET FOREIGN_KEY_CHECKS = 1;
-USE smartcampusdb;
-
 
 -- 1. Roles
 CREATE TABLE roles (
@@ -21,6 +19,8 @@ CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    campus_id VARCHAR(20) UNIQUE,
+    password VARCHAR(255),
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(100) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -101,6 +101,7 @@ ALTER TABLE bookings
 ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 -- 10. Tickets
+
 
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

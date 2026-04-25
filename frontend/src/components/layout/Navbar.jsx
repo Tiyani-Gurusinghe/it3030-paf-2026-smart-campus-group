@@ -1,4 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../features/auth/context/AuthContext";
+import NotificationPanel from "../notifications/NotificationPanel";
+import { googleLogout } from "@react-oauth/google";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
 import Breadcrumbs from "./Breadcrumbs";
@@ -8,6 +11,7 @@ function Navbar() {
   const navigate = useNavigate();
   
   const handleLogout = () => {
+    googleLogout();
     logout();
     // Use window.location to force full page reload to homepage
     window.location.href = "/";

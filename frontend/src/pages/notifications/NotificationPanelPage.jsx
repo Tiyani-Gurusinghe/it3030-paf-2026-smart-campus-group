@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 import { getNotifications, markAllRead } from "../../api/notification/notificationApi";
 import useAuth from "../../features/auth/hooks/useAuth";
 
+const TYPE_ICONS = {
+  TICKET_STATUS_CHANGED: "🔄",
+  NEW_COMMENT: "💬",
+  TICKET_ASSIGNED: "👤",
+  TICKET_UPDATED: "📝",
+  BOOKING_APPROVED: "✅",
+  BOOKING_REJECTED: "❌",
+};
+
 function NotificationPanelPage() {
   const { isAdmin, isTechnician } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -37,7 +46,7 @@ function NotificationPanelPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Notifications</h1>
-          <p className="page-subtitle">Recent updates for your tickets and assignments.</p>
+          <p className="page-subtitle">Recent updates for your tickets, bookings, and assignments.</p>
         </div>
         {notifications.length > 0 && (
           <button className="btn secondary" onClick={handleMarkAllRead}>
@@ -74,6 +83,7 @@ function NotificationPanelPage() {
             >
               <span className="notification-icon"><img src="/notification.png" alt="" className="notification-bell-icon" /></span>
               <div className="notification-body">
+                <p className="notification-title" style={{ fontWeight: 600, color: "var(--text-main)", marginBottom: 4 }}>{notification.title}</p>
                 <p className="notification-message">{notification.message}</p>
                 <span className="notification-time">
                   {new Date(notification.createdAt).toLocaleString()}
