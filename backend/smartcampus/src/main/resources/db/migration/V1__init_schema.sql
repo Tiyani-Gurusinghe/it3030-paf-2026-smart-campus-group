@@ -90,8 +90,8 @@ CREATE TABLE bookings (
     user_id BIGINT NOT NULL,
     resource_id BIGINT NOT NULL,
     booking_date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
+    start_time DATETIME(6) NOT NULL,
+    end_time DATETIME(6) NOT NULL,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -103,6 +103,7 @@ CREATE TABLE bookings (
 -- 10. Tickets
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     title VARCHAR(120) NOT NULL,
     location VARCHAR(120) NOT NULL,
     category VARCHAR(30) NOT NULL,
@@ -117,23 +118,41 @@ CREATE TABLE tickets (
     resource_id BIGINT NOT NULL,
     required_skill_id BIGINT NOT NULL,
 
-    due_at DATETIME NULL,
-    closed_at DATETIME NULL,
+    due_at DATETIME(6) NULL,
+    original_due_at DATETIME(6) NULL,
+    due_extended_at DATETIME(6) NULL,
+    due_extended_by BIGINT NULL,
+    due_extension_note TEXT NULL,
+
+    closed_at DATETIME(6) NULL,
+    first_responded_at DATETIME(6) NULL,
+    resolved_at DATETIME(6) NULL,
 
     resolution_notes TEXT NULL,
     rejected_reason TEXT NULL,
-    first_responded_at DATETIME NULL,
-    resolved_at DATETIME NULL,
 
     attachment_urls JSON NULL,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
 
-    CONSTRAINT fk_tickets_reported_by FOREIGN KEY (reported_by) REFERENCES users(id),
-    CONSTRAINT fk_tickets_assigned_to FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_tickets_resource FOREIGN KEY (resource_id) REFERENCES resources(id),
-    CONSTRAINT fk_tickets_required_skill FOREIGN KEY (required_skill_id) REFERENCES skills(id)
+    CONSTRAINT fk_tickets_reported_by
+        FOREIGN KEY (reported_by) REFERENCES users(id),
+
+    CONSTRAINT fk_tickets_assigned_to
+        FOREIGN KEY (assigned_to) REFERENCES users(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_tickets_resource
+        FOREIGN KEY (resource_id) REFERENCES resources(id),
+
+    CONSTRAINT fk_tickets_required_skill
+        FOREIGN KEY (required_skill_id) REFERENCES skills(id),
+
+    CONSTRAINT fk_tickets_due_extended_by
+        FOREIGN KEY (due_extended_by) REFERENCES users(id)
+        ON DELETE SET NULL
 );
 
 -- =========================================================

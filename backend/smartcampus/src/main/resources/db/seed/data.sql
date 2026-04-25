@@ -7,67 +7,126 @@ INSERT INTO roles (name) VALUES
 ('TECHNICIAN');
 
 -- Users
-INSERT INTO users (oauth_provider, oauth_id, full_name, email) VALUES
-('google', 'google-001', 'Admin User', 'admin@smartcampus.com'),
-('google', 'google-002', 'Normal User', 'user@smartcampus.com'),
-('google', 'google-003', 'Tech User', 'tech@smartcampus.com');
+INSERT IGNORE INTO users (
+    id,
+    oauth_provider,
+    oauth_id,
+    full_name,
+    email,
+    campus_id,
+    password,
+    created_at
+) VALUES
+(10, 'google', 'admin1', 'Admin User', 'admin@test.com', 'IT20260001', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user@test.com', 'IT20260002', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', 'IT20260003', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', 'IT20260004', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', 'IT20260005', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', 'IT20260006', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', 'IT20260007', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP);
 
--- Assign roles
-INSERT INTO user_roles (user_id, role_id) VALUES
-(1, 2), -- Admin User -> ADMIN
-(2, 1), -- Normal User -> USER
-(3, 3); -- Tech User -> TECHNICIAN
+--- =========================
+-- USER ROLES
+-- =========================
+INSERT IGNORE INTO user_roles (user_id, role_id) VALUES
+(10, 1),
+(20, 2),
+(30, 3),
+(40, 3),
+(50, 3),
+(60, 2),
+(70, 2);
 
--- Resources
-INSERT INTO resources (resource_name, resource_type, capacity, location, availability_start, availability_end, status) VALUES
-('Lecture Hall A', 'LECTURE_HALL', 120, 'Block A - Floor 1', '08:00:00', '18:00:00', 'ACTIVE'),
-('Computer Lab 1', 'LAB', 40, 'Block B - Floor 2', '08:00:00', '17:00:00', 'ACTIVE'),
-('Meeting Room 2', 'MEETING_ROOM', 12, 'Admin Building - Floor 3', '09:00:00', '17:00:00', 'ACTIVE'),
-('Projector X120', 'EQUIPMENT', NULL, 'Equipment Store', '08:00:00', '16:00:00', 'OUT_OF_SERVICE');
+-- =========================
+-- SKILLS
+-- =========================
+INSERT IGNORE INTO skills (id, name) VALUES
+(1, 'GENERAL_MAINTENANCE'),
+(2, 'IT_SUPPORT'),
+(3, 'HVAC_SYSTEM'),
+(4, 'ELECTRICAL');
 
--- Sample bookings
-INSERT INTO bookings (user_id, resource_id, booking_date, start_time, end_time, purpose, expected_attendees, status, admin_reason) VALUES
-(2, 1, '2026-03-15', '10:00:00', '12:00:00', 'Final year presentation', 80, 'APPROVED', 'Approved for academic use'),
-(2, 3, '2026-03-16', '14:00:00', '15:00:00', 'Project meeting', 6, 'PENDING', NULL);
+-- =========================
+-- RESOURCE TYPE SKILLS
+-- =========================
+INSERT IGNORE INTO resource_type_skills (resource_type, skill_id) VALUES
+-- building-level issues
+('ACADEMIC', 1),
+('ACADEMIC', 3),
+('ACADEMIC', 4),
 
--- Sample tickets
-INSERT INTO tickets (
-    title,
-    location,
-    category,
-    description,
-    priority,
-    preferred_contact,
-    status,
-    assigned_to,
-    resolution_notes,
-    created_at,
-    updated_at
-) VALUES (
-    'Projector not working',
-    'A401',
-    'PROJECTOR',
-    'Projector shows a black screen',
-    'HIGH',
-    '0771234567',
-    'OPEN',
-    NULL,
-    NULL,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-);
+-- spaces
+('LECTURE_HALL', 1),
+('LECTURE_HALL', 2),
+('LECTURE_HALL', 3),
+('LECTURE_HALL', 4),
 
--- Sample comments
-INSERT INTO ticket_comments (ticket_id, user_id, comment_text) VALUES
-(1, 2, 'This issue was noticed during the morning lecture.'),
-(1, 3, 'Inspection started. Will update after diagnosis.');
+('LAB', 1),
+('LAB', 2),
+('LAB', 3),
+('LAB', 4),
 
--- Notifications
-INSERT INTO notifications (user_id, message, is_read) VALUES
-(2, 'Your booking for Lecture Hall A has been approved.', FALSE),
-(2, 'Your ticket for Projector X120 is now IN_PROGRESS.', FALSE);
+('MEETING_ROOM', 1),
+('MEETING_ROOM', 2),
+('MEETING_ROOM', 3),
+('MEETING_ROOM', 4),
 
--- Audit logs
-INSERT INTO audit_logs (actor_user_id, action_type, entity_type, entity_id, action_details) VALUES
-(1, 'APPROVE_BOOKING', 'BOOKING', 1, 'Approved booking request for Lecture Hall A'),
-(3, 'UPDATE_TICKET_STATUS', 'TICKET', 1, 'Changed status from OPEN to IN_PROGRESS');
+-- equipment/resource-specific mappings
+('PROJECTOR', 2),
+('PROJECTOR', 4),
+
+('PC', 2),
+('SMART_BOARD', 2),
+('SMART_BOARD', 4),
+
+('CHAIR', 1);
+
+-- =========================
+-- TECHNICIAN SKILLS
+-- =========================
+INSERT IGNORE INTO technician_skills (user_id, skill_id) VALUES
+(30, 1),
+(30, 2),
+(40, 4),
+(50, 3),
+(50, 1);
+
+-- =========================
+-- RESOURCES (Hierarchical)
+-- =========================
+INSERT IGNORE INTO resources (id, resource_name, resource_type, resource_category, config_type, floor, capacity, location, status, parent_id, created_at)
+VALUES
+  (1, 'Main Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 5000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (2, 'New Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 3000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (3, 'Business Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 4000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (4, 'Engineering Building', 'ACADEMIC', 'BUILDING', 'NONE', NULL, 6000, 'Main Campus', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (5, 'Main Auditorium', 'LECTURE_HALL', 'SPACE', 'FLEXIBLE', 'Floor 1', 300, 'Main Building', 'ACTIVE', 1, CURRENT_TIMESTAMP),
+  (6, 'Software Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 60, 'Main Building', 'ACTIVE', 1, CURRENT_TIMESTAMP),
+  (7, '4K Laser Projector', 'PROJECTOR', 'EQUIPMENT', 'NONE', NULL, 1, 'Above stage', 'ACTIVE', 5, CURRENT_TIMESTAMP),
+  (8, 'Dell Workstations', 'PC', 'EQUIPMENT', 'NONE', NULL, 60, 'Lab Desks', 'ACTIVE', 6, CURRENT_TIMESTAMP),
+  (9, 'Interactive Display', 'SMART_BOARD', 'EQUIPMENT', 'NONE', NULL, 2, 'Main Desk', 'ACTIVE', 6, CURRENT_TIMESTAMP),
+  (10, 'Folding Chairs', 'CHAIR', 'EQUIPMENT', 'NONE', NULL, 50, 'Store Room B', 'ACTIVE', NULL, CURRENT_TIMESTAMP),
+  (11, 'Network Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 1', 40, 'New Building', 'ACTIVE', 2, CURRENT_TIMESTAMP),
+  (12, 'Architecture Studio', 'LAB', 'SPACE', 'FIXED', 'Floor 3', 30, 'New Building', 'ACTIVE', 2, CURRENT_TIMESTAMP),
+  (13, 'Business Hall A', 'LECTURE_HALL', 'SPACE', 'FIXED', 'Ground Floor', 150, 'Business Building', 'ACTIVE', 3, CURRENT_TIMESTAMP),
+  (14, 'Mechanical Workshop', 'LAB', 'SPACE', 'FIXED', 'Lower Ground', 80, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP),
+  (15, 'Electrical Lab', 'LAB', 'SPACE', 'FLEXIBLE', 'Floor 2', 45, 'Engineering Building', 'ACTIVE', 4, CURRENT_TIMESTAMP);
+
+-- =========================
+-- RESOURCE FACULTIES
+-- =========================
+INSERT IGNORE INTO resource_faculties (resource_id, faculty) VALUES
+(1, 'COMPUTING'),
+(1, 'GRADUATE_STUDIES'),
+(1, 'INTERNATIONAL_PROGRAMMES'),
+(2, 'COMPUTING'),
+(2, 'ARCHITECTURE'),
+(3, 'BUSINESS'),
+(4, 'ENGINEERING'),
+(5, 'COMPUTING'),
+(6, 'COMPUTING'),
+(11, 'COMPUTING'),
+(12, 'ARCHITECTURE'),
+(13, 'BUSINESS'),
+(14, 'ENGINEERING'),
+(15, 'ENGINEERING');
