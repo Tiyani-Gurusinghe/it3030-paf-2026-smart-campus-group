@@ -38,7 +38,7 @@ export default function EditTicketPage() {
     return (
       <div className="page">
         <div className="error-box">
-          <span>⚠️</span> {error}
+          <span>Error</span> {error}
           <button onClick={() => navigate("/tickets/my")} className="btn secondary" style={{ marginLeft: 12 }}>
             Back to My Tickets
           </button>

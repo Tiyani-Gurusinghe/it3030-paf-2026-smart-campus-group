@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketResolutionEditor from "../../components/ticket/TicketResolutionEditor";
+import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import {
   CommentsSection,
   AttachmentsSection,
@@ -30,8 +31,8 @@ export default function TechnicianTicketDetailPage() {
   if (error) {
     return (
       <div className="page">
-        <div className="error-box"><span>⚠️</span> {error}</div>
-        <Link to="/technician/tickets" className="btn secondary" style={{ marginTop: 12 }}>← Back</Link>
+        <div className="error-box"><span>Error</span> {error}</div>
+        <Link to="/technician/tickets" className="btn secondary" style={{ marginTop: 12 }}>Back</Link>
       </div>
     );
   }
@@ -55,7 +56,7 @@ export default function TechnicianTicketDetailPage() {
           <div>
             <h1 className="details-title">{ticket.title}</h1>
             {ticket.resourceName && (
-              <p className="details-location">📦 {ticket.resourceName}</p>
+              <p className="details-location">{ticket.resourceName}</p>
             )}
           </div>
           <StatusBadge status={ticket.status} />
@@ -86,6 +87,10 @@ export default function TechnicianTicketDetailPage() {
           </div>
         </div>
 
+        <TicketSlaPanel ticket={ticket} />
+
+        <hr className="details-section-divider" />
+
         {/* Description */}
         <div className="details-section">
           <div className="details-section-label">Description</div>
@@ -112,7 +117,7 @@ export default function TechnicianTicketDetailPage() {
 
         {/* Back */}
         <div className="card-actions">
-          <Link to="/technician/tickets" className="btn secondary">← Back to Assigned Tickets</Link>
+          <Link to="/technician/tickets" className="btn secondary">Back to Assigned Tickets</Link>
         </div>
       </div>
     </div>

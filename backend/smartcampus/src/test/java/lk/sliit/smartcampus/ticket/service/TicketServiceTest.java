@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class TicketServiceTest {
@@ -114,5 +115,40 @@ class TicketServiceTest {
 
         assertThrows(UnauthorizedException.class,
                 () -> service.updateStatus(1L, request, 5L));
+    }
+
+    @Test
+    void reporterCanResolveAndCloseOwnTicket() {
+        Ticket ticket = new Ticket();
+        ticket.setId(1L);
+        ticket.setStatus(TicketStatus.IN_PROGRESS);
+        ticket.setReportedBy(2L);
+        ticket.setTitle("Projector issue");
+
+        User reporter = mock(User.class);
+        when(reporter.getId()).thenReturn(2L);
+        when(reporter.hasRole(RoleType.ADMIN)).thenReturn(false);
+        when(reporter.hasRole(RoleType.TECHNICIAN)).thenReturn(false);
+
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(ticket));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(reporter));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TicketStatusUpdateRequest resolveRequest = new TicketStatusUpdateRequest();
+        resolveRequest.setStatus(TicketStatus.RESOLVED);
+        resolveRequest.setResolutionNotes("Issue no longer occurs.");
+
+        var resolved = service.updateStatus(1L, resolveRequest, 2L);
+
+        assertEquals(TicketStatus.RESOLVED, resolved.getStatus());
+        assertEquals("Issue no longer occurs.", resolved.getResolutionNotes());
+
+        TicketStatusUpdateRequest closeRequest = new TicketStatusUpdateRequest();
+        closeRequest.setStatus(TicketStatus.CLOSED);
+
+        var closed = service.updateStatus(1L, closeRequest, 2L);
+
+        assertEquals(TicketStatus.CLOSED, closed.getStatus());
+        verify(ticketRepository, org.mockito.Mockito.atLeastOnce()).save(ticket);
     }
 }

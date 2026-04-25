@@ -48,7 +48,7 @@ export default function AdminTicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🛡️ Admin — All Tickets</h1>
+          <h1 className="page-title">Admin Tickets</h1>
           <p className="page-subtitle">
             Manage, assign, reject and close tickets across the campus.
             {!loading && (
@@ -71,7 +71,7 @@ export default function AdminTicketsPage() {
         ))}
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
 
       {loading ? (
         <div className="skeleton-grid">
@@ -91,13 +91,13 @@ export default function AdminTicketsPage() {
             className="btn secondary"
             onClick={() => { const p = page - 1; setPage(p); load(activeTab, p); }}
             disabled={page === 0}
-          >← Previous</button>
+          >Previous</button>
           <span className="pagination-page">Page {page + 1}</span>
           <button
             className="btn secondary"
             onClick={() => { const p = page + 1; setPage(p); load(activeTab, p); }}
             disabled={!hasMore}
-          >Next →</button>
+          >Next</button>
         </div>
       )}
     </div>

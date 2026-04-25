@@ -97,7 +97,7 @@ export default function MyTicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎫 My Tickets</h1>
+          <h1 className="page-title">My Tickets</h1>
           <p className="page-subtitle">
             Track all your submitted maintenance and incident reports.
             {!loading && (
@@ -121,7 +121,7 @@ export default function MyTicketsPage() {
         ))}
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
 
       {loading ? (
         <div className="skeleton-grid">
@@ -140,11 +140,11 @@ export default function MyTicketsPage() {
       {!loading && (tickets.length > 0 || page > 0) && (
         <div className="pagination">
           <button className="btn secondary" onClick={handlePrev} disabled={page === 0}>
-            ← Previous
+            Previous
           </button>
           <span className="pagination-page">Page {page + 1}</span>
           <button className="btn secondary" onClick={handleNext} disabled={!hasMore}>
-            Next →
+            Next
           </button>
         </div>
       )}

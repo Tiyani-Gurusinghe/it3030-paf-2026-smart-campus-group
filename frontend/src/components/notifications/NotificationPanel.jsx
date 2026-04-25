@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 import useAuth from "../../features/auth/hooks/useAuth";
 
 const TYPE_ICONS = {
-  TICKET_STATUS_CHANGED: "🔄",
-  NEW_COMMENT: "💬",
-  TICKET_ASSIGNED: "👤",
+  TICKET_STATUS_CHANGED: "ST",
+  NEW_COMMENT: "CM",
+  TICKET_ASSIGNED: "AS",
 };
 
 function timeAgo(dateStr) {
@@ -71,7 +71,7 @@ export default function NotificationPanel() {
   return (
     <div className="notification-wrapper" ref={panelRef}>
       <button className="notification-bell" onClick={handleOpen} aria-label="Notifications">
-        🔔
+        <img src="/notification.png" alt="" className="notification-bell-icon" />
         {unreadCount > 0 && (
           <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
         )}
@@ -91,7 +91,7 @@ export default function NotificationPanel() {
           <div className="notification-list">
             {notifications.length === 0 ? (
               <div className="notification-empty">
-                <p>🎉 You're all caught up!</p>
+                <p>You are all caught up.</p>
               </div>
             ) : (
               notifications.map((n) => (
@@ -101,7 +101,7 @@ export default function NotificationPanel() {
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => setOpen(false)}
                 >
-                  <span className="notification-icon">{TYPE_ICONS[n.type] ?? "📢"}</span>
+                  <span className="notification-icon">{TYPE_ICONS[n.type] ?? "NT"}</span>
                   <div className="notification-body">
                     <p className="notification-message">{n.message}</p>
                     <span className="notification-time">{timeAgo(n.createdAt)}</span>

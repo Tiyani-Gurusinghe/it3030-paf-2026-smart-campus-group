@@ -5,6 +5,7 @@ import LoginPage from "../pages/auth/LoginPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
+import HomePage from "../pages/home/HomePage";
 
 // Resources
 import DashboardPage from "../pages/dashboard/DashboardPage";
@@ -38,6 +39,7 @@ import RouteErrorPage from "../pages/common/RouteErrorPage";
 
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
+  { path: "/", element: <HomePage />, errorElement: <RouteErrorPage /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteErrorPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage />, errorElement: <RouteErrorPage /> },
 
@@ -51,10 +53,6 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
-        index: true,
-        element: <DashboardPage />,
-      },
       { path: "dashboard", element: <DashboardPage /> },
 
       // --- RESOURCES ---
