@@ -1,83 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
+  /* SLIIT-inspired palette */
+  --sliit-white: #ffffff;
+  --sliit-blue: #0b16f4;
+  --sliit-blue-dark: #050c86;
+  --sliit-blue-soft: #eef2ff;
+  --sliit-orange: #ff9300;
+  --sliit-orange-dark: #e67500;
+  --sliit-orange-soft: #fff3df;
+
   /* Background layers */
-  --bg-base: #050505;
-  --bg-surface: #0c0d10;
-  --bg-elevated: #121419;
-  --bg-hover: #1a1f27;
+  --bg-base: #f6f8ff;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5ff;
+  --bg-hover: #e9efff;
+  --bg-secondary: #f7f9ff;
+  --bg-tertiary: #eef2ff;
+  --surface: #ffffff;
+  --background: #f6f8ff;
 
-  /* Accent - SLIIT-inspired warm gold with subtle blue support */
-  --accent: #e7902a;
-  --accent-alt: #f3b341;
-  --accent-hover: #ffd79a;
-  --accent-muted: rgba(255, 164, 52, 0.14);
-  --accent-border: rgba(255, 181, 73, 0.42);
+  /* Accent */
+  --accent: var(--sliit-blue);
+  --accent-hover: #111bcf;
+  --accent-muted: rgba(11, 22, 244, 0.09);
+  --accent-border: rgba(11, 22, 244, 0.22);
+  --accent-bg: var(--sliit-blue-soft);
 
-  /* Secondary accent - restrained brand blue */
-  --accent2: #75b5ff;
-  --accent2-muted: rgba(98, 171, 255, 0.2);
-  --sliit-blue: #2e348c;
-  --sliit-blue-soft: #4d57c7;
+  --accent2: var(--sliit-orange);
+  --accent2-muted: rgba(255, 147, 0, 0.14);
 
   /* Text */
-  --text-primary: #f7f8fa;
-  --text-secondary: #c7ccd4;
-  --text-muted: #99a1ad;
+  --text-primary: #171a22;
+  --text-secondary: #515b70;
+  --text-muted: #7a8497;
+  --text-color: var(--text-primary);
+  --text-h: var(--text-primary);
 
   /* Borders */
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --border-color: var(--border);
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.42);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.62), 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 24px rgba(255, 164, 52, 0.22);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 8px rgba(11, 22, 244, 0.04);
+  --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.13);
+  --shadow-glow: 0 16px 44px rgba(255, 147, 0, 0.16);
+  --shadow: var(--shadow-md);
 
   /* Status colors */
-  --status-open-bg: rgba(76, 157, 255, 0.22);
-  --status-open-text: #8fc8ff;
-  --status-open-border: rgba(116, 183, 255, 0.6);
+  --status-open-bg: rgba(11, 22, 244, 0.08);
+  --status-open-text: #0b16f4;
+  --status-open-border: rgba(11, 22, 244, 0.24);
 
-  --status-progress-bg: rgba(245, 158, 11, 0.15);
-  --status-progress-text: #fbbf24;
-  --status-progress-border: rgba(245, 158, 11, 0.35);
+  --status-progress-bg: rgba(255, 147, 0, 0.14);
+  --status-progress-text: #b95a00;
+  --status-progress-border: rgba(255, 147, 0, 0.34);
 
-  --status-resolved-bg: rgba(16, 185, 129, 0.15);
-  --status-resolved-text: #34d399;
-  --status-resolved-border: rgba(16, 185, 129, 0.35);
+  --status-resolved-bg: rgba(22, 163, 74, 0.11);
+  --status-resolved-text: #15803d;
+  --status-resolved-border: rgba(22, 163, 74, 0.26);
 
-  --status-closed-bg: rgba(100, 116, 139, 0.15);
-  --status-closed-text: #94a3b8;
-  --status-closed-border: rgba(100, 116, 139, 0.3);
+  --status-closed-bg: rgba(100, 116, 139, 0.12);
+  --status-closed-text: #475569;
+  --status-closed-border: rgba(100, 116, 139, 0.24);
 
-  --status-rejected-bg: rgba(255, 92, 109, 0.2);
-  --status-rejected-text: #ff98a4;
-  --status-rejected-border: rgba(255, 122, 136, 0.55);
+  --status-rejected-bg: rgba(220, 38, 38, 0.1);
+  --status-rejected-text: #b91c1c;
+  --status-rejected-border: rgba(220, 38, 38, 0.24);
 
   /* Priority colors */
-  --priority-low: #34d399;
-  --priority-medium: #fbbf24;
-  --priority-high: #ff8f9c;
+  --priority-low: #15803d;
+  --priority-medium: #d97706;
+  --priority-high: #dc2626;
+  --color-danger: #dc2626;
+
+  /* Compatibility aliases used by some pages */
+  --primary-color: var(--sliit-blue);
+  --radius: 8px;
+  --social-bg: var(--bg-elevated);
 
   /* Layout */
   --navbar-height: 72px;
-  --sidebar-width: 272px;
+  --sidebar-width: 264px;
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-xl: 20px;
-
-  /* Readability helpers */
-  --bg-secondary: #151920;
-  --btn-text-on-accent: #14181f;
-
-  /* Compatibility tokens used by some legacy classes */
-  --primary-color: var(--accent);
-  --background: var(--bg-base);
-  --surface: var(--bg-surface);
-  --text-color: var(--text-primary);
-  --border-color: var(--border-strong);
-  --radius: var(--radius-sm);
 }

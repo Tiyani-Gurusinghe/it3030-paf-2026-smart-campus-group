@@ -48,6 +48,10 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     Page<Ticket> findByReportedBy(Long reportedBy, Pageable pageable);
 
+    List<Ticket> findByResourceId(Long resourceId);
+
+    void deleteByResourceId(Long resourceId);
+
     long countByAssignedToAndStatusIn(Long assignedTo, List<TicketStatus> statuses);
 
     List<Ticket> findByAssignedToAndStatusInOrderByCreatedAtDesc(Long assignedTo, List<TicketStatus> statuses);
@@ -55,4 +59,12 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByAssignedToIsNullOrderByCreatedAtDesc();
 
     List<Ticket> findByDueAtBeforeAndStatusInOrderByDueAtAsc(LocalDateTime time, List<TicketStatus> statuses);
+
+    long countByStatus(TicketStatus status);
+
+    long countByAssignedToIsNull();
+
+    long countByDueAtBeforeAndStatusIn(LocalDateTime time, List<TicketStatus> statuses);
+
+    List<Ticket> findTop5ByOrderByCreatedAtDesc();
 }

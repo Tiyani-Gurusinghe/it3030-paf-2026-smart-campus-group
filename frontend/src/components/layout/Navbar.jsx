@@ -1,16 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
 
-const ROLE_STYLES = {
-  ADMIN: "role-badge-admin",
-  TECHNICIAN: "role-badge-technician",
-  USER: "role-badge-user",
-};
-
 function Navbar() {
-  const navigate = useNavigate();
-  const { user, logout } = useAuthContext();
+  const { user, logout, primaryRole } = useAuthContext();
   
   const handleLogout = () => {
     logout();
@@ -24,14 +16,23 @@ function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-brand">
-        <div className="navbar-brand-icon">🏛️</div>
-        Smart Campus
+        <div className="navbar-brand-icon" aria-hidden="true">SC</div>
+        <div>
+          <span className="navbar-brand-title">Smart Campus</span>
+          <span className="navbar-brand-subtitle">SLIIT Operations Hub</span>
+        </div>
       </div>
       <div className="navbar-spacer" />
-      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div className="navbar-actions">
         <NotificationPanel />
-        <div className="navbar-avatar" title={user?.fullName || "Profile"}>{initials}</div>
-        <button onClick={handleLogout} className="btn secondary" style={{ padding: '6px 12px', fontSize: '12px', height: 'fit-content' }}>
+        <div className="navbar-user-info">
+          <div className="navbar-avatar" title={user?.fullName || "Profile"}>{initials}</div>
+          <div className="navbar-user-text">
+            <span className="navbar-username">{user?.fullName || "Smart Campus User"}</span>
+            <span className={`role-badge role-badge-${primaryRole.toLowerCase()}`}>{primaryRole}</span>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="btn secondary navbar-logout-btn">
           Logout
         </button>
       </div>

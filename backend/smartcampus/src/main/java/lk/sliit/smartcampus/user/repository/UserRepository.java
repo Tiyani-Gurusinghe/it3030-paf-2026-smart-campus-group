@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.user.repository;
 
 import java.util.Optional;
+import lk.sliit.smartcampus.common.enums.RoleType;
 import java.util.List;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.common.enums.RoleType;
@@ -14,12 +15,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @EntityGraph(attributePaths = {"userRoles", "userRoles.role"})
     Optional<User> findByEmailIgnoreCase(String email);
+  
+    @Query("""
+           SELECT COUNT(DISTINCT u.id)
+           FROM User u
+           JOIN u.userRoles ur
+           JOIN ur.role r
+           WHERE r.name = :role
+           """)
+    long countUsersByRole(@Param("role") RoleType role);
 
     @Query("""
-            SELECT DISTINCT ur.userId
-            FROM UserRole ur
-            JOIN ur.role r
-            WHERE r.name = :roleType
-            """)
+           SELECT DISTINCT ur.userId
+           FROM UserRole ur
+           JOIN ur.role r
+           WHERE r.name = :roleType
+           """)
     List<Long> findUserIdsByRoleType(@Param("roleType") RoleType roleType);
 }

@@ -3,7 +3,6 @@ import { createBrowserRouter } from "react-router-dom";
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
-import { AuthProvider } from "../features/auth/context/AuthContext";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
 
@@ -35,27 +34,28 @@ import TechnicianTicketDetailPage from "../pages/technician/TechnicianTicketDeta
 // Misc
 import NotificationPanelPage from "../pages/notifications/NotificationPanelPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+import RouteErrorPage from "../pages/common/RouteErrorPage";
 
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
-  { path: "/login", element: <LoginPage /> },
-  { path: "/unauthorized", element: <UnauthorizedPage /> },
+  { path: "/login", element: <LoginPage />, errorElement: <RouteErrorPage /> },
+  { path: "/unauthorized", element: <UnauthorizedPage />, errorElement: <RouteErrorPage /> },
 
   // --- PROTECTED ROUTES ---
   {
     path: "/",
+    errorElement: <RouteErrorPage />,
     element: (
-      <AuthProvider>
-        <ProtectedRoute>
-          <AppLayout />
-        </ProtectedRoute>
-      </AuthProvider>
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
     ),
     children: [
       {
         index: true,
         element: <DashboardPage />,
       },
+      { path: "dashboard", element: <DashboardPage /> },
 
       // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },
