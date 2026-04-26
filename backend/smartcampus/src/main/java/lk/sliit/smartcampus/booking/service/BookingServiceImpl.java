@@ -15,6 +15,8 @@ import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,7 @@ public class BookingServiceImpl implements BookingService {
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
             throw new ConflictException("Start time must be before end time");
         }
+        validateTimeRules(requestDto.getStartTime(), requestDto.getEndTime());
 
         int quantity = resolveQuantity(resource, requestDto.getQuantity());
         validateAvailability(resource, quantity, requestDto.getStartTime(), requestDto.getEndTime(), null);
@@ -98,6 +101,31 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public int getAvailableQuantity(Long resourceId, LocalDateTime startTime, LocalDateTime endTime, Long excludingBookingId) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+
+        if (startTime.isAfter(endTime)) {
+            throw new ConflictException("Start time must be before end time");
+        }
+        validateTimeRules(startTime, endTime);
+
+        if (!isInventory(resource)) {
+            boolean isOverlapping = excludingBookingId == null
+                    ? bookingRepository.existsOverlappingBooking(resourceId, startTime, endTime)
+                    : bookingRepository.existsOverlappingBookingExcludingId(resourceId, excludingBookingId, startTime, endTime);
+            return isOverlapping ? 0 : 1;
+        }
+
+        int totalQuantity = resource.getCapacity() == null ? 1 : resource.getCapacity();
+        long bookedQuantity = excludingBookingId == null
+                ? bookingRepository.sumOverlappingQuantity(resourceId, startTime, endTime)
+                : bookingRepository.sumOverlappingQuantityExcludingId(resourceId, excludingBookingId, startTime, endTime);
+
+        return (int) Math.max(totalQuantity - bookedQuantity, 0);
+    }
+
+    @Override
     @Transactional
     public BookingResponseDto updateBookingStatus(Long id, BookingStatus status) {
         Booking booking = bookingRepository.findById(id)
@@ -127,6 +155,7 @@ public class BookingServiceImpl implements BookingService {
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
             throw new ConflictException("Start time must be before end time");
         }
+        validateTimeRules(requestDto.getStartTime(), requestDto.getEndTime());
 
         int quantity = resolveQuantity(resource, requestDto.getQuantity());
         validateAvailability(resource, quantity, requestDto.getStartTime(), requestDto.getEndTime(), id);
@@ -188,7 +217,7 @@ public class BookingServiceImpl implements BookingService {
         return requestedQuantity;
     }
 
-    private void validateAvailability(Resource resource, int quantity, java.time.LocalDateTime startTime, java.time.LocalDateTime endTime, Long excludingBookingId) {
+    private void validateAvailability(Resource resource, int quantity, LocalDateTime startTime, LocalDateTime endTime, Long excludingBookingId) {
         if (!isInventory(resource)) {
             boolean isOverlapping = excludingBookingId == null
                     ? bookingRepository.existsOverlappingBooking(resource.getId(), startTime, endTime)
@@ -213,5 +242,20 @@ public class BookingServiceImpl implements BookingService {
 
     private boolean isInventory(Resource resource) {
         return resource.getCategory() == ResourceCategory.EQUIPMENT || resource.getCategory() == ResourceCategory.UTILITY;
+    }
+
+    private void validateTimeRules(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime.getMinute() != 0 || startTime.getSecond() != 0 || startTime.getNano() != 0 ||
+                endTime.getMinute() != 0 || endTime.getSecond() != 0 || endTime.getNano() != 0) {
+            throw new ConflictException("Bookings must start and end on whole hours");
+        }
+
+        long minutes = Duration.between(startTime, endTime).toMinutes();
+        if (minutes <= 0) {
+            throw new ConflictException("Start time must be before end time");
+        }
+        if (minutes > 120) {
+            throw new ConflictException("Bookings cannot be longer than 2 hours");
+        }
     }
 }
