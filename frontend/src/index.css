@@ -3087,6 +3087,81 @@ body {
   background: rgba(22, 163, 74, 0.15);
 }
 
+.booking-alternatives {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.booking-alternatives h4 {
+  color: var(--text-primary);
+  font-size: 13px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.booking-alternatives p {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.booking-alternative-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.booking-alternative-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(11, 22, 244, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(246, 248, 255, 0.86);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.booking-alternative-card:hover {
+  border-color: rgba(255, 141, 0, 0.5);
+  background: rgba(255, 141, 0, 0.08);
+}
+
+.booking-alternative-card span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.booking-alternative-card strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.booking-alternative-card small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.booking-alternative-card em {
+  flex: 0 0 auto;
+  color: #15803d;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.booking-alternatives-muted {
+  margin-top: 10px;
+}
+
 .booking-day-list {
   display: flex;
   flex-direction: column;

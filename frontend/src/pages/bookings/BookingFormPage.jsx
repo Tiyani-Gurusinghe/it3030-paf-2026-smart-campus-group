@@ -50,6 +50,8 @@ const formatDisplayTime = (value) => {
     });
 };
 
+const formatResourceLabel = (value) => value?.replaceAll('_', ' ') || '';
+
 const BookingFormPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -66,6 +68,8 @@ const BookingFormPage = () => {
     const [calendarLoading, setCalendarLoading] = useState(false);
     const [availableQuantity, setAvailableQuantity] = useState(null);
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
+    const [alternativeResources, setAlternativeResources] = useState([]);
+    const [alternativesLoading, setAlternativesLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         resourceId: resourceIdParam || '',
@@ -76,21 +80,34 @@ const BookingFormPage = () => {
     });
 
     useEffect(() => {
-        if (!resourceIdParam) {
-            resourceApi.getAllResources()
-                .then(data => {
-                    const bookable = data.filter(r =>
-                        r.status === 'ACTIVE' && ['SPACE', 'EQUIPMENT', 'UTILITY'].includes(r.category)
-                    );
-                    setResources(bookable);
+        let ignore = false;
+
+        resourceApi.getAllResources()
+            .then(data => {
+                if (ignore) return;
+                const bookable = data.filter(r =>
+                    r.status === 'ACTIVE' && ['SPACE', 'EQUIPMENT', 'UTILITY'].includes(r.category)
+                );
+                setResources(bookable);
+            })
+            .catch(err => console.error("Failed to fetch resources", err));
+
+        if (resourceIdParam) {
+            resourceApi.getResourceById(resourceIdParam)
+                .then((resource) => {
+                    if (!ignore) setSelectedResource(resource);
                 })
-                .catch(err => console.error("Failed to fetch resources", err));
-            return;
+                .catch(err => console.error("Failed to fetch selected resource", err));
         }
 
-        resourceApi.getResourceById(resourceIdParam)
-            .then((resource) => setSelectedResource(resource))
-            .catch(err => console.error("Failed to fetch selected resource", err));
+        return () => {
+            ignore = true;
+        };
+    }, [resourceIdParam]);
+
+    useEffect(() => {
+        if (!resourceIdParam) return;
+        setFormData(prev => ({ ...prev, resourceId: resourceIdParam }));
     }, [resourceIdParam]);
 
     useEffect(() => {
@@ -238,7 +255,7 @@ const BookingFormPage = () => {
     })();
 
     useEffect(() => {
-        if (!isInventory || !formData.resourceId || !formData.startTime || !formData.endTime) {
+        if (!selectedResource || !formData.resourceId || !formData.startTime || !formData.endTime) {
             setAvailableQuantity(null);
             return;
         }
@@ -268,7 +285,7 @@ const BookingFormPage = () => {
         return () => {
             ignore = true;
         };
-    }, [formData.endTime, formData.resourceId, formData.startTime, isInventory]);
+    }, [formData.endTime, formData.resourceId, formData.startTime, selectedResource]);
 
     useEffect(() => {
         if (!isInventory || availableQuantity == null) return;
@@ -294,6 +311,98 @@ const BookingFormPage = () => {
             startTime: `${calendarDate}T${formatSlotTime(slot.start)}`,
             endTime: `${calendarDate}T${formatSlotTime(slot.end)}`,
         }));
+    };
+
+    const selectedQuantity = isInventory ? Number(formData.quantity) || 1 : 1;
+    const selectedSlotUnavailable = Boolean(
+        selectedResource &&
+        formData.startTime &&
+        formData.endTime &&
+        availableQuantity != null &&
+        availableQuantity < selectedQuantity
+    );
+
+    useEffect(() => {
+        if (!selectedSlotUnavailable || !selectedResource || resources.length === 0) {
+            setAlternativeResources([]);
+            return;
+        }
+
+        let ignore = false;
+        setAlternativesLoading(true);
+
+        const startMinutes = getMinutes(getTimeFromDateTime(formData.startTime));
+        const endMinutes = getMinutes(getTimeFromDateTime(formData.endTime));
+        const candidateResources = resources
+            .filter((resource) => String(resource.id) !== String(selectedResource.id))
+            .filter((resource) => resource.category === selectedResource.category)
+            .filter((resource) => resource.type === selectedResource.type)
+            .filter((resource) => {
+                const resourceStart = getMinutes(resource.availableFrom?.slice(0, 5) || '08:00');
+                const resourceEnd = getMinutes(resource.availableTo?.slice(0, 5) || '18:00');
+                return resourceStart <= startMinutes && resourceEnd >= endMinutes;
+            })
+            .map((resource) => {
+                let score = 0;
+                if (resource.location && selectedResource.location && resource.location === selectedResource.location) score += 30;
+                if (resource.floor && selectedResource.floor && resource.floor === selectedResource.floor) score += 20;
+                if ((resource.capacity || 0) >= (selectedResource.capacity || 0)) score += 8;
+                return { resource, score };
+            })
+            .sort((a, b) => b.score - a.score || a.resource.name.localeCompare(b.resource.name))
+            .slice(0, 8);
+
+        Promise.all(candidateResources.map(async ({ resource, score }) => {
+            try {
+                const response = await bookingApi.getAvailableQuantity(resource.id, {
+                    startTime: formData.startTime,
+                    endTime: formData.endTime,
+                });
+                const remaining = response?.data?.data ?? response?.data ?? 0;
+                return { ...resource, remaining, score };
+            } catch (err) {
+                console.error("Failed to check alternative availability", err);
+                return null;
+            }
+        }))
+            .then((results) => {
+                if (ignore) return;
+                const neededQuantity = selectedQuantity;
+                const availableAlternatives = results
+                    .filter(Boolean)
+                    .filter((resource) => Number(resource.remaining) >= neededQuantity)
+                    .sort((a, b) => b.score - a.score || Number(b.remaining) - Number(a.remaining))
+                    .slice(0, 3);
+                setAlternativeResources(availableAlternatives);
+            })
+            .finally(() => {
+                if (!ignore) setAlternativesLoading(false);
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [
+        formData.endTime,
+        formData.startTime,
+        resources,
+        selectedQuantity,
+        selectedResource,
+        selectedSlotUnavailable,
+    ]);
+
+    const applyAlternativeResource = (resource) => {
+        setSelectedResource(resource);
+        setAvailableQuantity(Number(resource.remaining) || null);
+        setFormData(prev => ({
+            ...prev,
+            resourceId: String(resource.id),
+            quantity: isInventory ? String(Math.min(Number(prev.quantity) || 1, Number(resource.remaining) || 1)) : prev.quantity,
+        }));
+
+        if (resourceIdParam) {
+            navigate(`/bookings/new?resourceId=${resource.id}&resourceName=${encodeURIComponent(resource.name)}`, { replace: true });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -547,6 +656,42 @@ const BookingFormPage = () => {
                                 </div>
                             )}
                         </div>
+
+                        {selectedSlotUnavailable && (
+                            <div className="booking-alternatives">
+                                <div>
+                                    <h4>Nearby alternatives</h4>
+                                    <p>Similar resources available for the selected time.</p>
+                                </div>
+
+                                {alternativesLoading ? (
+                                    <p className="booking-alternatives-muted">Checking matching resources...</p>
+                                ) : alternativeResources.length === 0 ? (
+                                    <p className="booking-alternatives-muted">No matching alternatives are free for this slot.</p>
+                                ) : (
+                                    <div className="booking-alternative-list">
+                                        {alternativeResources.map((resource) => (
+                                            <button
+                                                key={resource.id}
+                                                type="button"
+                                                className="booking-alternative-card"
+                                                onClick={() => applyAlternativeResource(resource)}
+                                            >
+                                                <span>
+                                                    <strong>{resource.name}</strong>
+                                                    <small>
+                                                        {formatResourceLabel(resource.type)}
+                                                        {resource.floor ? ` · Floor ${resource.floor}` : ''}
+                                                        {resource.location ? ` · ${resource.location}` : ''}
+                                                    </small>
+                                                </span>
+                                                <em>{Number(resource.remaining)} available</em>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {selectedDateBookings.length > 0 && (
                             <div className="booking-day-list">
