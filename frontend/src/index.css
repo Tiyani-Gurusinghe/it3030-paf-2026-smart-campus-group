@@ -1065,64 +1065,6 @@ select option {
   gap: 8px;
 }
 
-.ticket-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.46);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.ticket-modal {
-  width: min(520px, 100%);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: 24px;
-  color: var(--text-primary);
-}
-
-.ticket-modal h2 {
-  margin: 0 0 12px;
-  font-size: 22px;
-  line-height: 1.25;
-  color: var(--text-primary);
-}
-
-.ticket-modal p {
-  margin: 0 0 12px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
-
-.ticket-modal-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  margin-top: 16px;
-  color: var(--text-secondary);
-}
-
-.ticket-modal-summary strong {
-  color: var(--text-primary);
-}
-
-.ticket-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-  flex-wrap: wrap;
-}
-
 .empty-state {
   text-align: center;
   padding: 60px 24px;
@@ -1579,31 +1521,9 @@ select option {
   background-repeat: no-repeat;
   background-position: right 10px center;
   transition: border-color 0.15s;
-  width: auto !important;
-  min-width: 140px;
-  max-width: 220px;
 }
 
 .filter-select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.filter-input {
-  padding: 8px 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-family: inherit;
-  width: auto !important;
-  min-width: 140px;
-  max-width: 220px;
-  transition: border-color 0.15s;
-}
-
-.filter-input:focus {
   outline: none;
   border-color: var(--accent);
 }
