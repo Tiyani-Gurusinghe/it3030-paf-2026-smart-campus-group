@@ -355,7 +355,7 @@ const canManage = isStaff;
                                 {resource.category} - {resource.type}
                             </div>
 
-                            {resource.healthScore != null && (
+                            {resource.category !== 'BUILDING' && resource.healthScore != null && (
                                 <div className={`resource-health resource-health-${getHealthClass(resource.healthLabel)}`}>
                                     <div className="resource-health-header">
                                         <span>Health Score</span>
