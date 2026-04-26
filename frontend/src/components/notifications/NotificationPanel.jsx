@@ -10,6 +10,8 @@ const TYPE_ICONS = {
   TICKET_UPDATED: "📝",
   BOOKING_APPROVED: "✅",
   BOOKING_REJECTED: "❌",
+  NEW_TICKET: "🎟️",
+  NEW_BOOKING: "📅",
 };
 
 function timeAgo(dateStr) {
@@ -29,8 +31,15 @@ export default function NotificationPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef();
 
-  function getTicketPath(referenceId) {
+  function getNotificationPath(referenceId, type) {
     if (!referenceId) return "/notifications";
+
+    const isBooking = ["NEW_BOOKING", "BOOKING_APPROVED", "BOOKING_REJECTED"].includes(type);
+    
+    if (isBooking) {
+        return `/bookings`;
+    }
+
     if (isAdmin) return `/admin/tickets/${referenceId}`;
     if (isTechnician) return `/technician/tickets/${referenceId}`;
     return `/tickets/${referenceId}`;
@@ -100,7 +109,7 @@ export default function NotificationPanel() {
               notifications.map((n) => (
                 <Link
                   key={n.id}
-                  to={getTicketPath(n.referenceId)}
+                  to={getNotificationPath(n.referenceId, n.type)}
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => setOpen(false)}
                 >

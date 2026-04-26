@@ -313,6 +313,19 @@ public class TicketService {
             );
         }
 
+        List<Long> adminIds = userRepository.findUserIdsByRoleType(RoleType.ADMIN);
+        if (adminIds != null) {
+            for (Long adminId : adminIds) {
+                notificationService.createNotification(
+                        adminId,
+                        NotificationType.NEW_TICKET,
+                        "New Ticket Created",
+                        "A new ticket \"" + saved.getTitle() + "\" has been created.",
+                        saved.getId()
+                );
+            }
+        }
+
         return toResponse(saved);
     }
 
