@@ -18,6 +18,7 @@ const BookingListPage = () => {
         endTime: '',
         quantity: '1',
     });
+    const isInventoryBooking = (booking) => ['EQUIPMENT', 'UTILITY'].includes(booking?.resourceCategory);
 
     const loadBookings = useCallback(async () => {
         if (!user) {
@@ -129,7 +130,7 @@ const BookingListPage = () => {
             resourceId: editingBooking.resourceId,
             userId: editingBooking.userId,
             purpose: editForm.purpose.trim(),
-            quantity: Number(editForm.quantity) || 1,
+            quantity: isInventoryBooking(editingBooking) ? Number(editForm.quantity) || 1 : 1,
             bookingDate: getBookingDate(editForm.startTime),
             startTime: formatDateTime(editForm.startTime),
             endTime: formatDateTime(editForm.endTime),
@@ -243,7 +244,7 @@ const BookingListPage = () => {
                                     <strong>END</strong>
                                     <span>{formatDate(booking.endTime)}</span>
                                 </div>
-                                {booking.quantity > 1 && (
+                                {isInventoryBooking(booking) && booking.quantity > 1 && (
                                     <div className="ticket-meta-item">
                                         <strong>QTY</strong>
                                         <span>{booking.quantity}</span>
@@ -360,24 +361,26 @@ const BookingListPage = () => {
                                 />
                             </div>
 
-                            <div style={{ marginBottom: '12px' }}>
-                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
-                                    Quantity
-                                </label>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    name="quantity"
-                                    value={editForm.quantity}
-                                    onChange={(e) => {
-                                        if (e.target.value !== '' && !/^\d+$/.test(e.target.value)) return;
-                                        handleEditFormChange(e);
-                                    }}
-                                    required
-                                    style={{ width: '100%', padding: '10px' }}
-                                />
-                            </div>
+                            {isInventoryBooking(editingBooking) && (
+                                <div style={{ marginBottom: '12px' }}>
+                                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                        Quantity
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        name="quantity"
+                                        value={editForm.quantity}
+                                        onChange={(e) => {
+                                            if (e.target.value !== '' && !/^\d+$/.test(e.target.value)) return;
+                                            handleEditFormChange(e);
+                                        }}
+                                        required
+                                        style={{ width: '100%', padding: '10px' }}
+                                    />
+                                </div>
+                            )}
 
                             <div style={{ marginBottom: '12px' }}>
                                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
