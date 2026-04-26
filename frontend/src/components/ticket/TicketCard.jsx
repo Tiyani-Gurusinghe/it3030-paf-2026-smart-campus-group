@@ -35,12 +35,7 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
             {ticket.resourceName}
           </div>
         )}
-        {ticket.requiredSkillName && (
-          <div className="ticket-meta-item">
-            <strong>Skill</strong>
-            {ticket.requiredSkillName}
-          </div>
-        )}
+
         <div className="ticket-meta-item">
           <strong>Priority</strong>
           <span className={`priority-badge priority-badge-${priority}`}>

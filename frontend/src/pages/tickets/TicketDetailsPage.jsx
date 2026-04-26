@@ -104,12 +104,7 @@ export default function TicketDetailsPage() {
               {ticket.assignedToName ?? <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Unassigned</span>}
             </div>
           </div>
-          {hasRequiredSkill && (
-            <div className="detail-item">
-              <div className="detail-item-label">Required Skill</div>
-              <div className="detail-item-value">{ticket.requiredSkillName}</div>
-            </div>
-          )}
+
           {hasPreferredContact && (
             <div className="detail-item">
               <div className="detail-item-label">Preferred Contact</div>
