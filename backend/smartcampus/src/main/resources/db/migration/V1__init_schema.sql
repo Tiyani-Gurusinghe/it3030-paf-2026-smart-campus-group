@@ -93,6 +93,7 @@ CREATE TABLE bookings (
     booking_date DATE NOT NULL,
     start_time DATETIME(6) NOT NULL,
     end_time DATETIME(6) NOT NULL,
+    booking_quantity INT NOT NULL DEFAULT 1,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +227,6 @@ CREATE TABLE audit_logs (
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
-
 
 
 
