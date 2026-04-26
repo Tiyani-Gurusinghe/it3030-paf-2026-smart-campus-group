@@ -52,6 +52,14 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     void deleteByResourceId(Long resourceId);
 
+    long countByResourceId(Long resourceId);
+
+    long countByResourceIdAndStatusIn(Long resourceId, List<TicketStatus> statuses);
+
+    long countByResourceIdAndCreatedAtAfter(Long resourceId, LocalDateTime time);
+
+    long countByResourceIdAndResolvedAtAfter(Long resourceId, LocalDateTime time);
+
     long countByAssignedToAndStatusIn(Long assignedTo, List<TicketStatus> statuses);
 
     List<Ticket> findByAssignedToAndStatusInOrderByCreatedAtDesc(Long assignedTo, List<TicketStatus> statuses);
