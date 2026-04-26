@@ -42,6 +42,7 @@ public class TicketCommentService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
 
+        // Visibility check: users can only read comments for tickets they may view.
         ticketService.validateTicketVisibility(ticket, currentUserId);
 
         return historyRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
@@ -55,6 +56,7 @@ public class TicketCommentService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
 
+        // Visibility check: only participants allowed to view the ticket can add comments.
         ticketService.validateTicketVisibility(ticket, userId);
 
         User author = userRepository.findById(userId)
@@ -67,9 +69,11 @@ public class TicketCommentService {
         history.setNote(request.getContent());
 
         TicketHistory saved = historyRepository.save(history);
+        // SLA tracking: staff comments can count as the first response to the ticket.
         ticketService.markFirstResponseIfApplicable(ticket, userId);
 
         if (ticket.getReportedBy() != null && !ticket.getReportedBy().equals(userId)) {
+            // Notification: reporter is alerted when someone else comments on their ticket.
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.NEW_COMMENT,
@@ -86,6 +90,7 @@ public class TicketCommentService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
 
+        // Visibility check: comment edits still require access to the parent ticket.
         ticketService.validateTicketVisibility(ticket, requesterId);
 
         TicketHistory history = historyRepository.findById(commentId)
@@ -97,6 +102,7 @@ public class TicketCommentService {
 
         boolean isAdmin = ticketService.isAdmin(requesterId);
 
+        // Ownership rule: admins can edit any comment; users can edit only their own.
         if (!isAdmin && !history.getActorUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only edit your own comments");
         }
@@ -111,6 +117,7 @@ public class TicketCommentService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
 
+        // Visibility check: comment deletes still require access to the parent ticket.
         ticketService.validateTicketVisibility(ticket, requesterId);
 
         TicketHistory history = historyRepository.findById(commentId)
@@ -122,6 +129,7 @@ public class TicketCommentService {
 
         boolean isAdmin = ticketService.isAdmin(requesterId);
 
+        // Ownership rule: admins can delete any comment; users can delete only their own.
         if (!isAdmin && !history.getActorUserId().equals(requesterId)) {
             throw new UnauthorizedException("You can only delete your own comments");
         }

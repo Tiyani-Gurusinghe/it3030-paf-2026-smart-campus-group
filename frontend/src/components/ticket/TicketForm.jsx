@@ -33,6 +33,8 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
   const [skills, setSkills] = useState([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterSub, setFilterSub] = useState("");
 
   useEffect(() => {
     const normalized = initialData
@@ -100,14 +102,56 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     [resources, form.resourceId]
   );
 
+  const buildings = useMemo(() => resources.filter(r => r.category === "BUILDING"), [resources]);
+  const assetTypes = useMemo(() => {
+    const types = new Set();
+    resources.forEach(r => {
+      if (r.category === "EQUIPMENT" || r.category === "UTILITY") {
+        if (r.type) types.add(r.type);
+      }
+    });
+    return Array.from(types).sort();
+  }, [resources]);
+
+  const filteredResources = useMemo(() => {
+    let list = resources;
+    if (filterCategory === "INFRA") {
+      list = list.filter(r => r.category === "BUILDING" || r.category === "SPACE");
+      if (filterSub) {
+        list = list.filter(r => String(r.id) === filterSub || (r.parentResource && String(r.parentResource.id) === filterSub));
+      }
+    } else if (filterCategory === "INV") {
+      list = list.filter(r => r.category === "EQUIPMENT" || r.category === "UTILITY");
+      if (filterSub) {
+        list = list.filter(r => r.type === filterSub);
+      }
+    }
+    return list;
+  }, [resources, filterCategory, filterSub]);
+
   function handleChange(e) {
     const { name, value } = e.target;
-    setForm((prev) => {
-      if (name === "resourceId") {
-        return { ...prev, resourceId: value, requiredSkillId: "" };
+    
+    if (name === "resourceId") {
+      if (value) {
+        const r = resources.find(x => String(x.id) === value);
+        if (r) {
+          if (r.category === "BUILDING" || r.category === "SPACE") {
+            setFilterCategory("INFRA");
+            if (r.category === "BUILDING") setFilterSub(String(r.id));
+            else if (r.parentResource) setFilterSub(String(r.parentResource.id));
+            else setFilterSub("");
+          } else if (r.category === "EQUIPMENT" || r.category === "UTILITY") {
+            setFilterCategory("INV");
+            setFilterSub(r.type || "");
+          }
+        }
       }
-      return { ...prev, [name]: value };
-    });
+      setForm(prev => ({ ...prev, resourceId: value, requiredSkillId: "" }));
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleAttachmentChange(e) {
@@ -137,6 +181,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     setAttachmentFiles(files);
   }
 
+  // Frontend validation gives quick feedback; backend validation still enforces the final rules.
   function validateForm() {
     const title = (form.title || "").trim();
     const description = (form.description || "").trim();
@@ -213,6 +258,63 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
       )}
 
       <div className="form-section-title">1. Select Resource</div>
+      {loadingResources ? (
+        <div className="skeleton-line" style={{ height: "40px", marginBottom: "16px" }} />
+      ) : (
+        <div style={{ display: "flex", gap: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+          <div className="form-field" style={{ flex: 1, minWidth: "180px", marginBottom: 0 }}>
+            <label>Category</label>
+            <select
+              value={filterCategory}
+              onChange={(e) => {
+                setFilterCategory(e.target.value);
+                setFilterSub("");
+                setForm(prev => ({ ...prev, resourceId: "", requiredSkillId: "" }));
+              }}
+              className="resource-select"
+            >
+              <option value="">All Categories</option>
+              <option value="INFRA">Infrastructure (Buildings & Spaces)</option>
+              <option value="INV">Inventory (Standalone Assets)</option>
+            </select>
+          </div>
+
+          {filterCategory === "INFRA" && (
+            <div className="form-field" style={{ flex: 1, minWidth: "180px", marginBottom: 0 }}>
+              <label>Building</label>
+              <select
+                value={filterSub}
+                onChange={(e) => {
+                  setFilterSub(e.target.value);
+                  setForm(prev => ({ ...prev, resourceId: "", requiredSkillId: "" }));
+                }}
+                className="resource-select"
+              >
+                <option value="">All Buildings</option>
+                {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {filterCategory === "INV" && (
+            <div className="form-field" style={{ flex: 1, minWidth: "180px", marginBottom: 0 }}>
+              <label>Asset Type</label>
+              <select
+                value={filterSub}
+                onChange={(e) => {
+                  setFilterSub(e.target.value);
+                  setForm(prev => ({ ...prev, resourceId: "", requiredSkillId: "" }));
+                }}
+                className="resource-select"
+              >
+                <option value="">All Types</option>
+                {assetTypes.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="form-field">
         <label htmlFor="resourceId">Affected Resource *</label>
         {loadingResources ? (
@@ -227,7 +329,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
             className="resource-select"
           >
             <option value="">-- Select a resource --</option>
-            {resources.map((r) => (
+            {filteredResources.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name} {r.location ? `(${r.location})` : ""}
               </option>

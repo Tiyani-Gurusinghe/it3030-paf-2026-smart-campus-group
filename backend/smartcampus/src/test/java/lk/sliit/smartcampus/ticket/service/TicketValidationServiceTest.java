@@ -45,6 +45,7 @@ class TicketValidationServiceTest {
     }
 
     @Test
+    // Test proof: validation service rejects invalid skill-resource mappings.
     void createRejectsInvalidSkillResourceCombo() {
         TicketRequest request = new TicketRequest();
         request.setTitle("Test");
@@ -69,6 +70,7 @@ class TicketValidationServiceTest {
     }
 
     @Test
+    // Test proof: valid required fields, active resource, and matching skill pass validation.
     void createAllowsValidSkillResourceCombo() {
         TicketRequest request = new TicketRequest();
         request.setTitle("Valid ticket");
@@ -93,6 +95,7 @@ class TicketValidationServiceTest {
     }
 
     @Test
+    // Test proof: max 3 attachments rule is enforced.
     void fileValidationRejectsMoreThanThreeFiles() {
         MultipartFile f1 = mock(MultipartFile.class);
         MultipartFile f2 = mock(MultipartFile.class);
@@ -104,6 +107,7 @@ class TicketValidationServiceTest {
     }
 
     @Test
+    // Test proof: non-image file uploads are rejected.
     void fileValidationRejectsNonImageFiles() {
         MultipartFile file = mock(MultipartFile.class);
         when(file.isEmpty()).thenReturn(false);
@@ -114,6 +118,7 @@ class TicketValidationServiceTest {
     }
 
     @Test
+    // Test proof: missing resource returns not-found validation behavior.
     void missingResourceThrowsNotFound() {
         when(jdbcTemplate.queryForList("SELECT id,status FROM resources WHERE id=?", 10L))
                 .thenReturn(List.of());

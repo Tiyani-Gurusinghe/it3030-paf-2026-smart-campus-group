@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 404 Not Found: the requested resource id does not exist or is not visible.
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
@@ -37,6 +38,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 403 Forbidden: the user is authenticated but not allowed to perform this action.
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
@@ -49,6 +51,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 400 Bad Request: the client sent invalid input or an invalid state change.
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -61,11 +64,13 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 409 Conflict: the request conflicts with current server state.
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        // 400 Bad Request: @Valid DTO validation errors are returned field by field.
         Map<String, String> validationErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
                 .forEach(fieldError -> validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage()));
@@ -91,6 +96,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 400 Bad Request: method parameter validation failed.
         return ResponseEntity.badRequest().body(error);
     }
 
@@ -103,6 +109,7 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI()
         );
+        // 500 Internal Server Error: fallback for unexpected server-side failures.
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

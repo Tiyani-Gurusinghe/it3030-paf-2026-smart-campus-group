@@ -62,6 +62,7 @@ class TicketServiceTest {
     }
 
     @Test
+    // Test proof: auto assignment chooses the technician with the lowest active load.
     void autoAssignmentChoosesLeastBusyTechnician() {
         User reporter = new User();
         reporter.setId(1L);
@@ -96,6 +97,7 @@ class TicketServiceTest {
     }
 
     @Test
+    // Test proof: invalid role/action returns 403-style UnauthorizedException.
     void unauthorizedUserCannotUpdateStatus() {
         Ticket ticket = new Ticket();
         ticket.setId(1L);
@@ -118,6 +120,7 @@ class TicketServiceTest {
     }
 
     @Test
+    // Test proof: reporter can resolve and close their own ticket through allowed transitions.
     void reporterCanResolveAndCloseOwnTicket() {
         Ticket ticket = new Ticket();
         ticket.setId(1L);
