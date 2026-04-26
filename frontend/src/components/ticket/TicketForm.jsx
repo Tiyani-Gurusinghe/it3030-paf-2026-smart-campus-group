@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useAuth from "../../features/auth/hooks/useAuth";
 import resourceApi from "../../features/resources/api/resourceApi";
 import { getSkillsForResource } from "../../api/ticket/ticketApi";
@@ -35,6 +35,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSub, setFilterSub] = useState("");
+  const attachmentInputRef = useRef(null);
 
   useEffect(() => {
     const normalized = initialData
@@ -154,27 +155,42 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  function handleAttachmentChange(e) {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) {
-      setAttachmentFiles([]);
-      return;
-    }
-
+  function validateAttachmentFiles(files) {
     if (files.length > MAX_ATTACHMENTS) {
-      setError("You can upload up to 3 attachments.");
-      return;
+      return "You can upload up to 3 attachments.";
     }
 
     for (const file of files) {
       if (!file.type?.startsWith("image/")) {
-        setError("Only image files are allowed for attachments.");
-        return;
+        return "Only image files are allowed for attachments.";
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError("Each attachment must be 5MB or smaller.");
-        return;
+        return "Each attachment must be 5MB or smaller.";
       }
+    }
+
+    return "";
+  }
+
+  function clearAttachmentSelection() {
+    setAttachmentFiles([]);
+    if (attachmentInputRef.current) {
+      attachmentInputRef.current.value = "";
+    }
+  }
+
+  function handleAttachmentChange(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) {
+      clearAttachmentSelection();
+      return;
+    }
+
+    const validationMessage = validateAttachmentFiles(files);
+    if (validationMessage) {
+      setError(validationMessage);
+      clearAttachmentSelection();
+      return;
     }
 
     setError("");
@@ -223,6 +239,12 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     const validationMessage = validateForm();
     if (validationMessage) {
       setError(validationMessage);
+      return;
+    }
+    const attachmentValidationMessage = validateAttachmentFiles(attachmentFiles);
+    if (attachmentValidationMessage) {
+      setError(attachmentValidationMessage);
+      clearAttachmentSelection();
       return;
     }
     setSaving(true);
@@ -441,6 +463,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
           <div className="form-field" style={{ gridColumn: "1 / -1" }}>
             <label htmlFor="attachments">Attachments (up to 3 images, max 5MB each)</label>
             <input
+              ref={attachmentInputRef}
               id="attachments"
               name="attachments"
               type="file"
