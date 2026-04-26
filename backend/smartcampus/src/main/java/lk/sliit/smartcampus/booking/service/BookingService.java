@@ -4,6 +4,7 @@ import lk.sliit.smartcampus.booking.dto.BookingRequestDto;
 import lk.sliit.smartcampus.booking.dto.BookingResponseDto;
 import lk.sliit.smartcampus.booking.enums.BookingStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingService {
@@ -17,6 +18,8 @@ public interface BookingService {
     List<BookingResponseDto> getBookingsByUserId(Long userId);
     
     List<BookingResponseDto> getBookingsByResourceId(Long resourceId);
+
+    int getAvailableQuantity(Long resourceId, LocalDateTime startTime, LocalDateTime endTime, Long excludingBookingId);
     
     BookingResponseDto updateBookingStatus(Long id, BookingStatus status);
 
