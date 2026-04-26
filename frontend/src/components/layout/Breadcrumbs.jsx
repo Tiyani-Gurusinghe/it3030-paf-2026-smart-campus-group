@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 const ROUTE_LABELS = {
   "": "Home",
   tickets: "Tickets",
-  my: "My Tickets",
+  my: "All Tickets",
   create: "Create Ticket",
   new: "New",
   edit: "Edit",
@@ -40,8 +40,8 @@ export default function Breadcrumbs() {
   // Virtual parent crumbs: inject a logical parent when the URL doesn't include it.
   // e.g. /tickets/:id has no "my" segment, but logically lives under My Tickets.
   const VIRTUAL_PARENTS = {
-    // When we see tickets/:id, prepend "My Tickets" → /tickets/my
-    tickets_id: { label: "My Tickets", path: "/tickets/my" },
+    // When we see tickets/:id, prepend "All Tickets" → /tickets/my
+    tickets_id: { label: "All Tickets", path: "/tickets/my" },
   };
 
   let crumbs = [];

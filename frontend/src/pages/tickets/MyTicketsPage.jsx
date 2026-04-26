@@ -97,7 +97,7 @@ export default function MyTicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">My Tickets</h1>
+          <h1 className="page-title">All Tickets</h1>
           <p className="page-subtitle">
             Track all your submitted maintenance and incident reports.
             {!loading && (
