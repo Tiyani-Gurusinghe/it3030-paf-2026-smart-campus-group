@@ -290,8 +290,10 @@ export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
   const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = {};
   if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",
     headers, // No Content-Type: let browser set multipart boundary

@@ -1,11 +1,30 @@
--- =========================
--- ROLES
--- =========================
+USE smartcampusdb;
+
+-- Roles
 INSERT IGNORE INTO roles (id, name) VALUES
 (1, 'ADMIN'),
 (2, 'USER'),
 (3, 'TECHNICIAN');
+-- Users
+INSERT IGNORE INTO users (
+    id,
+    oauth_provider,
+    oauth_id,
+    full_name,
+    email,
+    campus_id,
+    password,
+    created_at
+) VALUES
+(10, 'google', 'admin1', 'Admin User', 'admin@test.com', 'IT20260001', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user@test.com', 'IT20260002', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', 'IT20260003', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', 'IT20260004', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', 'IT20260005', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', 'IT20260006', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', 'IT20260007', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP);
 
+--- =========================
 -- =========================
 -- USERS
 -- =========================
@@ -22,13 +41,13 @@ INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, passwo
 -- USER ROLES
 -- =========================
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES
-(10, 1),
-(20, 2),
-(30, 3),
-(40, 3),
-(50, 3),
-(60, 2),
-(70, 2);
+(10, 2), -- Admin User = ADMIN
+(20, 1), -- Normal User = USER
+(30, 3), -- Alice = TECHNICIAN
+(40, 3), -- Bob = TECHNICIAN
+(50, 3), -- Charlie = TECHNICIAN
+(60, 1), -- Nimal = USER
+(70, 1); -- Ayesha = USER
 
 -- =========================
 -- SKILLS
@@ -125,129 +144,115 @@ INSERT IGNORE INTO resource_faculties (resource_id, faculty) VALUES
 (15, 'ENGINEERING');
 
 
--- =========================
 -- TICKETS
--- =========================
-INSERT IGNORE INTO tickets (
+INSERT INTO tickets (
     id, title, location, category, description, priority, preferred_contact, status,
-    reported_by, assigned_to, resource_id, required_skill_id, due_at, closed_at,
-    attachment_urls, created_at, updated_at
+    reported_by, assigned_to, resource_id, required_skill_id,
+    due_at, original_due_at, due_extended_at, due_extended_by, due_extension_note,
+    closed_at, first_responded_at, resolved_at,
+    resolution_notes, rejected_reason, attachment_urls,
+    created_at, updated_at
 ) VALUES
-(1,
- 'Projector not turning on',
- 'Main Auditorium',
- 'EQUIPMENT',
+(1, 'Projector not turning on', 'Main Auditorium', 'EQUIPMENT',
  'The 4K laser projector in the main auditorium does not power on before lectures.',
- 'HIGH',
- 'user@test.com',
- 'OPEN',
+ 'HIGH', 'user@test.com', 'OPEN',
  20, 30, 7, 2,
- DATE_ADD(NOW(), INTERVAL 4 HOUR),
- NULL,
+ DATE_ADD(NOW(6), INTERVAL 4 HOUR), DATE_ADD(NOW(6), INTERVAL 4 HOUR), NULL, NULL, NULL,
+ NULL, NULL, NULL,
+ NULL, NULL,
  JSON_ARRAY('/uploads/tickets/1/projector-front.jpg', '/uploads/tickets/1/projector-cable.jpg'),
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-),
+ NOW(6), NOW(6)),
 
-(2,
- 'Electrical sparks near lab switchboard',
- 'Electrical Lab',
- 'SAFETY',
+(2, 'Electrical sparks near lab switchboard', 'Electrical Lab', 'SAFETY',
  'Small sparks observed near the switchboard in Electrical Lab when powering equipment.',
- 'HIGH',
- 'ayesha@test.com',
- 'IN_PROGRESS',
+ 'HIGH', 'ayesha@test.com', 'IN_PROGRESS',
  70, 40, 15, 4,
- DATE_ADD(NOW(), INTERVAL 4 HOUR),
- NULL,
+ DATE_ADD(NOW(6), INTERVAL 4 HOUR), DATE_ADD(NOW(6), INTERVAL 4 HOUR), NULL, NULL, NULL,
+ NULL, NOW(6), NULL,
+ NULL, NULL,
  JSON_ARRAY('/uploads/tickets/2/switchboard.jpg'),
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-),
+ NOW(6), NOW(6)),
 
-(3,
- 'Air conditioning not cooling',
- 'Architecture Studio',
- 'FACILITY',
+(3, 'Air conditioning not cooling', 'Architecture Studio', 'FACILITY',
  'The studio is unusually hot and the air conditioning is not cooling properly during lectures.',
- 'MEDIUM',
- 'nimal@test.com',
- 'OPEN',
+ 'MEDIUM', 'nimal@test.com', 'OPEN',
  60, 50, 12, 3,
- DATE_ADD(NOW(), INTERVAL 1 DAY),
+ DATE_ADD(NOW(6), INTERVAL 1 DAY), DATE_ADD(NOW(6), INTERVAL 1 DAY), NULL, NULL, NULL,
+ NULL, NULL, NULL,
+ NULL, NULL,
  NULL,
- NULL,
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-),
+ NOW(6), NOW(6)),
 
-(4,
- 'Broken chairs in hall',
- 'Business Hall A',
- 'FURNITURE',
+(4, 'Broken chairs in hall', 'Business Hall A', 'FURNITURE',
  'Several chairs in Business Hall A are broken and unsafe for student use.',
- 'LOW',
- 'user@test.com',
- 'OPEN',
+ 'LOW', 'user@test.com', 'OPEN',
  20, 30, 13, 1,
- DATE_ADD(NOW(), INTERVAL 3 DAY),
+ DATE_ADD(NOW(6), INTERVAL 3 DAY), DATE_ADD(NOW(6), INTERVAL 3 DAY), NULL, NULL, NULL,
+ NULL, NULL, NULL,
+ NULL, NULL,
  NULL,
- NULL,
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-),
+ NOW(6), NOW(6)),
 
-(5,
- 'Lab computers cannot access internet',
- 'Network Lab',
- 'NETWORK',
+(5, 'Lab computers cannot access internet', 'Network Lab', 'NETWORK',
  'Most workstations in Network Lab have no internet access since this morning.',
- 'HIGH',
- 'ayesha@test.com',
- 'IN_PROGRESS',
+ 'HIGH', 'ayesha@test.com', 'IN_PROGRESS',
  70, 30, 11, 2,
- DATE_ADD(NOW(), INTERVAL 4 HOUR),
- NULL,
+ DATE_ADD(NOW(6), INTERVAL 4 HOUR), DATE_ADD(NOW(6), INTERVAL 4 HOUR), NULL, NULL, NULL,
+ NULL, NOW(6), NULL,
+ NULL, NULL,
  JSON_ARRAY('/uploads/tickets/5/network-lab-error.png'),
- CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-);
+ NOW(6), NOW(6)),
 
--- =========================
+(6, 'Projector black screen in A401', 'A401', 'PROJECTOR',
+ 'Projector shows a black screen even though the power indicator is on.',
+ 'HIGH', '0771234567', 'OPEN',
+ 20, NULL, 7, 2,
+ DATE_ADD(NOW(6), INTERVAL 4 HOUR), DATE_ADD(NOW(6), INTERVAL 4 HOUR), NULL, NULL, NULL,
+ NULL, NULL, NULL,
+ NULL, NULL,
+ NULL,
+ NOW(6), NOW(6)),
+
+(7, 'Extended due date test ticket', 'Software Lab', 'FACILITY',
+ 'This ticket is seeded with due-date extension data for testing.',
+ 'MEDIUM', 'user@test.com', 'OPEN',
+ 20, 30, 6, 1,
+ DATE_ADD(NOW(6), INTERVAL 2 DAY), DATE_ADD(NOW(6), INTERVAL 1 DAY), NOW(6), 10,
+ 'Admin extended the due date due to technician workload.',
+ NULL, NULL, NULL,
+ NULL, NULL,
+ NULL,
+ NOW(6), NOW(6));
+
 -- TICKET HISTORY
--- =========================
-INSERT IGNORE INTO ticket_history (
-    id, ticket_id, actor_user_id, action_type, from_status, to_status,
-    previous_assignee, new_assignee, note, created_at
+INSERT INTO ticket_history (
+    id, ticket_id, actor_user_id, action_type,
+    from_status, to_status, previous_assignee, new_assignee,
+    note, created_at
 ) VALUES
-(1, 1, 20, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Ticket created by user for auditorium projector issue.', CURRENT_TIMESTAMP),
-(2, 1, 10, 'ASSIGNED', NULL, NULL, NULL, 30,
- 'Auto-assigned to Alice Technician based on IT support skill.', CURRENT_TIMESTAMP),
+(1, 1, 20, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Ticket created by user for auditorium projector issue.', CURRENT_TIMESTAMP),
+(2, 1, 10, 'ASSIGNED', NULL, NULL, NULL, 30, 'Auto-assigned to Alice Technician based on IT support skill.', CURRENT_TIMESTAMP),
 
-(3, 2, 70, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Electrical hazard reported in Electrical Lab.', CURRENT_TIMESTAMP),
-(4, 2, 10, 'ASSIGNED', NULL, NULL, NULL, 40,
- 'Assigned to Bob Electrician.', CURRENT_TIMESTAMP),
-(5, 2, 40, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 40, 40,
- 'Started inspection of affected switchboard.', CURRENT_TIMESTAMP),
+(3, 2, 70, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Electrical hazard reported in Electrical Lab.', CURRENT_TIMESTAMP),
+(4, 2, 10, 'ASSIGNED', NULL, NULL, NULL, 40, 'Assigned to Bob Electrician.', CURRENT_TIMESTAMP),
+(5, 2, 40, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 40, 40, 'Started inspection of affected switchboard.', CURRENT_TIMESTAMP),
 
-(6, 3, 60, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Cooling issue reported in Architecture Studio.', CURRENT_TIMESTAMP),
-(7, 3, 10, 'ASSIGNED', NULL, NULL, NULL, 50,
- 'Assigned to Charlie HVAC.', CURRENT_TIMESTAMP),
+(6, 3, 60, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Cooling issue reported in Architecture Studio.', CURRENT_TIMESTAMP),
+(7, 3, 10, 'ASSIGNED', NULL, NULL, NULL, 50, 'Assigned to Charlie HVAC.', CURRENT_TIMESTAMP),
 
-(8, 4, 20, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Broken chairs reported in Business Hall A.', CURRENT_TIMESTAMP),
-(9, 4, 10, 'ASSIGNED', NULL, NULL, NULL, 30,
- 'Assigned as general maintenance task.', CURRENT_TIMESTAMP),
+(8, 4, 20, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Broken chairs reported in Business Hall A.', CURRENT_TIMESTAMP),
+(9, 4, 10, 'ASSIGNED', NULL, NULL, NULL, 30, 'Assigned as general maintenance task.', CURRENT_TIMESTAMP),
 
-(10, 5, 70, 'CREATED', NULL, 'OPEN', NULL, NULL,
- 'Network outage reported in Network Lab.', CURRENT_TIMESTAMP),
-(11, 5, 10, 'ASSIGNED', NULL, NULL, NULL, 30,
- 'Assigned to Alice Technician.', CURRENT_TIMESTAMP),
-(12, 5, 30, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 30, 30,
- 'Diagnosing switch and router connectivity.', CURRENT_TIMESTAMP);
+(10, 5, 70, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Network outage reported in Network Lab.', CURRENT_TIMESTAMP),
+(11, 5, 10, 'ASSIGNED', NULL, NULL, NULL, 30, 'Assigned to Alice Technician.', CURRENT_TIMESTAMP),
+(12, 5, 30, 'STATUS_CHANGED', 'OPEN', 'IN_PROGRESS', 30, 30, 'Diagnosing switch and router connectivity.', CURRENT_TIMESTAMP),
 
--- =========================
+(13, 6, 20, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Manual test ticket created for A401 projector issue.', CURRENT_TIMESTAMP),
+(14, 7, 20, 'CREATED', NULL, 'OPEN', NULL, NULL, 'Due-date extension test ticket created.', CURRENT_TIMESTAMP),
+(15, 7, 10, 'DUE_EXTENDED', NULL, NULL, NULL, NULL, 'Due date extended because technician workload is high.', CURRENT_TIMESTAMP);
+
 -- NOTIFICATIONS
--- =========================
-INSERT IGNORE INTO notifications (
+INSERT INTO notifications (
     id, user_id, ticket_id, type, title, message, is_read, created_at
 ) VALUES
 (1, 30, 1, 'TICKET_ASSIGNED', 'New ticket assigned', 'Projector not turning on has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
@@ -256,12 +261,41 @@ INSERT IGNORE INTO notifications (
 (4, 30, 4, 'TICKET_ASSIGNED', 'New ticket assigned', 'Broken chairs in hall has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
 (5, 30, 5, 'TICKET_ASSIGNED', 'New ticket assigned', 'Lab computers cannot access internet has been assigned to you.', FALSE, CURRENT_TIMESTAMP),
 (6, 70, 2, 'TICKET_UPDATED', 'Ticket status updated', 'Your ticket Electrical sparks near lab switchboard is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP),
-(7, 70, 5, 'Ticket status updated', 'Ticket status updated', 'Your ticket Lab computers cannot access internet is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP);
+(7, 70, 5, 'TICKET_UPDATED', 'Ticket status updated', 'Your ticket Lab computers cannot access internet is now IN_PROGRESS.', FALSE, CURRENT_TIMESTAMP),
+(8, 20, 7, 'DUE_EXTENDED', 'Due date extended', 'Your ticket Extended due date test ticket has a new due date.', FALSE, CURRENT_TIMESTAMP);
 
--- =========================
+-- NOTIFICATION PREFERENCES
+INSERT INTO notification_preferences (user_id, type, enabled) VALUES
+(10, 'TICKET_ASSIGNED', TRUE),
+(10, 'TICKET_UPDATED', TRUE),
+(10, 'DUE_EXTENDED', TRUE),
+
+(20, 'TICKET_ASSIGNED', TRUE),
+(20, 'TICKET_UPDATED', TRUE),
+(20, 'DUE_EXTENDED', TRUE),
+
+(30, 'TICKET_ASSIGNED', TRUE),
+(30, 'TICKET_UPDATED', TRUE),
+(30, 'DUE_EXTENDED', TRUE),
+
+(40, 'TICKET_ASSIGNED', TRUE),
+(40, 'TICKET_UPDATED', TRUE),
+(40, 'DUE_EXTENDED', TRUE),
+
+(50, 'TICKET_ASSIGNED', TRUE),
+(50, 'TICKET_UPDATED', TRUE),
+(50, 'DUE_EXTENDED', TRUE),
+
+(60, 'TICKET_ASSIGNED', TRUE),
+(60, 'TICKET_UPDATED', TRUE),
+(60, 'DUE_EXTENDED', TRUE),
+
+(70, 'TICKET_ASSIGNED', TRUE),
+(70, 'TICKET_UPDATED', TRUE),
+(70, 'DUE_EXTENDED', TRUE);
+
 -- AUDIT LOGS
--- =========================
-INSERT IGNORE INTO audit_logs (
+INSERT INTO audit_logs (
     id, actor_user_id, entity_type, entity_id, action, details, created_at
 ) VALUES
 (1, 10, 'TICKET', 1, 'ASSIGN', 'Assigned ticket 1 to user 30', CURRENT_TIMESTAMP),
@@ -270,4 +304,5 @@ INSERT IGNORE INTO audit_logs (
 (4, 10, 'TICKET', 4, 'ASSIGN', 'Assigned ticket 4 to user 30', CURRENT_TIMESTAMP),
 (5, 10, 'TICKET', 5, 'ASSIGN', 'Assigned ticket 5 to user 30', CURRENT_TIMESTAMP),
 (6, 40, 'TICKET', 2, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP),
-(7, 30, 'TICKET', 5, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP);
+(7, 30, 'TICKET', 5, 'STATUS_CHANGE', 'Changed status from OPEN to IN_PROGRESS', CURRENT_TIMESTAMP),
+(8, 10, 'TICKET', 7, 'DUE_EXTENDED', 'Extended due date for ticket 7', CURRENT_TIMESTAMP);

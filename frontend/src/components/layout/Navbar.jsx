@@ -3,16 +3,16 @@ import { useAuthContext } from "../../features/auth/context/AuthContext";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { googleLogout } from "@react-oauth/google";
 import Breadcrumbs from "./Breadcrumbs";
+import { useAuthContext } from "../../features/auth/context/AuthContext";
 
 function Navbar() {
   const { user, logout, primaryRole } = useAuthContext();
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
-    googleLogout();
     logout();
-    // Use window.location to force full page reload to homepage
-    window.location.href = "/";
+    // Redirect to the public home page, not the protected dashboard ("/")
+    window.location.href = "/home";
   };
 
   const initials = user?.fullName
@@ -28,9 +28,11 @@ function Navbar() {
           <span className="navbar-brand-subtitle">SLIIT Operations Hub</span>
         </div>
       </div>
+      
       <div className="navbar-breadcrumb-area">
         <Breadcrumbs />
       </div>
+
       <div className="navbar-spacer" />
       <div className="navbar-actions">
         <NotificationPanel />
