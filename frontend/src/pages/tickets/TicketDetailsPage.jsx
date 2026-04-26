@@ -63,10 +63,11 @@ export default function TicketDetailsPage() {
 
   return (
     <div className="page">
-      <button onClick={() => navigate("/tickets/my")} className="btn-back">
-        ← Back
-      </button>
-      <div className="card details-card">
+      <div className="form-layout-wrapper">
+        <button onClick={() => navigate(-1)} className="btn-back btn-back-floating">
+          Back
+        </button>
+        <div className="card details-card">
 
         {/* Header */}
         <div className="details-header">
@@ -185,8 +186,9 @@ export default function TicketDetailsPage() {
 
         {/* Actions */}
         <div className="card-actions">
-          <Link to="/tickets/my" className="btn secondary">Back to My Tickets</Link>
+          <button onClick={() => navigate(-1)} className="btn secondary">Back to List</button>
         </div>
+      </div>
       </div>
     </div>
   );
