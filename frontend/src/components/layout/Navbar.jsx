@@ -3,7 +3,6 @@ import { useAuthContext } from "../../features/auth/context/AuthContext";
 import NotificationPanel from "../notifications/NotificationPanel";
 import { googleLogout } from "@react-oauth/google";
 import Breadcrumbs from "./Breadcrumbs";
-import { useAuthContext } from "../../features/auth/context/AuthContext";
 
 function Navbar() {
   const { user, logout, primaryRole } = useAuthContext();
