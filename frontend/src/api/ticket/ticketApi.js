@@ -11,8 +11,10 @@ function getUserId() {
 
 function getHeaders(extra = {}) {
   const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = { "Content-Type": "application/json" };
   if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   return { ...headers, ...extra };
 }
 
@@ -147,6 +149,19 @@ export async function updateTicketResolution(id, payload) {
   return handleResponse(res);
 }
 
+/**
+ * Extend due date (assigned TECHNICIAN / ADMIN).
+ * payload: { dueAt, note }
+ */
+export async function updateTicketDueDate(id, payload) {
+  const res = await fetch(`${TICKET_BASE}/${id}/due-date`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
 // ─── Technician APIs ──────────────────────────────────────────────────────────
 
 /**
@@ -195,13 +210,13 @@ export async function rejectTicket(id, payload) {
 }
 
 /**
- * Close a resolved ticket (ADMIN).
+ * Close a resolved ticket (reporter / ADMIN).
  */
 export async function closeTicket(id) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/close`, {
+  const res = await fetch(`${TICKET_BASE}/${id}/status`, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify({}),
+    body: JSON.stringify({ status: "CLOSED" }),
   });
   return handleResponse(res);
 }
@@ -275,8 +290,10 @@ export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
   const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = {};
   if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",
     headers, // No Content-Type: let browser set multipart boundary

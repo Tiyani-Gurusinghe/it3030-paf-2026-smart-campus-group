@@ -71,7 +71,7 @@ export default function TicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎫 Tickets</h1>
+          <h1 className="page-title">Tickets</h1>
           <p className="page-subtitle">
             Create, track, and manage campus maintenance & incident reports.
             {!loading && (
@@ -110,17 +110,17 @@ export default function TicketsPage() {
             className={`btn secondary filter-toggle ${myTickets ? "active" : ""}`}
             onClick={() => setMyTickets((v) => !v)}
           >
-            👤 My Tickets
+            My Tickets
           </button>
           {hasActiveFilters && (
             <button className="btn secondary" onClick={clearFilters}>
-              ✕ Clear
+              Clear
             </button>
           )}
         </div>
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
       {loading && <SkeletonCards />}
       {!loading && !error && (
         <TicketList

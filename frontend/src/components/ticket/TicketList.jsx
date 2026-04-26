@@ -4,7 +4,7 @@ export default function TicketList({ tickets = [], linkBase = "/tickets", emptyM
   if (!tickets.length) {
     return (
       <div className="card empty-state">
-        <div className="empty-state-icon">🎫</div>
+        <div className="empty-state-icon">No tickets</div>
         <h3>{emptyMessage}</h3>
         <p>Nothing to show here yet.</p>
         {emptyAction && <div style={{ marginTop: '16px' }}>{emptyAction}</div>}

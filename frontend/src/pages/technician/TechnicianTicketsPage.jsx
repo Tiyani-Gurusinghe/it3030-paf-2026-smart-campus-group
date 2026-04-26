@@ -6,8 +6,8 @@ const TABS = [
   { label: "All", value: "", overdue: false, dueSoon: false },
   { label: "Open", value: "OPEN", overdue: false, dueSoon: false },
   { label: "In Progress", value: "IN_PROGRESS", overdue: false, dueSoon: false },
-  { label: "⚠️ Overdue", value: "", overdue: true, dueSoon: false },
-  { label: "⏰ Due Soon", value: "", overdue: false, dueSoon: true },
+  { label: "Overdue", value: "", overdue: true, dueSoon: false },
+  { label: "Due Soon", value: "", overdue: false, dueSoon: true },
 ];
 
 const PAGE_SIZE = 10;
@@ -58,7 +58,7 @@ export default function TechnicianTicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🔧 Assigned Tickets</h1>
+          <h1 className="page-title">Assigned Tickets</h1>
           <p className="page-subtitle">
             Tickets assigned to you. Update status and add resolution notes.
             {!loading && (
@@ -81,7 +81,7 @@ export default function TechnicianTicketsPage() {
         ))}
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
 
       {loading ? (
         <div className="skeleton-grid">
@@ -98,11 +98,11 @@ export default function TechnicianTicketsPage() {
       {!loading && (tickets.length > 0 || page > 0) && (
         <div className="pagination">
           <button className="btn secondary" onClick={() => { const p = page - 1; setPage(p); load(activeTab, p); }} disabled={page === 0}>
-            ← Previous
+            Previous
           </button>
           <span className="pagination-page">Page {page + 1}</span>
           <button className="btn secondary" onClick={() => { const p = page + 1; setPage(p); load(activeTab, p); }} disabled={!hasMore}>
-            Next →
+            Next
           </button>
         </div>
       )}

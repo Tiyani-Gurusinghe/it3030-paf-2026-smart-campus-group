@@ -3,8 +3,8 @@
 :root {
   /* SLIIT-inspired palette */
   --sliit-white: #ffffff;
-  --sliit-blue: #0b16f4;
-  --sliit-blue-dark: #050c86;
+  --sliit-blue: #030987;
+  --sliit-blue-dark: #101564;
   --sliit-blue-soft: #eef2ff;
   --sliit-orange: #ff9300;
   --sliit-orange-dark: #e67500;
@@ -22,9 +22,9 @@
 
   /* Accent */
   --accent: var(--sliit-blue);
-  --accent-hover: #111bcf;
-  --accent-muted: rgba(11, 22, 244, 0.09);
-  --accent-border: rgba(11, 22, 244, 0.22);
+  --accent-hover: #31418c;
+  --accent-muted: rgba(95, 118, 223, 0.1);
+  --accent-border: rgba(95, 118, 223, 0.24);
   --accent-bg: var(--sliit-blue-soft);
 
   --accent2: var(--sliit-orange);
@@ -51,7 +51,7 @@
 
   /* Status colors */
   --status-open-bg: rgba(11, 22, 244, 0.08);
-  --status-open-text: #0b16f4;
+  --status-open-text: #343cd4;
   --status-open-border: rgba(11, 22, 244, 0.24);
 
   --status-progress-bg: rgba(255, 147, 0, 0.14);

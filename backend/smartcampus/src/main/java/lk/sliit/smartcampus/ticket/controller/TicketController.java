@@ -3,9 +3,11 @@ package lk.sliit.smartcampus.ticket.controller;
 import jakarta.validation.Valid;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketCommentResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketDueDateUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -81,8 +83,9 @@ public class TicketController {
     @PutMapping("/{id}")
     public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
             @Valid @RequestBody TicketRequest request) {
-        return ResponseEntity.ok(ticketService.updateTicket(id, request));
+        return ResponseEntity.ok(ticketService.updateTicket(id, request, currentUserId));
     }
 
     @PatchMapping("/{id}/status")
@@ -93,9 +96,27 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.updateStatus(id, request, currentUserId));
     }
 
+    @PatchMapping("/{id}/resolution")
+    public ResponseEntity<TicketResponse> updateTicketResolution(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketResolutionUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.updateResolutionNotes(id, request, currentUserId));
+    }
+
+    @PatchMapping("/{id}/due-date")
+    public ResponseEntity<TicketResponse> updateTicketDueDate(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId,
+            @Valid @RequestBody TicketDueDateUpdateRequest request) {
+        return ResponseEntity.ok(ticketService.extendDueDate(id, request, currentUserId));
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTicket(@PathVariable Long id) {
-        ticketService.deleteTicket(id);
+    public ResponseEntity<Void> deleteTicket(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        ticketService.deleteTicket(id, currentUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -135,23 +156,26 @@ public class TicketController {
 
     @GetMapping("/{ticketId}/attachments")
     public ResponseEntity<List<String>> getAttachments(
-            @PathVariable Long ticketId) {
-        return ResponseEntity.ok(attachmentService.get(ticketId));
+            @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long currentUserId) {
+        return ResponseEntity.ok(attachmentService.get(ticketId, currentUserId));
     }
 
     @PostMapping("/{ticketId}/attachments")
     public ResponseEntity<List<String>> uploadAttachments(
             @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(attachmentService.upload(ticketId, files));
+                .body(attachmentService.upload(ticketId, currentUserId, files));
     }
 
     @DeleteMapping("/{ticketId}/attachments")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long currentUserId,
             @RequestParam String url) {
-        attachmentService.delete(ticketId, url);
+        attachmentService.delete(ticketId, currentUserId, url);
         return ResponseEntity.noContent().build();
     }
 }

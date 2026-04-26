@@ -6,6 +6,11 @@ import { getSkillsForResource } from "../../api/ticket/ticketApi";
 const MAX_ATTACHMENTS = 3;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const CONTACT_REGEX = /^(\+?[0-9][0-9\s-]{6,18}|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
+const PRIORITY_DUE_INFO = {
+  HIGH: "High priority - Due in 1 day",
+  MEDIUM: "Medium priority - Due in 5 days",
+  LOW: "Low priority - Due in 14 days",
+};
 
 const defaultForm = {
   resourceId: "",
@@ -32,13 +37,13 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
   useEffect(() => {
     const normalized = initialData
       ? {
-          ...defaultForm,
-          ...initialData,
-          resourceId: initialData.resourceId ? String(initialData.resourceId) : "",
-          requiredSkillId: initialData.requiredSkillId ? String(initialData.requiredSkillId) : "",
-          preferredContact:
-            initialData.preferredContact ?? initialData.preferredContactDetails ?? "",
-        }
+        ...defaultForm,
+        ...initialData,
+        resourceId: initialData.resourceId ? String(initialData.resourceId) : "",
+        requiredSkillId: initialData.requiredSkillId ? String(initialData.requiredSkillId) : "",
+        preferredContact:
+          initialData.preferredContact ?? initialData.preferredContactDetails ?? "",
+      }
       : defaultForm;
 
     setForm(normalized);
@@ -197,13 +202,13 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
   return (
     <form className="ticket-form card" onSubmit={handleSubmit}>
       <div className="form-header">
-        <h2>🎫 {initialData ? "Edit Ticket" : "Create New Ticket"}</h2>
+        <h2>{initialData ? "Edit Ticket" : "Create New Ticket"}</h2>
         <p>Submit a maintenance or incident report for the campus.</p>
       </div>
 
       {error && (
         <div className="error-box">
-          <span>⚠️</span> {error}
+          <span>Error</span> {error}
         </div>
       )}
 
@@ -275,10 +280,18 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
         <div className="form-field">
           <label htmlFor="priority">Priority *</label>
           <select id="priority" name="priority" value={form.priority} onChange={handleChange}>
-            <option value="LOW">🟢 Low</option>
-            <option value="MEDIUM">🟡 Medium</option>
-            <option value="HIGH">🔴 High</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
           </select>
+          <p className="field-hint">
+            {PRIORITY_DUE_INFO[form.priority]}
+          </p>
+          <div className="priority-due-guide" aria-label="Priority due date guide">
+            <span>High: 1 day</span>
+            <span>Medium: 5 days</span>
+            <span>Low: 14 days</span>
+          </div>
         </div>
 
         <div className="form-field">
@@ -344,7 +357,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
 
       <div className="form-actions">
         <button type="submit" className="btn" disabled={saving}>
-          {saving ? "⏳ Saving..." : submitText}
+          {saving ? "Saving..." : submitText}
         </button>
       </div>
     </form>

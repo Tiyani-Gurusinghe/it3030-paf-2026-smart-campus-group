@@ -39,7 +39,18 @@ public class TicketResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime dueAt;
+    private LocalDateTime originalDueAt;
+    private LocalDateTime firstRespondedAt;
+    private LocalDateTime resolvedAt;
     private LocalDateTime closedAt;
+    private LocalDateTime dueExtendedAt;
+    private Long dueExtendedBy;
+    private String dueExtendedByName;
+    private String dueExtensionNote;
+    private String resolutionNotes;
+    private String rejectedReason;
+    private Long timeToFirstResponseMinutes;
+    private Long timeToResolutionMinutes;
 
     public Long getId() {
         return id;
@@ -133,8 +144,52 @@ public class TicketResponse {
         return dueAt;
     }
 
+    public LocalDateTime getOriginalDueAt() {
+        return originalDueAt;
+    }
+
+    public LocalDateTime getFirstRespondedAt() {
+        return firstRespondedAt;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public LocalDateTime getDueExtendedAt() {
+        return dueExtendedAt;
+    }
+
+    public Long getDueExtendedBy() {
+        return dueExtendedBy;
+    }
+
+    public String getDueExtendedByName() {
+        return dueExtendedByName;
+    }
+
+    public String getDueExtensionNote() {
+        return dueExtensionNote;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public Long getTimeToFirstResponseMinutes() {
+        return timeToFirstResponseMinutes;
+    }
+
+    public Long getTimeToResolutionMinutes() {
+        return timeToResolutionMinutes;
     }
 
     public void setId(Long id) {
@@ -229,7 +284,51 @@ public class TicketResponse {
         this.dueAt = dueAt;
     }
 
+    public void setOriginalDueAt(LocalDateTime originalDueAt) {
+        this.originalDueAt = originalDueAt;
+    }
+
+    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
+        this.firstRespondedAt = firstRespondedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public void setDueExtendedAt(LocalDateTime dueExtendedAt) {
+        this.dueExtendedAt = dueExtendedAt;
+    }
+
+    public void setDueExtendedBy(Long dueExtendedBy) {
+        this.dueExtendedBy = dueExtendedBy;
+    }
+
+    public void setDueExtendedByName(String dueExtendedByName) {
+        this.dueExtendedByName = dueExtendedByName;
+    }
+
+    public void setDueExtensionNote(String dueExtensionNote) {
+        this.dueExtensionNote = dueExtensionNote;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
+    }
+
+    public void setTimeToFirstResponseMinutes(Long timeToFirstResponseMinutes) {
+        this.timeToFirstResponseMinutes = timeToFirstResponseMinutes;
+    }
+
+    public void setTimeToResolutionMinutes(Long timeToResolutionMinutes) {
+        this.timeToResolutionMinutes = timeToResolutionMinutes;
     }
 }

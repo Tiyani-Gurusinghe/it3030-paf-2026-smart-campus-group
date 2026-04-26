@@ -67,6 +67,7 @@ public class TicketCommentService {
         history.setNote(request.getContent());
 
         TicketHistory saved = historyRepository.save(history);
+        ticketService.markFirstResponseIfApplicable(ticket, userId);
 
         if (ticket.getReportedBy() != null && !ticket.getReportedBy().equals(userId)) {
             notificationService.createNotification(

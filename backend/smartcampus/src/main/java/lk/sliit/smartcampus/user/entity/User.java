@@ -13,11 +13,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "oauth_provider", nullable = false, length = 50)
+    @Column(name = "oauth_provider", length = 50)
     private String oauthProvider;
 
-    @Column(name = "oauth_id", nullable = false, unique = true, length = 100)
+    @Column(name = "oauth_id", unique = true, length = 100)
     private String oauthId;
+
+    @Column(name = "campus_id", unique = true, length = 20)
+    private String campusId;
+
+    @Column(name = "password", length = 255)
+    private String password;
 
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
@@ -68,6 +74,14 @@ public class User {
         return email;
     }
 
+    public String getCampusId() {
+        return campusId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -94,6 +108,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setCampusId(String campusId) {
+        this.campusId = campusId;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

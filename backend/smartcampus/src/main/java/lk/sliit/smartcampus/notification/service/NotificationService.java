@@ -11,13 +11,19 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationPreferenceService notificationPreferenceService;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository,
+                               NotificationPreferenceService notificationPreferenceService) {
         this.notificationRepository = notificationRepository;
+        this.notificationPreferenceService = notificationPreferenceService;
     }
 
     public Notification createNotification(Long userId, NotificationType type, String title, String message, Long ticketId) {
         if (userId == null) return null;
+        if (!notificationPreferenceService.isEnabled(userId, type)) {
+            return null;
+        }
         Notification n = new Notification();
         n.setUserId(userId);
         n.setType(type);
