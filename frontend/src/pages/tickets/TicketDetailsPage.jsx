@@ -60,7 +60,7 @@ export default function TicketDetailsPage() {
 
   const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
   const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
-  const hasPreferredContact = hasDisplayValue(ticket.preferredContactDetails);
+  const hasPreferredContact = hasDisplayValue(ticket.preferredContact);
 
   return (
     <div className="page">
@@ -109,7 +109,7 @@ export default function TicketDetailsPage() {
           {hasPreferredContact && (
             <div className="detail-item">
               <div className="detail-item-label">Preferred Contact</div>
-              <div className="detail-item-value">{ticket.preferredContactDetails}</div>
+              <div className="detail-item-value">{ticket.preferredContact}</div>
             </div>
           )}
           <div className={`detail-item ${overdue ? "overdue-item" : ""}`}>

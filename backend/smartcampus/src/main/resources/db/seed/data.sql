@@ -25,6 +25,19 @@ INSERT IGNORE INTO users (
 (70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', 'IT20260007', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP);
 
 --- =========================
+-- =========================
+-- USERS
+-- =========================
+INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, password, created_at) VALUES
+(10, 'google', 'admin1', 'Admin User', 'admin@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP);
+
+-- =========================
 -- USER ROLES
 -- =========================
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES

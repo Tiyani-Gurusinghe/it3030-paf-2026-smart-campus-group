@@ -1,6 +1,6 @@
 import TicketCard from "./TicketCard";
 
-export default function TicketList({ tickets = [], linkBase = "/tickets", emptyMessage = "No tickets found.", emptyAction = null }) {
+export default function TicketList({ tickets = [], linkBase = "/tickets", emptyMessage = "No tickets found.", emptyAction = null, onDelete = null }) {
   if (!tickets.length) {
     return (
       <div className="card empty-state">
@@ -15,7 +15,7 @@ export default function TicketList({ tickets = [], linkBase = "/tickets", emptyM
   return (
     <div className="ticket-grid">
       {tickets.map((ticket) => (
-        <TicketCard key={ticket.id} ticket={ticket} linkBase={linkBase} />
+        <TicketCard key={ticket.id} ticket={ticket} linkBase={linkBase} onDelete={onDelete} />
       ))}
     </div>
   );

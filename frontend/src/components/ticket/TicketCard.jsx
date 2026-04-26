@@ -15,7 +15,7 @@ function isDueOverdue(dueAt) {
   return new Date(dueAt) < new Date();
 }
 
-export default function TicketCard({ ticket, linkBase = "/tickets" }) {
+export default function TicketCard({ ticket, linkBase = "/tickets", onDelete = null }) {
   const priority = PRIORITY_LEVEL[ticket.priority] ?? "medium";
   const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
 
@@ -75,6 +75,11 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
         <Link to={`${linkBase}/${ticket.id}`} className="btn secondary">
           View
         </Link>
+        {onDelete && (
+          <button type="button" className="btn danger" onClick={() => onDelete(ticket.id)}>
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );

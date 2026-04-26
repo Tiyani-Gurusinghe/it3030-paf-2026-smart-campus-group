@@ -6,6 +6,7 @@ export default function UserTicketActions({ ticket, onUpdated }) {
   const [reopenReason, setReopenReason] = useState("");
   const [newPriority, setNewPriority] = useState(ticket.priority ?? "MEDIUM");
   const [showReopenForm, setShowReopenForm] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,13 +36,12 @@ export default function UserTicketActions({ ticket, onUpdated }) {
   }
 
   async function handleClose() {
-    if (!window.confirm("Close this resolved ticket?")) return;
-
     setSaving(true);
     setError("");
     try {
       const updated = await updateTicketStatus(ticket.id, { status: "CLOSED" });
       onUpdated(updated);
+      setConfirmClose(false);
     } catch (err) {
       setError(err.message || "Failed to close ticket");
     } finally {
@@ -121,13 +121,26 @@ export default function UserTicketActions({ ticket, onUpdated }) {
         <div className="resolution-action-row" style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "flex-start" }}>
           <p className="admin-panel-hint">The ticket is marked as resolved. You can close it, or re-open it if the issue persists.</p>
           <div style={{ display: "flex", gap: "12px", width: "100%" }}>
-            <button className="btn" onClick={handleClose} disabled={saving} style={{ flex: 1, backgroundColor: "var(--color-success)" }}>
+            <button className="btn" onClick={() => setConfirmClose(true)} disabled={saving} style={{ flex: 1, backgroundColor: "var(--color-success)" }}>
               Close Ticket
             </button>
             <button className="btn secondary" onClick={() => setShowReopenForm(true)} disabled={saving} style={{ flex: 1 }}>
               Issue Not Fixed? Re-open
             </button>
           </div>
+          {confirmClose && (
+            <div className="admin-panel-section" style={{ width: "100%" }}>
+              <p className="admin-panel-hint" style={{ marginBottom: 8 }}>Close this resolved ticket?</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn" onClick={handleClose} disabled={saving} style={{ backgroundColor: "var(--color-success)" }}>
+                  Confirm Close
+                </button>
+                <button className="btn secondary" onClick={() => setConfirmClose(false)} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

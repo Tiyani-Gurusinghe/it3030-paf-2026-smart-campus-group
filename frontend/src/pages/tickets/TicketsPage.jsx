@@ -20,6 +20,7 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [myTickets, setMyTickets] = useState(false);
   const [filters, setFilters] = useState({ status: "", priority: "" });
 
@@ -46,13 +47,13 @@ export default function TicketsPage() {
   }, [filters, myTickets, user?.id]);
 
   async function handleDelete(id) {
-    const confirmed = window.confirm("Are you sure you want to delete this ticket?");
-    if (!confirmed) return;
     try {
+      setError("");
       await deleteTicket(id);
       setTickets((prev) => prev.filter((t) => t.id !== id));
+      setPendingDeleteId(null);
     } catch (err) {
-      alert(err.message || "Failed to delete ticket");
+      setError(err.message || "Failed to delete ticket");
     }
   }
 
@@ -123,11 +124,24 @@ export default function TicketsPage() {
       {error && <div className="error-box"><span>Error</span> {error}</div>}
       {loading && <SkeletonCards />}
       {!loading && !error && (
-        <TicketList
-          tickets={tickets}
-          onDelete={handleDelete}
-          emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
-        />
+        <>
+          {pendingDeleteId && (
+            <div className="error-box" style={{ marginBottom: 16 }}>
+              <span>Confirm</span> Delete ticket #{pendingDeleteId}?
+              <button className="btn danger" style={{ marginLeft: 12 }} onClick={() => handleDelete(pendingDeleteId)}>
+                Delete
+              </button>
+              <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => setPendingDeleteId(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
+          <TicketList
+            tickets={tickets}
+            onDelete={setPendingDeleteId}
+            emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
+          />
+        </>
       )}
     </div>
   );
