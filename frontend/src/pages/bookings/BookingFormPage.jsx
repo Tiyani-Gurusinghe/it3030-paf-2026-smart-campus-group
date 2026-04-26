@@ -14,31 +14,53 @@ const BookingFormPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [resources, setResources] = useState([]);
+    const [selectedResource, setSelectedResource] = useState(null);
 
     const [formData, setFormData] = useState({
         resourceId: resourceIdParam || '',
         startTime: '',
         endTime: '',
+        quantity: '1',
         purpose: ''
     });
 
     useEffect(() => {
-        // If not pre-selected, fetch all active resources to populate a dropdown
         if (!resourceIdParam) {
             resourceApi.getAllResources()
                 .then(data => {
-                    // Filter for active spaces & equipment typically bookable
-                    const bookable = data.filter(r => r.status === 'ACTIVE' && (r.category === 'SPACE' || r.category === 'EQUIPMENT'));
+                    const bookable = data.filter(r =>
+                        r.status === 'ACTIVE' && ['SPACE', 'EQUIPMENT', 'UTILITY'].includes(r.category)
+                    );
                     setResources(bookable);
                 })
                 .catch(err => console.error("Failed to fetch resources", err));
+            return;
         }
+
+        resourceApi.getResourceById(resourceIdParam)
+            .then((resource) => setSelectedResource(resource))
+            .catch(err => console.error("Failed to fetch selected resource", err));
     }, [resourceIdParam]);
+
+    useEffect(() => {
+        if (!formData.resourceId || resourceIdParam) return;
+        const resource = resources.find(r => String(r.id) === String(formData.resourceId));
+        setSelectedResource(resource || null);
+    }, [formData.resourceId, resourceIdParam, resources]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const handleQuantityChange = (e) => {
+        const { value } = e.target;
+        if (value !== '' && !/^\d+$/.test(value)) return;
+        setFormData(prev => ({ ...prev, quantity: value }));
+    };
+
+    const isInventory = selectedResource && ['EQUIPMENT', 'UTILITY'].includes(selectedResource.category);
+    const maxQuantity = selectedResource?.capacity || 1;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -54,11 +76,24 @@ const BookingFormPage = () => {
             return;
         }
 
+        if (isInventory) {
+            const quantity = Number(formData.quantity);
+            if (!quantity || quantity < 1) {
+                setError("Please enter a valid quantity.");
+                return;
+            }
+            if (quantity > maxQuantity) {
+                setError(`Quantity cannot exceed available inventory count (${maxQuantity}).`);
+                return;
+            }
+        }
+
         const payload = {
             userId: user.id,
             resourceId: formData.resourceId,
             startTime: formData.startTime,
             endTime: formData.endTime,
+            quantity: isInventory ? Number(formData.quantity) : 1,
             purpose: formData.purpose,
             bookingDate: formData.startTime.split("T")[0]
         };
@@ -95,6 +130,11 @@ const BookingFormPage = () => {
                         {resourceIdParam ? (
                             <div style={{ padding: '10px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}>
                                 <strong>{resourceNameParam || 'Selected Resource'}</strong>
+                                {selectedResource && (
+                                    <div style={{ marginTop: '4px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+                                        {selectedResource.category} · {selectedResource.type?.replace('_', ' ')}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <select 
@@ -107,11 +147,35 @@ const BookingFormPage = () => {
                             >
                                 <option value="">-- Select a Resource --</option>
                                 {resources.map(r => (
-                                    <option key={r.id} value={r.id}>{r.name} ({r.type.replace('_', ' ')})</option>
+                                    <option key={r.id} value={r.id}>
+                                        {r.name} ({r.category} · {r.type.replace('_', ' ')})
+                                    </option>
                                 ))}
                             </select>
                         )}
                     </div>
+
+                    {isInventory && (
+                        <div className="form-group" style={{ marginBottom: '16px' }}>
+                            <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
+                                Quantity
+                            </label>
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                name="quantity"
+                                value={formData.quantity}
+                                onChange={handleQuantityChange}
+                                className="filter-input"
+                                style={{ width: '100%', padding: '10px' }}
+                                required
+                            />
+                            <p className="field-hint" style={{ marginTop: '6px' }}>
+                                Available inventory count: {maxQuantity}
+                            </p>
+                        </div>
+                    )}
 
                     <div className="form-group" style={{ marginBottom: '16px' }}>
                         <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Start Time</label>
