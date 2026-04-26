@@ -124,6 +124,10 @@ export default function MyTicketsPage() {
     navigate(`/tickets/${blockedDeleteTicket.id}`);
   }
 
+  const blockedDeleteStatus = blockedDeleteTicket?.status ?? "";
+  const isBlockedClosedTicket = blockedDeleteStatus === "CLOSED";
+  const isBlockedResolvedTicket = blockedDeleteStatus === "RESOLVED";
+
   return (
     <div className="page">
       <div className="page-header">
@@ -178,24 +182,40 @@ export default function MyTicketsPage() {
               </>
             ) : (
               <>
-                <h2 id="ticket-delete-title">This ticket should be closed, not deleted</h2>
+                <h2 id="ticket-delete-title">
+                  {isBlockedClosedTicket ? "This ticket is already closed" : "This ticket should be closed, not deleted"}
+                </h2>
                 <p>
-                  Ticket #{blockedDeleteTicket.id} is already in <strong>{blockedDeleteTicket.status.replace("_", " ")}</strong> status, so it cannot be deleted by the reporter. This keeps the ticket history, comments, assignments, and SLA records available for review.
+                  Ticket #{blockedDeleteTicket.id} is already in <strong>{blockedDeleteStatus.replace("_", " ")}</strong> status, so it cannot be deleted by the reporter. This keeps the ticket history, comments, assignments, and SLA records available for review.
                 </p>
-                <p>
-                  If the issue has been fixed, open the ticket and use the ticket actions to mark it as <strong>Resolved</strong>. After it is resolved, you can <strong>Close Ticket</strong> to finish the workflow.
-                </p>
+                {isBlockedClosedTicket ? (
+                  <p>
+                    No further action is needed. This ticket has already completed the workflow and will remain visible as a closed record.
+                  </p>
+                ) : (
+                  <p>
+                    {isBlockedResolvedTicket
+                      ? "This ticket is already resolved. Open the ticket actions and choose Close Ticket to finish the workflow."
+                      : "If the issue has been fixed, open the ticket and use the ticket actions to mark it as Resolved. After it is resolved, you can close it to finish the workflow."}
+                  </p>
+                )}
                 <div className="ticket-modal-summary">
                   <strong>{blockedDeleteTicket.title}</strong>
-                  <span>Use resolve and close instead of deleting this ticket.</span>
+                  <span>
+                    {isBlockedClosedTicket
+                      ? "This ticket is already closed and kept for records."
+                      : "Use resolve and close instead of deleting this ticket."}
+                  </span>
                 </div>
                 <div className="ticket-modal-actions">
                   <button className="btn secondary" type="button" onClick={closeTicketPopup}>
                     Got It
                   </button>
-                  <button className="btn" type="button" onClick={goToTicketActions}>
-                    Open Ticket Actions
-                  </button>
+                  {!isBlockedClosedTicket && (
+                    <button className="btn" type="button" onClick={goToTicketActions}>
+                      Open Ticket Actions
+                    </button>
+                  )}
                 </div>
               </>
             )}
