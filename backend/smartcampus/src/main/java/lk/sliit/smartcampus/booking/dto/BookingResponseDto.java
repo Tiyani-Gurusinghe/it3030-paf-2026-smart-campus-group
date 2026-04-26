@@ -12,6 +12,7 @@ public class BookingResponseDto {
     private String userName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Integer quantity;
     private String purpose;
     private BookingStatus status;
     private LocalDateTime createdAt;
@@ -73,6 +74,14 @@ public class BookingResponseDto {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public String getPurpose() {
