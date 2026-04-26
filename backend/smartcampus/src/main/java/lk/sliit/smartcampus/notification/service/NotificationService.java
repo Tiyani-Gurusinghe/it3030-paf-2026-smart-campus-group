@@ -19,7 +19,7 @@ public class NotificationService {
         this.notificationPreferenceService = notificationPreferenceService;
     }
 
-    public Notification createNotification(Long userId, NotificationType type, String title, String message, Long ticketId) {
+    public Notification createNotification(Long userId, NotificationType type, String title, String message, Long referenceId) {
         if (userId == null) return null;
         if (!notificationPreferenceService.isEnabled(userId, type)) {
             return null;
@@ -29,7 +29,12 @@ public class NotificationService {
         n.setType(type);
         n.setTitle(title);
         n.setMessage(message);
-        n.setTicketId(ticketId);
+        
+        if (type == NotificationType.NEW_BOOKING || type == NotificationType.BOOKING_APPROVED || type == NotificationType.BOOKING_REJECTED) {
+            n.setBookingId(referenceId);
+        } else {
+            n.setTicketId(referenceId);
+        }
         n.setRead(false);
         return notificationRepository.save(n);
     }

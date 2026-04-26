@@ -174,4 +174,21 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing Google Sign-in.");
         }
     }
+
+    @GetMapping("/seed-passwords")
+    public ResponseEntity<String> seedPasswords() {
+        String encoded = passwordEncoder.encode("Password123");
+        int count = 0;
+        int totalUsers = 0;
+        for (User user : userRepository.findAll()) {
+            totalUsers++;
+            if (user.getPassword() == null || user.getPassword().isEmpty()) {
+                user.setPassword(encoded);
+                userRepository.save(user);
+                count++;
+            }
+        }
+        return ResponseEntity.ok("Successfully seeded passwords for " + count + " out of " + totalUsers + " total users to 'Password123'.");
+    }
 }
+

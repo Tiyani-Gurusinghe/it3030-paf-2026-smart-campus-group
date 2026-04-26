@@ -10,6 +10,8 @@ const TYPE_ICONS = {
   TICKET_UPDATED: "📝",
   BOOKING_APPROVED: "✅",
   BOOKING_REJECTED: "❌",
+  NEW_TICKET: "🎟️",
+  NEW_BOOKING: "📅",
 };
 
 function NotificationPanelPage() {
@@ -18,8 +20,15 @@ function NotificationPanelPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  function getTicketPath(referenceId) {
+  function getNotificationPath(referenceId, type) {
     if (!referenceId) return "/notifications";
+
+    const isBooking = ["NEW_BOOKING", "BOOKING_APPROVED", "BOOKING_REJECTED"].includes(type);
+    
+    if (isBooking) {
+        return `/bookings`;
+    }
+
     if (isAdmin) return `/admin/tickets/${referenceId}`;
     if (isTechnician) return `/technician/tickets/${referenceId}`;
     return `/tickets/${referenceId}`;
@@ -70,7 +79,7 @@ function NotificationPanelPage() {
           {notifications.map((notification) => (
             <Link
               key={notification.id}
-              to={getTicketPath(notification.referenceId)}
+              to={getNotificationPath(notification.referenceId, notification.type)}
               className="notification-item"
               style={{
                 display: "flex",
