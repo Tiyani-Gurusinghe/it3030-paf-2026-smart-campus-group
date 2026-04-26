@@ -4,7 +4,6 @@
 
 - `backend/` - Spring Boot REST API
 - `frontend/` - React application
-- `docs/` - diagrams, API notes, team contributions
 
 ## Team Workflow
 
