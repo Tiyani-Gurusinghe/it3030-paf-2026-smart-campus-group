@@ -16,6 +16,7 @@ const BookingListPage = () => {
         purpose: '',
         startTime: '',
         endTime: '',
+        quantity: '1',
     });
 
     const loadBookings = useCallback(async () => {
@@ -87,6 +88,7 @@ const BookingListPage = () => {
             purpose: booking.purpose || '',
             startTime: toLocalDateTimeInput(booking.startTime),
             endTime: toLocalDateTimeInput(booking.endTime),
+            quantity: String(booking.quantity || 1),
         });
     };
 
@@ -104,6 +106,7 @@ const BookingListPage = () => {
             purpose: '',
             startTime: '',
             endTime: '',
+            quantity: '1',
         });
     };
 
@@ -126,6 +129,7 @@ const BookingListPage = () => {
             resourceId: editingBooking.resourceId,
             userId: editingBooking.userId,
             purpose: editForm.purpose.trim(),
+            quantity: Number(editForm.quantity) || 1,
             bookingDate: getBookingDate(editForm.startTime),
             startTime: formatDateTime(editForm.startTime),
             endTime: formatDateTime(editForm.endTime),
@@ -239,6 +243,12 @@ const BookingListPage = () => {
                                     <strong>END</strong>
                                     <span>{formatDate(booking.endTime)}</span>
                                 </div>
+                                {booking.quantity > 1 && (
+                                    <div className="ticket-meta-item">
+                                        <strong>QTY</strong>
+                                        <span>{booking.quantity}</span>
+                                    </div>
+                                )}
                                 <div className="ticket-meta-item" style={{ flexBasis: '100%' }}>
                                     <strong>PURPOSE</strong>
                                     <span style={{ display: 'block', marginTop: '4px', whiteSpace: 'pre-wrap' }}>{booking.purpose}</span>
@@ -345,6 +355,25 @@ const BookingListPage = () => {
                                     name="purpose"
                                     value={editForm.purpose}
                                     onChange={handleEditFormChange}
+                                    required
+                                    style={{ width: '100%', padding: '10px' }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '12px' }}>
+                                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                                    Quantity
+                                </label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    name="quantity"
+                                    value={editForm.quantity}
+                                    onChange={(e) => {
+                                        if (e.target.value !== '' && !/^\d+$/.test(e.target.value)) return;
+                                        handleEditFormChange(e);
+                                    }}
                                     required
                                     style={{ width: '100%', padding: '10px' }}
                                 />
