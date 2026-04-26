@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+// REST resource base path: technician ticket views are grouped under /api/v1/technician/tickets.
 @RequestMapping("/api/v1/technician/tickets")
 public class TechnicianTicketController {
 
@@ -23,8 +24,10 @@ public class TechnicianTicketController {
         this.authenticatedUserService = authenticatedUserService;
     }
 
+    // GET reads tickets assigned to the authenticated technician.
     @GetMapping
     public ResponseEntity<PageResponse<TicketResponse>> getTechnicianTickets(
+            // Authentication comes from the stateless JWT sent with this request.
             Authentication authentication,
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false, defaultValue = "false") boolean overdue,
@@ -33,7 +36,9 @@ public class TechnicianTicketController {
             @RequestParam(defaultValue = "10") int size) {
 
         Long technicianUserId = authenticatedUserService.getCurrentUserId(authentication);
+        // 200 OK: successful read with a response body.
         return ResponseEntity.ok()
+                // no-store: prevents private ticket data from being cached by browser/proxy.
                 .cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.PRAGMA, "no-cache")
                 .body(PageResponse.from(

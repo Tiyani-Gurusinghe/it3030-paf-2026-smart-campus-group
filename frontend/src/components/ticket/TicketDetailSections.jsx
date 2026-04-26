@@ -190,6 +190,7 @@ export function AttachmentsSection({ ticketId, canUpload = true }) {
       .finally(() => setLoading(false));
   }, [ticketId]);
 
+  // Frontend validation catches file mistakes early; backend validation remains the security boundary.
   function validateFiles(files) {
     if (attachments.length + files.length > MAX_ATTACHMENTS) {
       return "A ticket can have at most 3 attachments.";

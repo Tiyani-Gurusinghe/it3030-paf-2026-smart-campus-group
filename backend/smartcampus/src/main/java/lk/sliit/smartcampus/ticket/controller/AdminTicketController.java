@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.List;
 
 @RestController
+// REST resource base path: admin ticket actions are grouped under /api/v1/admin/tickets.
 @RequestMapping("/api/v1/admin/tickets")
 public class AdminTicketController {
 
@@ -27,23 +28,32 @@ public class AdminTicketController {
         this.authenticatedUserService = authenticatedUserService;
     }
 
+    // GET reads assignable technician lookup data for admin assignment.
     @GetMapping("/{id}/technicians")
     public ResponseEntity<List<TechnicianOptionResponse>> getAssignableTechnicians(
             @PathVariable Long id,
+            // Authentication comes from the stateless JWT sent with this request.
             Authentication authentication) {
         Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
+        // 200 OK: successful read with a response body.
         return ResponseEntity.ok()
+                // max-age: technician options are cacheable briefly for this private user.
                 .cacheControl(CacheControl.maxAge(Duration.ofMinutes(2)).cachePrivate())
                 .body(ticketService.getAssignableTechnicians(id, currentUserId));
     }
 
+    // PATCH partially updates the ticket assignment.
     @PatchMapping("/{id}/assignment")
     public ResponseEntity<TicketResponse> assignTicket(
             @PathVariable Long id,
+            // Authentication comes from the stateless JWT sent with this request.
             Authentication authentication,
+            // @Valid triggers DTO validation before service logic runs.
             @Valid @RequestBody TicketAssignRequest request) {
         Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
+        // 200 OK: assignment update succeeded and returns the updated ticket.
         return ResponseEntity.ok()
+                // no-store: prevents private ticket data from being cached by browser/proxy.
                 .cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.PRAGMA, "no-cache")
                 .body(ticketService.assignTicket(id, currentUserId, request));
