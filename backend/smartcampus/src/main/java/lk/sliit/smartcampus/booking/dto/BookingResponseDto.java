@@ -8,6 +8,8 @@ public class BookingResponseDto {
     private Long id;
     private Long resourceId;
     private String resourceName;
+    private String resourceCategory;
+    private String resourceType;
     private Long userId;
     private String userName;
     private LocalDateTime startTime;
@@ -42,6 +44,22 @@ public class BookingResponseDto {
 
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
+    }
+
+    public String getResourceCategory() {
+        return resourceCategory;
+    }
+
+    public void setResourceCategory(String resourceCategory) {
+        this.resourceCategory = resourceCategory;
+    }
+
+    public String getResourceType() {
+        return resourceType;
+    }
+
+    public void setResourceType(String resourceType) {
+        this.resourceType = resourceType;
     }
 
     public Long getUserId() {

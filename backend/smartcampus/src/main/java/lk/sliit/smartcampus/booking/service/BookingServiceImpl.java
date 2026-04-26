@@ -191,6 +191,8 @@ public class BookingServiceImpl implements BookingService {
         dto.setId(booking.getId());
         dto.setResourceId(booking.getResource().getId());
         dto.setResourceName(booking.getResource().getName());
+        dto.setResourceCategory(booking.getResource().getCategory().name());
+        dto.setResourceType(booking.getResource().getType().name());
         dto.setUserId(booking.getUser().getId());
         dto.setUserName(booking.getUser().getFullName());
         dto.setStartTime(booking.getStartTime());
