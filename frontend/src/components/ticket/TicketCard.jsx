@@ -73,7 +73,7 @@ export default function TicketCard({ ticket, linkBase = "/tickets", onDelete = n
 
       <div className="card-actions">
         <Link to={`${linkBase}/${ticket.id}`} className="btn secondary">
-          View
+          View / Edit
         </Link>
         {onDelete && (
           <button type="button" className="btn danger" onClick={() => onDelete(ticket.id)}>
