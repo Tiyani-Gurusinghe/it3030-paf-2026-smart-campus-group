@@ -17,6 +17,9 @@ public class Notification {
     @Column(name = "ticket_id")
     private Long ticketId;
 
+    @Column(name = "booking_id")
+    private Long bookingId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private NotificationType type;
@@ -48,6 +51,16 @@ public class Notification {
 
     public Long getTicketId() { return ticketId; }
     public void setTicketId(Long ticketId) { this.ticketId = ticketId; }
+
+    public Long getBookingId() { return bookingId; }
+    public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("referenceId")
+    public Long getReferenceId() {
+        if (ticketId != null) return ticketId;
+        if (bookingId != null) return bookingId;
+        return null;
+    }
 
     public NotificationType getType() { return type; }
     public void setType(NotificationType type) { this.type = type; }

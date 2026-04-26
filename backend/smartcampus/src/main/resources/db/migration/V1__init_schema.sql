@@ -148,28 +148,6 @@ ALTER TABLE tickets
 UPDATE tickets
 SET original_due_at = due_at
 WHERE original_due_at IS NULL;
-INSERT INTO ticket_history (
-    ticket_id,
-    actor_user_id,
-    action_type,
-    note,
-    created_at
-)
-SELECT
-    t.id,
-    t.due_extended_by,
-    'DUE_EXTENDED',
-    CONCAT('Due date extended to ', DATE_FORMAT(t.due_at, '%Y-%m-%d %H:%i:%s'), '. Note: ', t.due_extension_note),
-    COALESCE(t.due_extended_at, CURRENT_TIMESTAMP)
-FROM tickets t
-WHERE t.due_extended_by IS NOT NULL
-  AND t.due_extension_note IS NOT NULL
-  AND NOT EXISTS (
-      SELECT 1
-      FROM ticket_history h
-      WHERE h.ticket_id = t.id
-        AND h.action_type = 'DUE_EXTENDED'
-  );
 
 -- =========================================================
 -- 11. TICKET HISTORY
@@ -205,6 +183,29 @@ ALTER TABLE tickets ADD COLUMN rejected_reason TEXT NULL;
 ALTER TABLE tickets ADD COLUMN first_responded_at DATETIME NULL;
 ALTER TABLE tickets ADD COLUMN resolved_at DATETIME NULL;
 
+INSERT INTO ticket_history (
+    ticket_id,
+    actor_user_id,
+    action_type,
+    note,
+    created_at
+)
+SELECT
+    t.id,
+    t.due_extended_by,
+    'DUE_EXTENDED',
+    CONCAT('Due date extended to ', DATE_FORMAT(t.due_at, '%Y-%m-%d %H:%i:%s'), '. Note: ', t.due_extension_note),
+    COALESCE(t.due_extended_at, CURRENT_TIMESTAMP)
+FROM tickets t
+WHERE t.due_extended_by IS NOT NULL
+  AND t.due_extension_note IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM ticket_history h
+      WHERE h.ticket_id = t.id
+        AND h.action_type = 'DUE_EXTENDED'
+  );
+
 
 CREATE TABLE IF NOT EXISTS notification_preferences (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -225,6 +226,7 @@ CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     ticket_id BIGINT NULL,
+    booking_id BIGINT NULL,
     type VARCHAR(50) NOT NULL,
     title VARCHAR(150) NOT NULL,
     message VARCHAR(500) NOT NULL,
@@ -234,7 +236,9 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notifications_user
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_ticket
-        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_booking
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
 
 -- =========================================================
