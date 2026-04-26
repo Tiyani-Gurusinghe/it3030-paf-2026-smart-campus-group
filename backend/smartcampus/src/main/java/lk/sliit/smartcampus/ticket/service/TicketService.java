@@ -39,7 +39,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -114,6 +116,11 @@ public class TicketService {
         }
 
         return mapPage(ticketRepository.findByReportedBy(currentUserId, pageable));
+    }
+
+    public Page<TicketResponse> getReportedTickets(Long currentUserId, int page, int size) {
+        findUserByIdOrThrow(currentUserId);
+        return mapPage(ticketRepository.findByReportedBy(currentUserId, PageRequest.of(page, size)));
     }
 
     public List<SkillOptionResponse> getSkillsForResource(Long resourceId) {
@@ -676,8 +683,37 @@ public class TicketService {
         r.setAttachmentUrls(parseAttachmentUrls(ticket.getAttachmentUrls()));
         r.setCommentCount(0);
         r.setAttachments(Collections.emptyList());
+        r.setLinks(buildLinks(ticket));
 
         return r;
+    }
+
+    private Map<String, String> buildLinks(Ticket ticket) {
+        Map<String, String> links = new LinkedHashMap<>();
+        String base = "/api/v1/tickets/" + ticket.getId();
+        links.put("self", base);
+        links.put("collection", "/api/v1/tickets");
+        links.put("comments", base + "/comments");
+        links.put("attachments", base + "/attachments");
+
+        if (ticket.getStatus() == TicketStatus.OPEN) {
+            links.put("update", base);
+            links.put("transition", base);
+            links.put("assignment", base + "/assignment");
+            links.put("eligibleTechnicians", base + "/technicians");
+        }
+
+        if (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS) {
+            links.put("resolve", base);
+            links.put("resolution", base + "/resolution");
+            links.put("dueDate", base + "/due-date");
+        }
+
+        if (ticket.getStatus() == TicketStatus.RESOLVED) {
+            links.put("close", base);
+        }
+
+        return links;
     }
 
     private String resolveUserName(Long userId) {
