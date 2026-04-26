@@ -181,6 +181,7 @@ export default function TicketForm({ initialData, onSubmit, submitText = "Submit
     setAttachmentFiles(files);
   }
 
+  // Frontend validation gives quick feedback; backend validation still enforces the final rules.
   function validateForm() {
     const title = (form.title || "").trim();
     const description = (form.description || "").trim();

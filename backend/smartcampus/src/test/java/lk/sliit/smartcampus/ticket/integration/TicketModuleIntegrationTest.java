@@ -101,6 +101,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: covers full create -> assign -> progress -> resolve -> close flow with SLA fields.
     void createAssignResolveAndExposeSlaFields() throws Exception {
         long ticketId = createTicket(20L);
 
@@ -140,6 +141,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: admin rejection persists the rejected status and reason.
     void adminCanRejectAndRejectedReasonIsPersisted() throws Exception {
         long ticketId = createTicket(20L);
 
@@ -153,6 +155,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: enforces max 3 attachments and blocks unauthorized uploads with 403.
     void attachmentLimitIsCumulativeAndUnauthorizedUploadIsBlocked() throws Exception {
         long ticketId = createTicket(20L);
 
@@ -192,6 +195,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: non-owner receives 403 for ticket edits and comment edits/deletes.
     void ticketOwnershipAndCommentOwnershipRulesAreEnforced() throws Exception {
         long ticketId = createTicket(20L);
 
@@ -227,6 +231,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: notification preferences can suppress ticket status notifications.
     void notificationPreferencesCanDisableTicketNotifications() throws Exception {
         mockMvc.perform(patch("/api/v1/notifications/preferences/{type}", "TICKET_STATUS_CHANGED")
                         .header("X-User-Id", 20L)
