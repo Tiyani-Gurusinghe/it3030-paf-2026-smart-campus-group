@@ -15,7 +15,7 @@ function isDueOverdue(dueAt) {
   return new Date(dueAt) < new Date();
 }
 
-export default function TicketCard({ ticket, linkBase = "/tickets" }) {
+export default function TicketCard({ ticket, linkBase = "/tickets", onDelete = null }) {
   const priority = PRIORITY_LEVEL[ticket.priority] ?? "medium";
   const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
 
@@ -35,12 +35,7 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
             {ticket.resourceName}
           </div>
         )}
-        {ticket.requiredSkillName && (
-          <div className="ticket-meta-item">
-            <strong>Skill</strong>
-            {ticket.requiredSkillName}
-          </div>
-        )}
+
         <div className="ticket-meta-item">
           <strong>Priority</strong>
           <span className={`priority-badge priority-badge-${priority}`}>
@@ -61,15 +56,17 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
           )}
         </div>
         {ticket.dueAt && (
-          <div className={`ticket-meta-item ${overdue ? "text-danger" : ""}`}>
+          <div className="ticket-meta-item">
             <strong>Due</strong>
-            {overdue && <span className="due-alert">Overdue: </span>}
-            {formatDate(ticket.dueAt)}
-            {ticket.dueExtendedAt && (
-              <span className="assignee-badge" style={{ marginLeft: 6 }}>
-                Extended
-              </span>
-            )}
+            <span style={{ 
+              color: ticket.dueExtendedAt ? "var(--sliit-orange)" : (overdue ? "#dc2626" : "var(--sliit-blue)"), 
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}>
+              {ticket.dueExtendedAt ? "Extended:" : (overdue ? "Overdue:" : "")} {formatDate(ticket.dueAt)}
+            </span>
           </div>
         )}
       </div>
@@ -78,6 +75,11 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
         <Link to={`${linkBase}/${ticket.id}`} className="btn secondary">
           View
         </Link>
+        {onDelete && (
+          <button type="button" className="btn danger" onClick={() => onDelete(ticket.id)}>
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );

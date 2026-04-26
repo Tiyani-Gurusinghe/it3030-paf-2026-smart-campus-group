@@ -22,7 +22,6 @@ backend/.idea/
 backend/.classpath
 backend/.project
 backend/.settings/
-backend/smartcampus/src/main/resources/application-dev.properties
 
 # Frontend
 frontend/node_modules/

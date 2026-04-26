@@ -1,19 +1,13 @@
 const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
-const TECH_BASE = `${BASE}/api/technician/tickets`;
-const ADMIN_BASE = `${BASE}/api/admin/tickets`;
+const TECH_BASE = `${BASE}/api/v1/technician/tickets`;
+const ADMIN_BASE = `${BASE}/api/v1/admin/tickets`;
 
 // ─── Headers ──────────────────────────────────────────────────────────────────
 
-function getUserId() {
-  return localStorage.getItem("userId");
-}
-
 function getHeaders(extra = {}) {
-  const userId = getUserId();
   const token = localStorage.getItem("jwtToken");
   const headers = { "Content-Type": "application/json" };
-  if (userId) headers["X-User-Id"] = userId;
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return { ...headers, ...extra };
 }
@@ -65,14 +59,10 @@ export async function getAllTickets(filters = {}) {
  * reportedBy is injected from localStorage userId.
  */
 export async function createTicket(payload) {
-  const userId = getUserId();
   const res = await fetch(TICKET_BASE, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({
-      ...payload,
-      reportedBy: userId ? Number(userId) : null,
-    }),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
@@ -128,7 +118,7 @@ export async function getTicketById(id) {
  * payload: { status, resolutionNotes? }
  */
 export async function updateTicketStatus(id, payload) {
-  const res = await fetch(`${TICKET_BASE}/${id}/status`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -188,7 +178,7 @@ export async function getTechnicianTickets(filters = {}) {
  * payload: { assignedTo: userId }
  */
 export async function assignTicket(id, payload) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/assign`, {
+  const res = await fetch(`${ADMIN_BASE}/${id}/assignment`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -201,10 +191,10 @@ export async function assignTicket(id, payload) {
  * payload: { rejectedReason }
  */
 export async function rejectTicket(id, payload) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/reject`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ status: "REJECTED", ...payload }),
   });
   return handleResponse(res);
 }
@@ -213,7 +203,7 @@ export async function rejectTicket(id, payload) {
  * Close a resolved ticket (reporter / ADMIN).
  */
 export async function closeTicket(id) {
-  const res = await fetch(`${TICKET_BASE}/${id}/status`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify({ status: "CLOSED" }),
@@ -289,10 +279,8 @@ export async function getAttachments(ticketId) {
 export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
-  const userId = getUserId();
   const token = localStorage.getItem("jwtToken");
   const headers = {};
-  if (userId) headers["X-User-Id"] = userId;
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",

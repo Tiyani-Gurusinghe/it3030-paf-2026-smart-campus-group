@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
+import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
 import UserTicketActions from "../../components/ticket/UserTicketActions";
 import {
   CommentsSection,
@@ -59,14 +60,15 @@ export default function TicketDetailsPage() {
 
   const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
   const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
-  const hasPreferredContact = hasDisplayValue(ticket.preferredContactDetails);
+  const hasPreferredContact = hasDisplayValue(ticket.preferredContact);
 
   return (
     <div className="page">
-      <button onClick={() => navigate("/tickets/my")} className="btn-back">
-        ← Back
-      </button>
-      <div className="card details-card">
+      <div className="form-layout-wrapper">
+        <button onClick={() => navigate(-1)} className="btn-back btn-back-floating">
+          Back
+        </button>
+        <div className="card details-card">
 
         {/* Header */}
         <div className="details-header">
@@ -103,16 +105,11 @@ export default function TicketDetailsPage() {
               {ticket.assignedToName ?? <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Unassigned</span>}
             </div>
           </div>
-          {hasRequiredSkill && (
-            <div className="detail-item">
-              <div className="detail-item-label">Required Skill</div>
-              <div className="detail-item-value">{ticket.requiredSkillName}</div>
-            </div>
-          )}
+
           {hasPreferredContact && (
             <div className="detail-item">
               <div className="detail-item-label">Preferred Contact</div>
-              <div className="detail-item-value">{ticket.preferredContactDetails}</div>
+              <div className="detail-item-value">{ticket.preferredContact}</div>
             </div>
           )}
           <div className={`detail-item ${overdue ? "overdue-item" : ""}`}>
@@ -148,32 +145,9 @@ export default function TicketDetailsPage() {
           <hr className="details-section-divider" />
         )}
 
-        {/* Resolution Notes (read-only for user) */}
-        {ticket.resolutionNotes && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label">Resolution Notes</div>
-              <p>{ticket.resolutionNotes}</p>
-              {ticket.resolvedAt && (
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
-                  Resolved on {formatDate(ticket.resolvedAt)}
-                </p>
-              )}
-            </div>
-            <hr className="details-section-divider" />
-          </>
-        )}
-
-        {/* Rejected Reason */}
-        {ticket.rejectedReason && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>Rejection Reason</div>
-              <p>{ticket.rejectedReason}</p>
-            </div>
-            <hr className="details-section-divider" />
-          </>
-        )}
+        {/* History Timeline */}
+        <TicketHistoryTimeline ticket={ticket} />
+        <hr className="details-section-divider" />
 
         {/* Attachments */}
         <AttachmentsSection ticketId={ticket.id} canUpload={true} />
@@ -185,8 +159,9 @@ export default function TicketDetailsPage() {
 
         {/* Actions */}
         <div className="card-actions">
-          <Link to="/tickets/my" className="btn secondary">Back to My Tickets</Link>
+          <button onClick={() => navigate(-1)} className="btn secondary">Back to List</button>
         </div>
+      </div>
       </div>
     </div>
   );

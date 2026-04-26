@@ -28,6 +28,7 @@ import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -69,10 +70,11 @@ public class TicketService {
         this.ticketValidationService = ticketValidationService;
     }
 
-    private List<TicketResponse> mapPage(Page<Ticket> page) {
-        return page.getContent().stream()
+    private Page<TicketResponse> mapPage(Page<Ticket> page) {
+        List<TicketResponse> content = page.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        return new PageImpl<>(content, page.getPageable(), page.getTotalElements());
     }
 
     public boolean isAdmin(Long userId) {
@@ -83,7 +85,7 @@ public class TicketService {
         return findUserByIdOrThrow(userId).hasRole(RoleType.TECHNICIAN);
     }
 
-    public List<TicketResponse> getAllTickets(Long currentUserId,
+    public Page<TicketResponse> getAllTickets(Long currentUserId,
                                               TicketStatus status,
                                               TicketPriority priority,
                                               Long reportedBy,
@@ -99,7 +101,7 @@ public class TicketService {
         return mapPage(ticketRepository.findWithFilters(status, priority, reportedBy, pageable));
     }
 
-    public List<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
+    public Page<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
         User user = findUserByIdOrThrow(currentUserId);
         Pageable pageable = PageRequest.of(page, size);
 
@@ -144,7 +146,7 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
-    public List<TicketResponse> getTechnicianTickets(Long technicianUserId,
+    public Page<TicketResponse> getTechnicianTickets(Long technicianUserId,
                                                      TicketStatus status,
                                                      boolean overdue,
                                                      boolean dueSoon,
@@ -157,7 +159,7 @@ public class TicketService {
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        List<Ticket> tickets = ticketRepository.findByAssignedTo(technicianUserId, pageable).getContent();
+        List<Ticket> tickets = ticketRepository.findByAssignedToOrderByCreatedAtDesc(technicianUserId);
 
         if (status != null) {
             tickets = tickets.stream()
@@ -187,9 +189,12 @@ public class TicketService {
                     .collect(Collectors.toList());
         }
 
-        return tickets.stream()
+        List<TicketResponse> content = tickets.stream()
+                .skip((long) page * size)
+                .limit(size)
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        return new PageImpl<>(content, pageable, tickets.size());
     }
 
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
@@ -399,6 +404,12 @@ public class TicketService {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
             }
         }
+        
+        if (currentStatus == TicketStatus.RESOLVED && nextStatus == TicketStatus.OPEN) {
+            ticket.setRejectedReason(request.getRejectedReason().trim());
+            ticket.setResolutionNotes(null);
+            ticket.setResolvedAt(null);
+        }
 
         if (nextStatus == TicketStatus.CLOSED) {
             ticket.setClosedAt(LocalDateTime.now());
@@ -548,6 +559,16 @@ public class TicketService {
             return;
         }
 
+        if (current == TicketStatus.RESOLVED && next == TicketStatus.OPEN) {
+            if (!isAdmin && !isReporter) {
+                throw new UnauthorizedException("Only reporter or admin can reopen a resolved ticket");
+            }
+            if (request.getRejectedReason() == null || request.getRejectedReason().isBlank()) {
+                throw new BadRequestException("Reason is required when reopening a ticket");
+            }
+            return;
+        }
+
         if (current == TicketStatus.OPEN && next == TicketStatus.REJECTED) {
             if (!isAdmin) {
                 throw new UnauthorizedException("Only admin can reject an OPEN ticket");
@@ -621,6 +642,12 @@ public class TicketService {
         r.setDescription(ticket.getDescription());
 
         r.setResourceId(ticket.getResourceId());
+        if (ticket.getResourceId() != null) {
+            resourceRepository.findById(ticket.getResourceId()).ifPresent(res -> {
+                r.setResourceName(res.getName());
+                r.setResourceType(res.getType().name());
+            });
+        }
         r.setRequiredSkillId(ticket.getRequiredSkillId());
         r.setPriority(ticket.getPriority());
         r.setStatus(ticket.getStatus());

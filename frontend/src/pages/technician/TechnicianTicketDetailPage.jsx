@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketResolutionEditor from "../../components/ticket/TicketResolutionEditor";
+import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import {
   CommentsSection,
@@ -49,43 +50,43 @@ export default function TechnicianTicketDetailPage() {
 
   return (
     <div className="page">
-      <div className="card details-card">
+      <div className="form-layout-wrapper">
+        <button onClick={() => window.history.back()} className="btn-back btn-back-floating">
+          Back
+        </button>
+        <div className="card details-card">
 
-        {/* Header */}
-        <div className="details-header">
-          <div>
-            <h1 className="details-title">{ticket.title}</h1>
-            {ticket.resourceName && (
-              <p className="details-location">{ticket.resourceName}</p>
-            )}
+          {/* Header */}
+          <div className="details-header">
+            <div>
+              <h1 className="details-title">{ticket.title}</h1>
+              {ticket.resourceName && (
+                <p className="details-location">{ticket.resourceName}</p>
+              )}
+            </div>
+            <StatusBadge status={ticket.status} />
           </div>
-          <StatusBadge status={ticket.status} />
-        </div>
 
-        {/* Meta Grid */}
-        <div className="details-grid">
-          <div className="detail-item">
-            <div className="detail-item-label">Priority</div>
-            <div className="detail-item-value">
-              <span className={`priority-badge priority-badge-${(ticket.priority ?? "MEDIUM").toLowerCase()}`}>
-                <span className={`priority-dot priority-dot-${(ticket.priority ?? "MEDIUM").toLowerCase()}`} />
-                {ticket.priority ?? "—"}
-              </span>
+          {/* Meta Grid */}
+          <div className="details-grid">
+            <div className="detail-item">
+              <div className="detail-item-label">Priority</div>
+              <div className="detail-item-value">
+                <span className={`priority-badge priority-badge-${(ticket.priority ?? "MEDIUM").toLowerCase()}`}>
+                  <span className={`priority-dot priority-dot-${(ticket.priority ?? "MEDIUM").toLowerCase()}`} />
+                  {ticket.priority ?? "—"}
+                </span>
+              </div>
+            </div>
+            <div className="detail-item">
+              <div className="detail-item-label">Reported By</div>
+              <div className="detail-item-value">{ticket.reportedByName ?? "—"}</div>
+            </div>
+            <div className="detail-item">
+              <div className="detail-item-label">Due At</div>
+              <div className="detail-item-value">{formatDate(ticket.dueAt)}</div>
             </div>
           </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Required Skill</div>
-            <div className="detail-item-value">{ticket.requiredSkillName ?? "—"}</div>
-          </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Reported By</div>
-            <div className="detail-item-value">{ticket.reportedByName ?? "—"}</div>
-          </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Due At</div>
-            <div className="detail-item-value">{formatDate(ticket.dueAt)}</div>
-          </div>
-        </div>
 
         <TicketSlaPanel ticket={ticket} />
 
@@ -97,6 +98,8 @@ export default function TechnicianTicketDetailPage() {
           <p>{ticket.description || "No description."}</p>
         </div>
 
+        {/* History Timeline */}
+        <TicketHistoryTimeline ticket={ticket} />
         <hr className="details-section-divider" />
 
         {/* Work Panel */}
@@ -117,8 +120,9 @@ export default function TechnicianTicketDetailPage() {
 
         {/* Back */}
         <div className="card-actions">
-          <Link to="/technician/tickets" className="btn secondary">Back to Assigned Tickets</Link>
+          <button onClick={() => window.history.back()} className="btn secondary">Back to Assigned Tickets</button>
         </div>
+      </div>
       </div>
     </div>
   );
