@@ -12,6 +12,9 @@ import lk.sliit.smartcampus.resource.enums.ResourceStatus;
 import lk.sliit.smartcampus.resource.repository.ResourceRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
+import lk.sliit.smartcampus.notification.entity.NotificationType;
+import lk.sliit.smartcampus.notification.service.NotificationService;
+import lk.sliit.smartcampus.common.enums.RoleType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +29,16 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public BookingServiceImpl(BookingRepository bookingRepository, 
                               ResourceRepository resourceRepository, 
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.resourceRepository = resourceRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -70,6 +76,20 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.PENDING); // Default status
 
         Booking savedBooking = bookingRepository.save(booking);
+
+        List<Long> adminIds = userRepository.findUserIdsByRoleType(RoleType.ADMIN);
+        if (adminIds != null) {
+            for (Long adminId : adminIds) {
+                notificationService.createNotification(
+                        adminId,
+                        NotificationType.NEW_BOOKING,
+                        "New Booking Request",
+                        "A new booking request for " + resource.getName() + " has been submitted by " + user.getFullName() + ".",
+                        savedBooking.getId()
+                );
+            }
+        }
+
         return mapToDto(savedBooking);
     }
 
@@ -135,6 +155,25 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(status);
         Booking updatedBooking = bookingRepository.save(booking);
+
+        if (status == BookingStatus.APPROVED) {
+            notificationService.createNotification(
+                    booking.getUser().getId(),
+                    NotificationType.BOOKING_APPROVED,
+                    "Booking Approved",
+                    "Your booking request for " + booking.getResource().getName() + " has been approved.",
+                    booking.getId()
+            );
+        } else if (status == BookingStatus.REJECTED) {
+            notificationService.createNotification(
+                    booking.getUser().getId(),
+                    NotificationType.BOOKING_REJECTED,
+                    "Booking Rejected",
+                    "Your booking request for " + booking.getResource().getName() + " has been rejected.",
+                    booking.getId()
+            );
+        }
+
         return mapToDto(updatedBooking);
     }
 

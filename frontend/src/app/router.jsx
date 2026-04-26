@@ -106,12 +106,28 @@ const router = createBrowserRouter([
       { path: "tickets/:id/edit", element: <EditTicketPage /> },
 
       // --- TICKETS (admin) ---
-      { path: "admin/tickets", element: <AdminTicketsPage /> },
-      { path: "admin/tickets/:id", element: <AdminTicketDetailPage /> },
+      { path: "admin/tickets", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminTicketsPage />
+        </ProtectedRoute>
+      ) },
+      { path: "admin/tickets/:id", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminTicketDetailPage />
+        </ProtectedRoute>
+      ) },
 
       // --- TICKETS (technician) ---
-      { path: "technician/tickets", element: <TechnicianTicketsPage /> },
-      { path: "technician/tickets/:id", element: <TechnicianTicketDetailPage /> },
+      { path: "technician/tickets", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianTicketsPage />
+        </ProtectedRoute>
+      ) },
+      { path: "technician/tickets/:id", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianTicketDetailPage />
+        </ProtectedRoute>
+      ) },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },

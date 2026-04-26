@@ -91,33 +91,36 @@ export default function TicketResolutionEditor({ ticket, onUpdated }) {
       )}
 
       {canResolve && (
-        <>
-          <div className="form-field" style={{ marginBottom: 12 }}>
-            <label>Resolution Notes</label>
+        <div style={{ backgroundColor: "var(--bg-elevated)", padding: 20, borderRadius: "var(--radius-lg)", marginBottom: 20, border: "1px solid var(--border-color)" }}>
+          <h4 style={{ margin: "0 0 16px 0", fontSize: 14, fontWeight: 700, color: "var(--text-primary)", letterSpacing: "0.3px", textTransform: "uppercase" }}>Resolve Ticket</h4>
+          <div className="form-field" style={{ marginBottom: 16 }}>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="Describe what was done to resolve the issue..."
+              style={{ backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-strong)", borderRadius: "var(--radius-md)", padding: "12px", width: "100%", fontSize: "14px", color: "var(--text-primary)" }}
             />
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "flex-end" }}>
             <button
               className="btn secondary"
               onClick={handleSaveNotes}
               disabled={saving || !notes.trim()}
+              style={{ padding: "10px 20px", fontWeight: 600 }}
             >
-              Save Notes
+              Save Draft Notes
             </button>
             <button
               className="btn"
               onClick={handleMarkResolved}
-              disabled={saving}
+              disabled={saving || !notes.trim()}
+              style={{ backgroundColor: "var(--status-resolved-text)", padding: "10px 20px", fontWeight: 600, color: "white" }}
             >
-              Mark Resolved
+              Mark as Resolved
             </button>
           </div>
-        </>
+        </div>
       )}
 
       <TicketDueDateExtensionPanel ticket={ticket} onUpdated={onUpdated} />

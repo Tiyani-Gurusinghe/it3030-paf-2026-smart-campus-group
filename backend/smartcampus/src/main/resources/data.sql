@@ -16,25 +16,65 @@ INSERT IGNORE INTO users (
     password,
     created_at
 ) VALUES
+-- Core users
 (10, 'google', 'admin1', 'Admin User', 'admin@test.com', 'IT20260001', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
 (20, 'google', 'user1', 'Normal User', 'user@test.com', 'IT20260002', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
-(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', 'IT20260003', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
-(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', 'IT20260004', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
-(50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', 'IT20260005', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
-(60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', 'IT20260006', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
-(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', 'IT20260007', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP);
+
+-- Existing technicians renamed to proper names
+(30, 'google', 'tech1', 'Alice Perera', 'alice@test.com', 'IT20260003', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Fernando', 'bob@test.com', 'IT20260004', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(50, 'google', 'tech3', 'Charlie Wijesinghe', 'charlie@test.com', 'IT20260005', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+
+-- Normal users
+(60, 'google', 'user2', 'Nimal Perera', 'nimal@my.sliit.lk', 'IT20260006', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@my.sliit.lk', 'IT20260007', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+
+-- Additional technicians
+(80, 'google', 'tech4', 'Kasun Madushanka', 'kasun@my.sliit.lk', 'IT20260008', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(90, 'google', 'tech5', 'Tharindu Senanayake', 'tharindu@my.sliit.lk', 'IT20260009', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(100, 'google', 'tech6', 'Dilshan Rodrigo', 'dilshan@my.sliit.lk', 'IT20260010', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(110, 'google', 'tech7', 'Nadeesha Jayawardena', 'nadeesha@my.sliit.lk', 'IT20260011', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(120, 'google', 'tech8', 'Sahan De Silva', 'sahan@my.sliit.lk', 'IT20260012', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(130, 'google', 'tech9', 'Ravindu Peris', 'ravindu@my.sliit.lk', 'IT20260013', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+
+-- Additional normal users
+(140, 'google', 'user4', 'Kavindi Fernando', 'kavindi@my.sliit.lk', 'IT20260014', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP),
+(150, 'google', 'user5', 'Pasindu Lakshan', 'pasindu@my.sliit.lk', 'IT20260015', '$2a$10$pt0NDXY9Hx7.XKfM5fmWNefFKUZ4vIwnqkSclXJ32vOEL.pTSzyUG', CURRENT_TIMESTAMP);
+
+
 
 --- =========================
+-- =========================
+-- USERS
+-- =========================
+INSERT IGNORE INTO users (id, oauth_provider, oauth_id, full_name, email, password, created_at) VALUES
+(10, 'google', 'admin1', 'Admin User', 'admin@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(20, 'google', 'user1', 'Normal User', 'user@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(30, 'google', 'tech1', 'Alice Technician', 'alice@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(40, 'google', 'tech2', 'Bob Electrician', 'bob@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(50, 'google', 'tech3', 'Charlie HVAC', 'charlie@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(60, 'google', 'user2', 'Nimal Perera', 'nimal@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP),
+(70, 'google', 'user3', 'Ayesha Silva', 'ayesha@test.com', '$2a$10$wt.63YS7RQCoytmLMKmfA.bm2CRm52MdecBMbgoxNU2wK5z3hk9E.', CURRENT_TIMESTAMP);
+
+-- =========================
 -- USER ROLES
 -- =========================
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES
-(10, 2), -- Admin User = ADMIN
-(20, 1), -- Normal User = USER
-(30, 3), -- Alice = TECHNICIAN
-(40, 3), -- Bob = TECHNICIAN
-(50, 3), -- Charlie = TECHNICIAN
-(60, 1), -- Nimal = USER
-(70, 1); -- Ayesha = USER
+(10, 1),
+(20, 2),
+(30, 3),
+(40, 3),
+(50, 3),
+(60, 2),
+(70, 2),
+(80, 3),
+(90, 3),
+(100, 3),
+(110, 3),
+(120, 3),
+(130, 3),
+(140, 2),
+(150, 2);
 
 -- =========================
 -- SKILLS
@@ -84,11 +124,32 @@ INSERT IGNORE INTO resource_type_skills (resource_type, skill_id) VALUES
 -- TECHNICIAN SKILLS
 -- =========================
 INSERT IGNORE INTO technician_skills (user_id, skill_id) VALUES
+-- Alice Perera
 (30, 1),
 (30, 2),
+-- Bob Fernando
 (40, 4),
+-- Charlie Wijesinghe
 (50, 3),
-(50, 1);
+(50, 1),
+-- Kasun Madushanka
+(80, 1),
+(80, 4),
+-- Tharindu Senanayake
+(90, 2),
+(90, 4),
+-- Dilshan Rodrigo
+(100, 2),
+(100, 1),
+-- Nadeesha Jayawardena
+(110, 3),
+(110, 4),
+-- Sahan De Silva
+(120, 3),
+(120, 1),
+-- Ravindu Peris
+(130, 2),
+(130, 3);
 
 -- =========================
 -- RESOURCES (Hierarchical)

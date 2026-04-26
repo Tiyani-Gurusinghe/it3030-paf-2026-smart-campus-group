@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import NotificationPanel from "../notifications/NotificationPanel";
-import Breadcrumbs from "./Breadcrumbs";
 import { useAuthContext } from "../../features/auth/context/AuthContext";
+import NotificationPanel from "../notifications/NotificationPanel";
+import { googleLogout } from "@react-oauth/google";
+import Breadcrumbs from "./Breadcrumbs";
 
 function Navbar() {
   const { user, logout, primaryRole } = useAuthContext();

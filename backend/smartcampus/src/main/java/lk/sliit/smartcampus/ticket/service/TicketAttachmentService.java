@@ -55,11 +55,14 @@ public class TicketAttachmentService {
 
     public List<String> upload(Long ticketId, Long currentUserId, List<MultipartFile> files) {
         Ticket ticket = find(ticketId);
+        // Attachment permission: reporter, assigned technician, or admin can upload evidence.
         ticketService.validateAttachmentModificationPermission(ticket, currentUserId);
 
+        // Safe upload: validate file count, type, and size before writing files.
         validationService.validateFiles(files);
 
         List<String> urls = readUrls(ticket);
+        // Validation: total stored attachments must stay within the ticket limit.
         validationService.validateCumulativeFileLimit(urls.size(), files);
         Path baseDir = Paths.get(uploadsDir).toAbsolutePath().normalize();
         Path ticketDir = baseDir.resolve(Paths.get("tickets", ticketId.toString())).normalize();
@@ -76,6 +79,7 @@ public class TicketAttachmentService {
                 String name = UUID.randomUUID() + ext;
                 Path path = ticketDir.resolve(name).normalize();
 
+                // Safe upload: normalized path must remain inside this ticket's upload folder.
                 if (!path.startsWith(ticketDir)) {
                     throw new BadRequestException("Invalid file path");
                 }
@@ -95,12 +99,14 @@ public class TicketAttachmentService {
 
     public List<String> get(Long ticketId, Long currentUserId) {
         Ticket ticket = find(ticketId);
+        // Visibility check: users can only view attachments for tickets they may access.
         ticketService.validateTicketVisibility(ticket, currentUserId);
         return readUrls(ticket);
     }
 
     public void delete(Long ticketId, Long currentUserId, String url) {
         Ticket ticket = find(ticketId);
+        // Attachment permission: delete uses the same role/reporter/technician rule as upload.
         ticketService.validateAttachmentModificationPermission(ticket, currentUserId);
 
         List<String> urls = readUrls(ticket);
@@ -159,6 +165,7 @@ public class TicketAttachmentService {
                 .toAbsolutePath()
                 .normalize();
         Path target = ticketDir.resolve(filename).normalize();
+        // Safe delete: normalized path prevents deleting files outside the ticket folder.
         if (!target.startsWith(ticketDir)) {
             throw new BadRequestException("Invalid attachment path");
         }

@@ -28,6 +28,7 @@ import lk.sliit.smartcampus.ticket.repository.TicketRepository;
 import lk.sliit.smartcampus.user.entity.User;
 import lk.sliit.smartcampus.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,10 +72,11 @@ public class TicketService {
         this.ticketValidationService = ticketValidationService;
     }
 
-    private List<TicketResponse> mapPage(Page<Ticket> page) {
-        return page.getContent().stream()
+    private Page<TicketResponse> mapPage(Page<Ticket> page) {
+        List<TicketResponse> content = page.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        return new PageImpl<>(content, page.getPageable(), page.getTotalElements());
     }
 
     public boolean isAdmin(Long userId) {
@@ -83,7 +87,7 @@ public class TicketService {
         return findUserByIdOrThrow(userId).hasRole(RoleType.TECHNICIAN);
     }
 
-    public List<TicketResponse> getAllTickets(Long currentUserId,
+    public Page<TicketResponse> getAllTickets(Long currentUserId,
                                               TicketStatus status,
                                               TicketPriority priority,
                                               Long reportedBy,
@@ -91,6 +95,7 @@ public class TicketService {
                                               int size) {
         User user = findUserByIdOrThrow(currentUserId);
 
+        // Authorization: only admins can view the complete ticket collection.
         if (!user.hasRole(RoleType.ADMIN)) {
             throw new UnauthorizedException("Only admin can view all tickets");
         }
@@ -99,10 +104,11 @@ public class TicketService {
         return mapPage(ticketRepository.findWithFilters(status, priority, reportedBy, pageable));
     }
 
-    public List<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
+    public Page<TicketResponse> getMyVisibleTickets(Long currentUserId, int page, int size) {
         User user = findUserByIdOrThrow(currentUserId);
         Pageable pageable = PageRequest.of(page, size);
 
+        // Visibility rule: admins see all tickets, technicians see assigned tickets, reporters see their own.
         if (user.hasRole(RoleType.ADMIN)) {
             return mapPage(ticketRepository.findAll(pageable));
         }
@@ -112,6 +118,11 @@ public class TicketService {
         }
 
         return mapPage(ticketRepository.findByReportedBy(currentUserId, pageable));
+    }
+
+    public Page<TicketResponse> getReportedTickets(Long currentUserId, int page, int size) {
+        findUserByIdOrThrow(currentUserId);
+        return mapPage(ticketRepository.findByReportedBy(currentUserId, PageRequest.of(page, size)));
     }
 
     public List<SkillOptionResponse> getSkillsForResource(Long resourceId) {
@@ -126,6 +137,7 @@ public class TicketService {
 
     public List<TechnicianOptionResponse> getAssignableTechnicians(Long ticketId, Long currentUserId) {
         User currentUser = findUserByIdOrThrow(currentUserId);
+        // Authorization: only admins can view eligible technicians for assignment.
         if (!currentUser.hasRole(RoleType.ADMIN)) {
             throw new UnauthorizedException("Only admin can view assignable technicians");
         }
@@ -144,7 +156,7 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
-    public List<TicketResponse> getTechnicianTickets(Long technicianUserId,
+    public Page<TicketResponse> getTechnicianTickets(Long technicianUserId,
                                                      TicketStatus status,
                                                      boolean overdue,
                                                      boolean dueSoon,
@@ -152,12 +164,13 @@ public class TicketService {
                                                      int size) {
         User user = findUserByIdOrThrow(technicianUserId);
 
+        // Authorization: technician queue is restricted to users with the TECHNICIAN role.
         if (!user.hasRole(RoleType.TECHNICIAN)) {
             throw new UnauthorizedException("Only technicians can access technician tickets");
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        List<Ticket> tickets = ticketRepository.findByAssignedTo(technicianUserId, pageable).getContent();
+        List<Ticket> tickets = ticketRepository.findByAssignedToOrderByCreatedAtDesc(technicianUserId);
 
         if (status != null) {
             tickets = tickets.stream()
@@ -187,13 +200,17 @@ public class TicketService {
                     .collect(Collectors.toList());
         }
 
-        return tickets.stream()
+        List<TicketResponse> content = tickets.stream()
+                .skip((long) page * size)
+                .limit(size)
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        return new PageImpl<>(content, pageable, tickets.size());
     }
 
     public TicketResponse getTicketByIdVisibleToUser(Long ticketId, Long currentUserId) {
         Ticket ticket = findByIdOrThrow(ticketId);
+        // Visibility check: service layer protects private ticket details before mapping the response.
         validateTicketVisibility(ticket, currentUserId);
         return toResponse(ticket);
     }
@@ -201,6 +218,7 @@ public class TicketService {
     public void validateTicketVisibility(Ticket ticket, Long currentUserId) {
         User user = findUserByIdOrThrow(currentUserId);
 
+        // Visibility rule: admin, assigned technician, or reporter may view the ticket.
         if (user.hasRole(RoleType.ADMIN)) {
             return;
         }
@@ -221,10 +239,12 @@ public class TicketService {
     public void validateTicketModificationPermission(Ticket ticket, Long currentUserId) {
         User user = findUserByIdOrThrow(currentUserId);
 
+        // Modification rule: admins may edit any ticket.
         if (user.hasRole(RoleType.ADMIN)) {
             return;
         }
 
+        // Modification rule: reporters may edit only their own OPEN tickets.
         boolean isReporter = ticket.getReportedBy() != null && ticket.getReportedBy().equals(currentUserId);
         if (!isReporter) {
             throw new UnauthorizedException("Only the reporter or admin can modify this ticket");
@@ -238,10 +258,12 @@ public class TicketService {
     public void validateAttachmentModificationPermission(Ticket ticket, Long currentUserId) {
         User user = findUserByIdOrThrow(currentUserId);
 
+        // Attachment permission: admins can manage attachments on any active ticket.
         if (user.hasRole(RoleType.ADMIN)) {
             return;
         }
 
+        // Attachment permission: reporter or assigned technician can manage ticket evidence.
         boolean isReporter = ticket.getReportedBy() != null && ticket.getReportedBy().equals(currentUserId);
         boolean isAssignedTechnician = user.hasRole(RoleType.TECHNICIAN)
                 && ticket.getAssignedTo() != null
@@ -263,6 +285,7 @@ public class TicketService {
         }
 
         User actor = findUserByIdOrThrow(actorUserId);
+        // SLA tracking: firstRespondedAt records when staff first handled the ticket.
         if (actor.hasRole(RoleType.ADMIN) || actor.hasRole(RoleType.TECHNICIAN)) {
             ticket.setFirstRespondedAt(LocalDateTime.now());
             ticketRepository.save(ticket);
@@ -285,11 +308,13 @@ public class TicketService {
         ticket.setPreferredContact(request.getPreferredContact());
         ticket.setReportedBy(currentUserId);
         ticket.setStatus(TicketStatus.OPEN);
+        // SLA rule: due date is calculated from priority when the ticket is created.
         LocalDateTime dueAt = calculateDueDate(request.getPriority());
         ticket.setDueAt(dueAt);
         ticket.setOriginalDueAt(dueAt);
         ticket.setAttachmentUrls("[]");
 
+        // Business rule: auto-assign to the eligible technician with the lowest active ticket load.
         Long assignedTechnicianId = findLeastBusyTechnician(request.getRequiredSkillId());
         if (assignedTechnicianId != null) {
             ticket.setAssignedTo(assignedTechnicianId);
@@ -299,6 +324,7 @@ public class TicketService {
         Ticket saved = ticketRepository.save(ticket);
 
         if (assignedTechnicianId != null) {
+            // Notification: assigned technician is alerted when a ticket is routed to them.
             notificationService.createNotification(
                     assignedTechnicianId,
                     NotificationType.TICKET_ASSIGNED,
@@ -306,6 +332,20 @@ public class TicketService {
                     "Ticket \"" + saved.getTitle() + "\" has been assigned to you.",
                     saved.getId()
             );
+        }
+
+        List<Long> adminIds = userRepository.findUserIdsByRoleType(RoleType.ADMIN);
+        if (adminIds != null) {
+            for (Long adminId : adminIds) {
+                // Notification: admins are alerted when a new ticket enters the system.
+                notificationService.createNotification(
+                        adminId,
+                        NotificationType.NEW_TICKET,
+                        "New Ticket Created",
+                        "A new ticket \"" + saved.getTitle() + "\" has been created.",
+                        saved.getId()
+                );
+            }
         }
 
         return toResponse(saved);
@@ -332,6 +372,7 @@ public class TicketService {
     @Transactional
     public TicketResponse assignTicket(Long ticketId, Long currentUserId, TicketAssignRequest request) {
         User currentUser = findUserByIdOrThrow(currentUserId);
+        // Authorization: only admins can assign/reassign tickets.
         if (!currentUser.hasRole(RoleType.ADMIN)) {
             throw new UnauthorizedException("Only admin can assign or reassign tickets");
         }
@@ -342,6 +383,7 @@ public class TicketService {
 
         ticket.setAssignedTo(request.getAssignedTo());
         if (ticket.getFirstRespondedAt() == null) {
+            // SLA tracking: assignment counts as the first staff response when none exists yet.
             ticket.setFirstRespondedAt(LocalDateTime.now());
         }
         Ticket saved = ticketRepository.save(ticket);
@@ -359,6 +401,7 @@ public class TicketService {
         TicketStatus currentStatus = ticket.getStatus();
         TicketStatus nextStatus = request.getStatus();
 
+        // Status workflow: validate role-based transitions before changing ticket state.
         enforceStatusTransition(ticket, currentUser, request);
 
         if (request.getAssignedTo() != null) {
@@ -374,6 +417,7 @@ public class TicketService {
                 throw new BadRequestException("Resolution notes are required when resolving a ticket");
             }
             ticket.setResolutionNotes(resolutionNotes.trim());
+            // SLA tracking: resolvedAt records when the ticket was completed.
             ticket.setResolvedAt(LocalDateTime.now());
             if (ticket.getFirstRespondedAt() == null) {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
@@ -385,6 +429,12 @@ public class TicketService {
             if (ticket.getFirstRespondedAt() == null) {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
             }
+        }
+        
+        if (currentStatus == TicketStatus.RESOLVED && nextStatus == TicketStatus.OPEN) {
+            ticket.setRejectedReason(request.getRejectedReason().trim());
+            ticket.setResolutionNotes(null);
+            ticket.setResolvedAt(null);
         }
 
         if (nextStatus == TicketStatus.CLOSED) {
@@ -398,6 +448,7 @@ public class TicketService {
         Ticket saved = ticketRepository.save(ticket);
 
         if (currentStatus != nextStatus) {
+            // Notification: reporter is informed when ticket status changes.
             notificationService.createNotification(
                     ticket.getReportedBy(),
                     NotificationType.TICKET_STATUS_CHANGED,
@@ -437,6 +488,7 @@ public class TicketService {
                 && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUser.getId());
 
+        // Authorization: only admins or the assigned technician can edit resolution notes.
         if (!isAdmin && !isAssignedTechnician) {
             throw new UnauthorizedException("Only assigned technician or admin can update resolution notes");
         }
@@ -461,6 +513,7 @@ public class TicketService {
                 && ticket.getAssignedTo() != null
                 && ticket.getAssignedTo().equals(currentUser.getId());
 
+        // Authorization: only admins or the assigned technician can extend SLA due dates.
         if (!isAdmin && !isAssignedTechnician) {
             throw new UnauthorizedException("Only admin or assigned technician can extend the due date");
         }
@@ -472,6 +525,7 @@ public class TicketService {
         }
 
         LocalDateTime currentDueAt = ticket.getDueAt();
+        // Validation: extended due date must move forward, not shorten the current SLA window.
         if (currentDueAt != null && !request.getDueAt().isAfter(currentDueAt)) {
             throw new BadRequestException("New due date must be later than the current due date");
         }
@@ -506,6 +560,7 @@ public class TicketService {
         boolean isReporter = ticket.getReportedBy() != null
                 && ticket.getReportedBy().equals(currentUser.getId());
 
+        // Status transition rules combine ticket state with ADMIN, TECHNICIAN, and reporter permissions.
         if (next == null) {
             throw new BadRequestException("Status is required");
         }
@@ -531,6 +586,16 @@ public class TicketService {
         if (current == TicketStatus.RESOLVED && next == TicketStatus.CLOSED) {
             if (!isAdmin && !isReporter) {
                 throw new UnauthorizedException("Only reporter or admin can close a resolved ticket");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.RESOLVED && next == TicketStatus.OPEN) {
+            if (!isAdmin && !isReporter) {
+                throw new UnauthorizedException("Only reporter or admin can reopen a resolved ticket");
+            }
+            if (request.getRejectedReason() == null || request.getRejectedReason().isBlank()) {
+                throw new BadRequestException("Reason is required when reopening a ticket");
             }
             return;
         }
@@ -570,6 +635,7 @@ public class TicketService {
 
     private LocalDateTime calculateDueDate(TicketPriority priority) {
         LocalDateTime now = LocalDateTime.now();
+        // SLA policy: priority controls how quickly the ticket should be resolved.
         return switch (priority) {
             case HIGH -> now.plusDays(1);
             case MEDIUM -> now.plusDays(5);
@@ -590,6 +656,7 @@ public class TicketService {
 
         List<TicketStatus> activeStatuses = List.of(TicketStatus.OPEN, TicketStatus.IN_PROGRESS);
 
+        // Business rule: choose the technician with the lowest active ticket load.
         return technicianIds.stream()
                 .min(Comparator
                         .comparingLong((Long technicianId) ->
@@ -608,6 +675,12 @@ public class TicketService {
         r.setDescription(ticket.getDescription());
 
         r.setResourceId(ticket.getResourceId());
+        if (ticket.getResourceId() != null) {
+            resourceRepository.findById(ticket.getResourceId()).ifPresent(res -> {
+                r.setResourceName(res.getName());
+                r.setResourceType(res.getType().name());
+            });
+        }
         r.setRequiredSkillId(ticket.getRequiredSkillId());
         r.setPriority(ticket.getPriority());
         r.setStatus(ticket.getStatus());
@@ -636,8 +709,37 @@ public class TicketService {
         r.setAttachmentUrls(parseAttachmentUrls(ticket.getAttachmentUrls()));
         r.setCommentCount(0);
         r.setAttachments(Collections.emptyList());
+        r.setLinks(buildLinks(ticket));
 
         return r;
+    }
+
+    private Map<String, String> buildLinks(Ticket ticket) {
+        Map<String, String> links = new LinkedHashMap<>();
+        String base = "/api/v1/tickets/" + ticket.getId();
+        links.put("self", base);
+        links.put("collection", "/api/v1/tickets");
+        links.put("comments", base + "/comments");
+        links.put("attachments", base + "/attachments");
+
+        if (ticket.getStatus() == TicketStatus.OPEN) {
+            links.put("update", base);
+            links.put("transition", base);
+            links.put("assignment", base + "/assignment");
+            links.put("eligibleTechnicians", base + "/technicians");
+        }
+
+        if (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.IN_PROGRESS) {
+            links.put("resolve", base);
+            links.put("resolution", base + "/resolution");
+            links.put("dueDate", base + "/due-date");
+        }
+
+        if (ticket.getStatus() == TicketStatus.RESOLVED) {
+            links.put("close", base);
+        }
+
+        return links;
     }
 
     private String resolveUserName(Long userId) {
