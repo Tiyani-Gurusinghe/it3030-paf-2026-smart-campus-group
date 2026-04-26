@@ -10,6 +10,9 @@ import lk.sliit.smartcampus.ticket.dto.TicketRequest;
 import lk.sliit.smartcampus.ticket.dto.TicketResponse;
 import lk.sliit.smartcampus.ticket.dto.SkillOptionResponse;
 import lk.sliit.smartcampus.ticket.dto.TicketResolutionUpdateRequest;
+import lk.sliit.smartcampus.ticket.dto.TechnicianOptionResponse;
+import lk.sliit.smartcampus.ticket.dto.TicketAssignRequest;
+import lk.sliit.smartcampus.ticket.dto.TicketScope;
 import lk.sliit.smartcampus.ticket.dto.TicketStatusUpdateRequest;
 import lk.sliit.smartcampus.ticket.entity.TicketPriority;
 import lk.sliit.smartcampus.ticket.entity.TicketStatus;
@@ -50,16 +53,22 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<PageResponse<TicketResponse>> getAllTickets(
             Authentication authentication,
+            @RequestParam(defaultValue = "ALL") TicketScope scope,
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(required = false) Long reportedBy,
+            @RequestParam(required = false, defaultValue = "false") boolean overdue,
+            @RequestParam(required = false, defaultValue = "false") boolean dueSoon,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
-        return noStore(PageResponse.from(
-                ticketService.getAllTickets(currentUserId, status, priority, reportedBy, page, size)
-        ));
+        return noStore(PageResponse.from(switch (scope) {
+            case ALL -> ticketService.getAllTickets(currentUserId, status, priority, reportedBy, page, size);
+            case MINE -> ticketService.getMyVisibleTickets(currentUserId, page, size);
+            case REPORTED_BY_ME -> ticketService.getReportedTickets(currentUserId, page, size);
+            case ASSIGNED_TO_ME -> ticketService.getTechnicianTickets(currentUserId, status, overdue, dueSoon, page, size);
+        }));
     }
 
     @GetMapping("/my")
@@ -115,6 +124,25 @@ public class TicketController {
             @Valid @RequestBody TicketStatusUpdateRequest request) {
         Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
         return noStore(ticketService.updateStatus(id, request, currentUserId));
+    }
+
+    @GetMapping("/{id}/technicians")
+    public ResponseEntity<List<TechnicianOptionResponse>> getAssignableTechnicians(
+            @PathVariable Long id,
+            Authentication authentication) {
+        Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(2)).cachePrivate())
+                .body(ticketService.getAssignableTechnicians(id, currentUserId));
+    }
+
+    @PatchMapping("/{id}/assignment")
+    public ResponseEntity<TicketResponse> assignTicket(
+            @PathVariable Long id,
+            Authentication authentication,
+            @Valid @RequestBody TicketAssignRequest request) {
+        Long currentUserId = authenticatedUserService.getCurrentUserId(authentication);
+        return noStore(ticketService.assignTicket(id, currentUserId, request));
     }
 
     @PatchMapping("/{id}/resolution")

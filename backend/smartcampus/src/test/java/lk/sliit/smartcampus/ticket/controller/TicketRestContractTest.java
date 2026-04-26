@@ -56,7 +56,7 @@ class TicketRestContractTest {
         when(ticketService.getMyVisibleTickets(20L, 0, 10)).thenReturn(page);
         when(ticketService.getTechnicianTickets(eq(20L), any(), eq(false), eq(false), eq(0), eq(10))).thenReturn(page);
 
-        var all = ticketController.getAllTickets(authentication, null, null, null, 0, 10);
+        var all = ticketController.getAllTickets(authentication, TicketScope.ALL, null, null, null, false, false, 0, 10);
         var mine = ticketController.getMyTickets(authentication, 0, 10);
         var assigned = technicianController.getTechnicianTickets(authentication, null, false, false, 0, 10);
 
@@ -66,6 +66,27 @@ class TicketRestContractTest {
         assertNoStore(all);
         assertNoStore(mine);
         assertNoStore(assigned);
+    }
+
+    @Test
+    void resourceScopedTicketEndpointSupportsAssignedToMeWithoutRoleUrl() {
+        var page = new PageImpl<>(List.of(ticket()), PageRequest.of(0, 10), 1);
+        when(ticketService.getTechnicianTickets(eq(20L), any(), eq(true), eq(false), eq(0), eq(10))).thenReturn(page);
+
+        var response = ticketController.getAllTickets(
+                authentication,
+                TicketScope.ASSIGNED_TO_ME,
+                null,
+                null,
+                null,
+                true,
+                false,
+                0,
+                10
+        );
+
+        assertEquals(1, response.getBody().getTotalElements());
+        assertNoStore(response);
     }
 
     @Test
@@ -108,6 +129,16 @@ class TicketRestContractTest {
         assertNoStore(create);
         assertNoStore(get);
         assertNoStore(delete);
+    }
+
+    @Test
+    void ticketResponsesExposeHypermediaLinks() {
+        TicketResponse ticket = ticket();
+
+        assertEquals("/api/v1/tickets/1", ticket.getLinks().get("self"));
+        assertEquals("/api/v1/tickets/1/comments", ticket.getLinks().get("comments"));
+        assertEquals("/api/v1/tickets/1/attachments", ticket.getLinks().get("attachments"));
+        assertEquals("/api/v1/tickets/1/assignment", ticket.getLinks().get("assignment"));
     }
 
     @Test
@@ -166,6 +197,22 @@ class TicketRestContractTest {
         assertNoStore(assignment);
     }
 
+    @Test
+    void assignmentEndpointsAreAvailableOnTicketResource() {
+        TicketResponse ticket = ticket();
+        when(ticketService.getAssignableTechnicians(99L, 20L))
+                .thenReturn(List.of(new TechnicianOptionResponse(30L, "Tech User", "tech@test.com")));
+        when(ticketService.assignTicket(eq(99L), eq(20L), any())).thenReturn(ticket);
+
+        var technicians = ticketController.getAssignableTechnicians(99L, authentication);
+        var assignment = ticketController.assignTicket(99L, authentication, assignRequest());
+
+        assertEquals(HttpStatus.OK, technicians.getStatusCode());
+        assertTrue(technicians.getHeaders().getCacheControl().contains("max-age=120"));
+        assertEquals(HttpStatus.OK, assignment.getStatusCode());
+        assertNoStore(assignment);
+    }
+
     private TicketResponse ticket() {
         TicketResponse response = new TicketResponse();
         response.setId(1L);
@@ -173,6 +220,13 @@ class TicketRestContractTest {
         response.setStatus(TicketStatus.OPEN);
         response.setPriority(TicketPriority.HIGH);
         response.setReportedBy(20L);
+        response.setLinks(java.util.Map.of(
+                "self", "/api/v1/tickets/1",
+                "collection", "/api/v1/tickets",
+                "comments", "/api/v1/tickets/1/comments",
+                "attachments", "/api/v1/tickets/1/attachments",
+                "assignment", "/api/v1/tickets/1/assignment"
+        ));
         return response;
     }
 

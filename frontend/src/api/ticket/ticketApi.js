@@ -1,7 +1,5 @@
 const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
-const TECH_BASE = `${BASE}/api/v1/technician/tickets`;
-const ADMIN_BASE = `${BASE}/api/v1/admin/tickets`;
 
 // ─── Headers ──────────────────────────────────────────────────────────────────
 
@@ -43,6 +41,7 @@ async function handleResponse(res) {
  */
 export async function getAllTickets(filters = {}) {
   const params = new URLSearchParams();
+  params.set("scope", filters.scope ?? "ALL");
   if (filters.status) params.set("status", filters.status);
   if (filters.priority) params.set("priority", filters.priority);
   if (filters.reportedBy) params.set("reportedBy", String(filters.reportedBy));
@@ -160,12 +159,13 @@ export async function updateTicketDueDate(id, payload) {
  */
 export async function getTechnicianTickets(filters = {}) {
   const params = new URLSearchParams();
+  params.set("scope", "ASSIGNED_TO_ME");
   if (filters.status) params.set("status", filters.status);
   if (filters.overdue) params.set("overdue", "true");
   if (filters.dueSoon) params.set("dueSoon", "true");
   params.set("page", String(filters.page ?? 0));
   params.set("size", String(filters.size ?? 10));
-  const res = await fetch(`${TECH_BASE}?${params}`, {
+  const res = await fetch(`${TICKET_BASE}?${params}`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
@@ -178,7 +178,7 @@ export async function getTechnicianTickets(filters = {}) {
  * payload: { assignedTo: userId }
  */
 export async function assignTicket(id, payload) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/assignment`, {
+  const res = await fetch(`${TICKET_BASE}/${id}/assignment`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -212,7 +212,7 @@ export async function closeTicket(id) {
 }
 
 export async function getAssignableTechnicians(ticketId) {
-  const res = await fetch(`${ADMIN_BASE}/${ticketId}/technicians`, {
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/technicians`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
