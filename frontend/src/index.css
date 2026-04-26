@@ -1524,7 +1524,6 @@ select option {
   width: auto !important;
   min-width: 140px;
   max-width: 220px;
-  height: 38px;
 }
 
 .filter-select:focus {
@@ -1543,7 +1542,6 @@ select option {
   width: auto !important;
   min-width: 140px;
   max-width: 220px;
-  height: 38px;
   transition: border-color 0.15s;
 }
 

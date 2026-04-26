@@ -34,7 +34,7 @@ export default function TicketsPage() {
           ...(myTickets && user?.id ? { reportedBy: user.id } : {}),
         };
         const data = await getTickets(activeFilters);
-        setTickets(data);
+        setTickets(Array.isArray(data) ? data : data.content ?? []);
       } catch (err) {
         setError(err.message || "Failed to load tickets");
       } finally {
