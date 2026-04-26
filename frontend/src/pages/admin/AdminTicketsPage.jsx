@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { getAllTickets } from "../../api/ticket/ticketApi";
+import resourceApi from "../../features/resources/api/resourceApi";
 import TicketList from "../../components/ticket/TicketList";
 
 const TABS = [
@@ -28,11 +29,15 @@ export default function AdminTicketsPage() {
   
   const [activeTab, setActiveTab] = useState("");
   const [assignedToFilter, setAssignedToFilter] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterSub, setFilterSub] = useState("");
   const [resourceFilter, setResourceFilter] = useState("");
   const [dueDateFilter, setDueDateFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(0);
+
+  const [allResources, setAllResources] = useState([]);
 
   async function load() {
     setLoading(true);
@@ -42,9 +47,13 @@ export default function AdminTicketsPage() {
       const filters = { page: 0, size: 1000 };
       if (activeTab) filters.status = activeTab;
       
-      const data = await getAllTickets(filters);
+      const [data, resData] = await Promise.all([
+        getAllTickets(filters),
+        resourceApi.getAllResources()
+      ]);
       const items = Array.isArray(data) ? data : data.content ?? [];
       setAllTickets(items);
+      setAllResources(resData);
     } catch (err) {
       setError(err.message || "Failed to load tickets");
     } finally {
@@ -55,6 +64,8 @@ export default function AdminTicketsPage() {
   useEffect(() => {
     setPage(0);
     setAssignedToFilter("");
+    setFilterCategory("");
+    setFilterSub("");
     setResourceFilter("");
     setDueDateFilter("");
     setFromDate("");
@@ -75,16 +86,32 @@ export default function AdminTicketsPage() {
     return Array.from(map.entries()).map(([val, label]) => ({ val: String(val), label }));
   }, [allTickets]);
 
-  // Extract unique resources for dropdown
-  const resources = useMemo(() => {
-    const map = new Map();
-    allTickets.forEach(t => {
-      if (t.resourceId) {
-        map.set(t.resourceId, t.resourceName || `Resource #${t.resourceId}`);
+  const buildings = useMemo(() => allResources.filter(r => r.category === "BUILDING"), [allResources]);
+  const assetTypes = useMemo(() => {
+    const types = new Set();
+    allResources.forEach(r => {
+      if (r.category === "EQUIPMENT" || r.category === "UTILITY") {
+        if (r.type) types.add(r.type);
       }
     });
-    return Array.from(map.entries()).map(([val, label]) => ({ val: String(val), label }));
-  }, [allTickets]);
+    return Array.from(types).sort();
+  }, [allResources]);
+
+  const filteredResources = useMemo(() => {
+    let list = allResources;
+    if (filterCategory === "INFRA") {
+      list = list.filter(r => r.category === "BUILDING" || r.category === "SPACE");
+      if (filterSub) {
+        list = list.filter(r => String(r.id) === filterSub || (r.parentResource && String(r.parentResource.id) === filterSub));
+      }
+    } else if (filterCategory === "INV") {
+      list = list.filter(r => r.category === "EQUIPMENT" || r.category === "UTILITY");
+      if (filterSub) {
+        list = list.filter(r => r.type === filterSub);
+      }
+    }
+    return list;
+  }, [allResources, filterCategory, filterSub]);
 
   // Apply frontend filters
   const filteredTickets = useMemo(() => {
@@ -100,6 +127,9 @@ export default function AdminTicketsPage() {
       
       if (resourceFilter && String(t.resourceId) !== resourceFilter) {
         return false;
+      } else if (filterCategory || filterSub) {
+         const allowedResourceIds = new Set(filteredResources.map(r => String(r.id)));
+         if (!allowedResourceIds.has(String(t.resourceId))) return false;
       }
       
       if (t.dueAt) {
@@ -150,7 +180,7 @@ export default function AdminTicketsPage() {
       }
       return true;
     });
-  }, [allTickets, assignedToFilter, resourceFilter, dueDateFilter, fromDate, toDate]);
+  }, [allTickets, assignedToFilter, resourceFilter, filterCategory, filterSub, filteredResources, dueDateFilter, fromDate, toDate]);
 
   // Pagination
   const totalPages = Math.ceil(filteredTickets.length / PAGE_SIZE);
@@ -197,11 +227,61 @@ export default function AdminTicketsPage() {
         
         <select 
           className="filter-select" 
-          value={resourceFilter}
-          onChange={(e) => { setResourceFilter(e.target.value); setPage(0); }}
+          value={filterCategory}
+          onChange={(e) => { setFilterCategory(e.target.value); setFilterSub(""); setResourceFilter(""); setPage(0); }}
         >
-          <option value="">Filter by Resource (All)</option>
-          {resources.map(a => <option key={a.val} value={a.val}>{a.label}</option>)}
+          <option value="">Filter by Resource Category (All)</option>
+          <option value="INFRA">Infrastructure (Buildings/Spaces)</option>
+          <option value="INV">Inventory (Assets)</option>
+        </select>
+
+        {filterCategory === "INFRA" && (
+          <select 
+            className="filter-select" 
+            value={filterSub}
+            onChange={(e) => { setFilterSub(e.target.value); setResourceFilter(""); setPage(0); }}
+          >
+            <option value="">All Buildings</option>
+            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+        )}
+
+        {filterCategory === "INV" && (
+          <select 
+            className="filter-select" 
+            value={filterSub}
+            onChange={(e) => { setFilterSub(e.target.value); setResourceFilter(""); setPage(0); }}
+          >
+            <option value="">All Asset Types</option>
+            {assetTypes.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+          </select>
+        )}
+        
+        <select 
+          className="filter-select" 
+          value={resourceFilter}
+          onChange={(e) => { 
+            const value = e.target.value;
+            if (value) {
+              const r = allResources.find(x => String(x.id) === value);
+              if (r) {
+                if (r.category === "BUILDING" || r.category === "SPACE") {
+                  setFilterCategory("INFRA");
+                  if (r.category === "BUILDING") setFilterSub(String(r.id));
+                  else if (r.parentResource) setFilterSub(String(r.parentResource.id));
+                  else setFilterSub("");
+                } else if (r.category === "EQUIPMENT" || r.category === "UTILITY") {
+                  setFilterCategory("INV");
+                  setFilterSub(r.type || "");
+                }
+              }
+            }
+            setResourceFilter(value); 
+            setPage(0); 
+          }}
+        >
+          <option value="">Specific Resource (All)</option>
+          {filteredResources.map(a => <option key={a.id} value={a.id}>{a.name} {a.location ? `(${a.location})` : ""}</option>)}
         </select>
         
         <select 
@@ -230,6 +310,25 @@ export default function AdminTicketsPage() {
             onChange={(e) => { setToDate(e.target.value); setPage(0); }}
           />
         </div>
+
+        {(assignedToFilter || filterCategory || filterSub || resourceFilter || dueDateFilter || fromDate || toDate) ? (
+          <button 
+            className="btn secondary" 
+            style={{ height: '38px', padding: '0 16px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={() => {
+              setAssignedToFilter("");
+              setFilterCategory("");
+              setFilterSub("");
+              setResourceFilter("");
+              setDueDateFilter("");
+              setFromDate("");
+              setToDate("");
+              setPage(0);
+            }}
+          >
+            Clear Filters
+          </button>
+        ) : null}
       </div>
 
       {error && <div className="error-box"><span>Error</span> {error}</div>}
