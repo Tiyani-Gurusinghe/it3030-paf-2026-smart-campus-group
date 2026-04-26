@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getTicketById } from "../../api/ticket/ticketApi";
+import { deleteTicket, getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
@@ -32,6 +32,7 @@ export default function TicketDetailsPage() {
   const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     getTicketById(id)
@@ -61,6 +62,18 @@ export default function TicketDetailsPage() {
   const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
   const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
   const hasPreferredContact = hasDisplayValue(ticket.preferredContact);
+  const canDelete = ticket.status === "OPEN";
+
+  async function handleDelete() {
+    try {
+      setError("");
+      await deleteTicket(ticket.id);
+      navigate("/tickets/my", { replace: true });
+    } catch (err) {
+      setError(err.message || "Failed to delete ticket");
+      setConfirmDelete(false);
+    }
+  }
 
   return (
     <div className="page">
@@ -160,7 +173,21 @@ export default function TicketDetailsPage() {
         {/* Actions */}
         <div className="card-actions">
           <button onClick={() => navigate(-1)} className="btn secondary">Back to List</button>
+          {canDelete && (
+            <button onClick={() => setConfirmDelete(true)} className="btn danger">Delete Ticket</button>
+          )}
         </div>
+        {confirmDelete && (
+          <div className="error-box" style={{ marginTop: 16 }}>
+            <span>Confirm</span> Delete this ticket permanently?
+            <button className="btn danger" style={{ marginLeft: 12 }} onClick={handleDelete}>
+              Delete
+            </button>
+            <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
       </div>
     </div>

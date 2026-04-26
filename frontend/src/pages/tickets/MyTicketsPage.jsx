@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getMyTickets } from "../../api/ticket/ticketApi";
+import { Link, useNavigate } from "react-router-dom";
+import { deleteTicket, getMyTickets } from "../../api/ticket/ticketApi";
 import TicketList from "../../components/ticket/TicketList";
 
 const TABS = [
@@ -24,12 +24,14 @@ function matchesTab(ticket, status) {
 }
 
 export default function MyTicketsPage() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [blockedDeleteTicket, setBlockedDeleteTicket] = useState(null);
 
   async function load(status, pageNum) {
     setLoading(true);
@@ -93,6 +95,35 @@ export default function MyTicketsPage() {
     load(activeTab, next);
   }
 
+  async function handleDelete(id) {
+    try {
+      setError("");
+      await deleteTicket(id);
+      setTickets((prev) => prev.filter((ticket) => ticket.id !== id));
+      setBlockedDeleteTicket(null);
+    } catch (err) {
+      setError(err.message || "Failed to delete ticket");
+    }
+  }
+
+  function requestDelete(id) {
+    const ticket = tickets.find((item) => item.id === id);
+    if (ticket?.status !== "OPEN") {
+      setBlockedDeleteTicket(ticket);
+      return;
+    }
+    setBlockedDeleteTicket({ ...ticket, canDelete: true });
+  }
+
+  function closeTicketPopup() {
+    setBlockedDeleteTicket(null);
+  }
+
+  function goToTicketActions() {
+    if (!blockedDeleteTicket) return;
+    navigate(`/tickets/${blockedDeleteTicket.id}`);
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -123,6 +154,55 @@ export default function MyTicketsPage() {
 
       {error && <div className="error-box"><span>Error</span> {error}</div>}
 
+      {blockedDeleteTicket && (
+        <div className="ticket-modal-backdrop" role="presentation">
+          <div className="ticket-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-delete-title">
+            {blockedDeleteTicket.canDelete ? (
+              <>
+                <h2 id="ticket-delete-title">Delete ticket permanently?</h2>
+                <p>
+                  Ticket #{blockedDeleteTicket.id} is still open. Deleting it removes the ticket from your list and from the system history.
+                </p>
+                <div className="ticket-modal-summary">
+                  <strong>{blockedDeleteTicket.title}</strong>
+                  <span>Status: {blockedDeleteTicket.status}</span>
+                </div>
+                <div className="ticket-modal-actions">
+                  <button className="btn secondary" type="button" onClick={closeTicketPopup}>
+                    Cancel
+                  </button>
+                  <button className="btn danger" type="button" onClick={() => handleDelete(blockedDeleteTicket.id)}>
+                    Delete Ticket
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 id="ticket-delete-title">This ticket should be closed, not deleted</h2>
+                <p>
+                  Ticket #{blockedDeleteTicket.id} is already in <strong>{blockedDeleteTicket.status.replace("_", " ")}</strong> status, so it cannot be deleted by the reporter. This keeps the ticket history, comments, assignments, and SLA records available for review.
+                </p>
+                <p>
+                  If the issue has been fixed, open the ticket and use the ticket actions to mark it as <strong>Resolved</strong>. After it is resolved, you can <strong>Close Ticket</strong> to finish the workflow.
+                </p>
+                <div className="ticket-modal-summary">
+                  <strong>{blockedDeleteTicket.title}</strong>
+                  <span>Use resolve and close instead of deleting this ticket.</span>
+                </div>
+                <div className="ticket-modal-actions">
+                  <button className="btn secondary" type="button" onClick={closeTicketPopup}>
+                    Got It
+                  </button>
+                  <button className="btn" type="button" onClick={goToTicketActions}>
+                    Open Ticket Actions
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="skeleton-grid">
           {[1, 2, 3].map((i) => <div key={i} className="skeleton-card" />)}
@@ -131,6 +211,7 @@ export default function MyTicketsPage() {
         <TicketList
           tickets={tickets}
           linkBase="/tickets"
+          onDelete={requestDelete}
           emptyMessage="You haven't submitted any tickets yet."
           emptyAction={<Link to="/tickets/create" className="btn">+ Create Your First Ticket</Link>}
         />
