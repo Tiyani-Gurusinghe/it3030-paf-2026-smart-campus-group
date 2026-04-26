@@ -3777,6 +3777,35 @@ select option {
   font-weight: 800;
 }
 
+.dashboard-user-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.dashboard-feature-booking {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, rgba(255, 147, 0, 0.1), rgba(11, 22, 244, 0.06)),
+    #fff;
+  border: 1px solid rgba(255, 147, 0, 0.24);
+}
+
+.dashboard-feature-booking strong {
+  color: var(--text-primary);
+  font-size: 20px;
+}
+
+.dashboard-feature-booking span:not(.status-badge) {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .dashboard-activity-item {
   color: inherit;
   text-decoration: none;
@@ -3807,6 +3836,52 @@ select option {
   color: var(--text-muted);
   font-size: 12px;
   margin-top: 4px;
+}
+
+.dashboard-resource-strip {
+  margin-top: 22px;
+}
+
+.dashboard-resource-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-resource-item {
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(11, 22, 244, 0.12);
+  background: rgba(246, 248, 255, 0.82);
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.dashboard-resource-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 147, 0, 0.42);
+  background: #fff;
+}
+
+.dashboard-resource-item strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.dashboard-resource-item span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.dashboard-resource-item em {
+  color: #15803d;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .route-error-page {
@@ -3862,7 +3937,8 @@ select option {
   .dashboard-grid,
   .dashboard-grid-four,
   .dashboard-panel-grid,
-  .dashboard-activity-grid {
+  .dashboard-activity-grid,
+  .dashboard-resource-list {
     grid-template-columns: 1fr;
   }
 
