@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { getAllTickets } from "../../api/ticket/ticketApi";
+import { deleteTicket, getAllTickets } from "../../api/ticket/ticketApi";
 import resourceApi from "../../features/resources/api/resourceApi";
 import TicketList from "../../components/ticket/TicketList";
 
@@ -187,6 +187,19 @@ export default function AdminTicketsPage() {
   const currentTickets = filteredTickets.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const hasMore = page + 1 < totalPages;
 
+  async function handleDelete(id) {
+    const shouldDelete = window.confirm(`Delete ticket #${id} permanently?`);
+    if (!shouldDelete) return;
+
+    try {
+      setError("");
+      await deleteTicket(id);
+      setAllTickets((prev) => prev.filter((ticket) => ticket.id !== id));
+    } catch (err) {
+      setError(err.message || "Failed to delete ticket");
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
@@ -341,6 +354,7 @@ export default function AdminTicketsPage() {
         <TicketList
           tickets={currentTickets}
           linkBase="/admin/tickets"
+          onDelete={handleDelete}
           emptyMessage="No tickets found for this filter."
         />
       )}

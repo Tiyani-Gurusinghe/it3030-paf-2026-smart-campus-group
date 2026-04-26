@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { getTicketById } from "../../api/ticket/ticketApi";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { deleteTicket, getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketAssignmentPanel from "../../components/ticket/TicketAssignmentPanel";
 import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
@@ -20,8 +20,10 @@ function formatDate(iso) {
 
 export default function AdminTicketDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     getTicketById(id)
@@ -46,6 +48,17 @@ export default function AdminTicketDetailPage() {
         </div>
       </div>
     );
+  }
+
+  async function handleDelete() {
+    try {
+      setError("");
+      await deleteTicket(ticket.id);
+      navigate("/admin/tickets", { replace: true });
+    } catch (err) {
+      setError(err.message || "Failed to delete ticket");
+      setConfirmDelete(false);
+    }
   }
 
   return (
@@ -151,7 +164,19 @@ export default function AdminTicketDetailPage() {
         {/* Back */}
         <div className="card-actions">
           <button onClick={() => window.history.back()} className="btn secondary">Back to List</button>
+          <button onClick={() => setConfirmDelete(true)} className="btn danger">Delete Ticket</button>
         </div>
+        {confirmDelete && (
+          <div className="error-box" style={{ marginTop: 16 }}>
+            <span>Confirm</span> Delete this ticket permanently?
+            <button className="btn danger" style={{ marginLeft: 12 }} onClick={handleDelete}>
+              Delete
+            </button>
+            <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
       </div>
     </div>
