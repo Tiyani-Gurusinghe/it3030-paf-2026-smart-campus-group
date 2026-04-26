@@ -49,8 +49,32 @@ public class Ticket {
     @Column(name = "due_at")
     private LocalDateTime dueAt;
 
+    @Column(name = "original_due_at")
+    private LocalDateTime originalDueAt;
+
+    @Column(name = "first_responded_at")
+    private LocalDateTime firstRespondedAt;
+
+    @Column(name = "resolved_at")
+    private LocalDateTime resolvedAt;
+
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
+
+    @Column(name = "due_extended_at")
+    private LocalDateTime dueExtendedAt;
+
+    @Column(name = "due_extended_by")
+    private Long dueExtendedBy;
+
+    @Column(name = "due_extension_note", columnDefinition = "TEXT")
+    private String dueExtensionNote;
+
+    @Column(name = "resolution_notes", columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(name = "rejected_reason", columnDefinition = "TEXT")
+    private String rejectedReason;
 
     @Column(name = "attachment_urls", columnDefinition = "json")
     private String attachmentUrls;
@@ -60,6 +84,8 @@ public class Ticket {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+
 
     public Ticket() {
     }
@@ -132,8 +158,40 @@ public class Ticket {
         return dueAt;
     }
 
+    public LocalDateTime getOriginalDueAt() {
+        return originalDueAt;
+    }
+
+    public LocalDateTime getFirstRespondedAt() {
+        return firstRespondedAt;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
     public LocalDateTime getClosedAt() {
         return closedAt;
+    }
+
+    public LocalDateTime getDueExtendedAt() {
+        return dueExtendedAt;
+    }
+
+    public Long getDueExtendedBy() {
+        return dueExtendedBy;
+    }
+
+    public String getDueExtensionNote() {
+        return dueExtensionNote;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
     }
 
     public String getAttachmentUrls() {
@@ -200,8 +258,40 @@ public class Ticket {
         this.dueAt = dueAt;
     }
 
+    public void setOriginalDueAt(LocalDateTime originalDueAt) {
+        this.originalDueAt = originalDueAt;
+    }
+
+    public void setFirstRespondedAt(LocalDateTime firstRespondedAt) {
+        this.firstRespondedAt = firstRespondedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
     public void setClosedAt(LocalDateTime closedAt) {
         this.closedAt = closedAt;
+    }
+
+    public void setDueExtendedAt(LocalDateTime dueExtendedAt) {
+        this.dueExtendedAt = dueExtendedAt;
+    }
+
+    public void setDueExtendedBy(Long dueExtendedBy) {
+        this.dueExtendedBy = dueExtendedBy;
+    }
+
+    public void setDueExtensionNote(String dueExtensionNote) {
+        this.dueExtensionNote = dueExtensionNote;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 
     public void setAttachmentUrls(String attachmentUrls) {

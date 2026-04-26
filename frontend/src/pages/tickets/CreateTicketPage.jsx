@@ -13,9 +13,16 @@ export default function CreateTicketPage() {
     navigate(`/tickets/${ticket.id}`);
   }
 
+  const handleBack = () => {
+    navigate("/tickets/my", { replace: false });
+  };
+
   return (
     <div className="page">
-      <TicketForm onSubmit={handleCreate} submitText="🎫 Create Ticket" />
+      <button onClick={handleBack} className="btn-back">
+        ← Back
+      </button>
+      <TicketForm onSubmit={handleCreate} submitText="Create Ticket" />
     </div>
   );
 }

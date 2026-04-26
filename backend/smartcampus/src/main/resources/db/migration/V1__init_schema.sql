@@ -3,24 +3,25 @@
 -- ========================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, tickets, 
+DROP TABLE IF EXISTS audit_logs, notifications, ticket_comments, ticket_history, tickets, 
                      bookings, resource_faculties, resource_type_skills, 
-                     technician_skills, resources, user_roles, users, roles, skills;
+                     technician_skills, resources, user_roles, users, roles, skills, notification_preferences;
 SET FOREIGN_KEY_CHECKS = 1;
-USE smartcampusdb;
 
-
+SET FOREIGN_KEY_CHECKS = 0;
 -- 1. Roles
 CREATE TABLE roles (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
--- 2. Users (Matched to your MySQL Screenshot)
+-- 2. Users 
 CREATE TABLE users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    campus_id VARCHAR(20) UNIQUE,
+    password VARCHAR(255),
     oauth_provider VARCHAR(50),
     oauth_id VARCHAR(100) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -37,8 +38,8 @@ CREATE TABLE user_roles (
     user_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
 -- 5. Technician Skills (Junction Table)
@@ -46,8 +47,8 @@ CREATE TABLE technician_skills (
     user_id BIGINT NOT NULL,
     skill_id BIGINT NOT NULL,
     PRIMARY KEY (user_id, skill_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+    CONSTRAINT fk_technician_skills_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_technician_skills_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
 
 -- 6. Resources
@@ -67,22 +68,23 @@ CREATE TABLE resources (
     availability_end TIME,
     CONSTRAINT fk_resource_parent FOREIGN KEY (parent_id) REFERENCES resources(id) ON DELETE SET NULL
 );
+
+
+
 -- 7. Resource Type Skills (Mapping Skills to Resource Types)
 CREATE TABLE resource_type_skills (
     resource_type VARCHAR(50) NOT NULL,
     skill_id BIGINT NOT NULL,
     PRIMARY KEY (resource_type, skill_id),
-    FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
+    CONSTRAINT fk_resource_type_skills_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE
 );
-
 -- 8. Resource Faculties
 CREATE TABLE resource_faculties (
     resource_id BIGINT NOT NULL,
     faculty VARCHAR(50) NOT NULL,
     PRIMARY KEY (resource_id, faculty),
-    FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
+    CONSTRAINT fk_resource_faculties_resource FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE
 );
-
 -- 9. Bookings
 CREATE TABLE bookings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -91,19 +93,19 @@ CREATE TABLE bookings (
     booking_date DATE NOT NULL,
     start_time DATETIME(6) NOT NULL,
     end_time DATETIME(6) NOT NULL,
+    booking_quantity INT NOT NULL DEFAULT 1,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (resource_id) REFERENCES resources(id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_bookings_resource FOREIGN KEY (resource_id) REFERENCES resources(id)
 );
-ALTER TABLE bookings
-ADD COLUMN updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
 -- 10. Tickets
-
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
     title VARCHAR(120) NOT NULL,
     location VARCHAR(120) NOT NULL,
     category VARCHAR(30) NOT NULL,
@@ -118,22 +120,41 @@ CREATE TABLE tickets (
     resource_id BIGINT NOT NULL,
     required_skill_id BIGINT NOT NULL,
 
-    due_at DATETIME NULL,
-    closed_at DATETIME NULL,
+    due_at DATETIME(6) NULL,
+    original_due_at DATETIME(6) NULL,
+    due_extended_at DATETIME(6) NULL,
+    due_extended_by BIGINT NULL,
+    due_extension_note TEXT NULL,
+
+    closed_at DATETIME(6) NULL,
+    first_responded_at DATETIME(6) NULL,
+    resolved_at DATETIME(6) NULL,
+
+    resolution_notes TEXT NULL,
+    rejected_reason TEXT NULL,
 
     attachment_urls JSON NULL,
 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)
+        ON UPDATE CURRENT_TIMESTAMP(6),
 
     CONSTRAINT fk_tickets_reported_by
         FOREIGN KEY (reported_by) REFERENCES users(id),
+
     CONSTRAINT fk_tickets_assigned_to
-        FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+        FOREIGN KEY (assigned_to) REFERENCES users(id)
+        ON DELETE SET NULL,
+
     CONSTRAINT fk_tickets_resource
         FOREIGN KEY (resource_id) REFERENCES resources(id),
+
     CONSTRAINT fk_tickets_required_skill
-        FOREIGN KEY (required_skill_id) REFERENCES skills(id)
+        FOREIGN KEY (required_skill_id) REFERENCES skills(id),
+
+    CONSTRAINT fk_tickets_due_extended_by
+        FOREIGN KEY (due_extended_by) REFERENCES users(id)
+        ON DELETE SET NULL
 );
 
 -- =========================================================
@@ -165,6 +186,46 @@ CREATE TABLE ticket_history (
     CONSTRAINT fk_ticket_history_new_assignee
         FOREIGN KEY (new_assignee) REFERENCES users(id) ON DELETE SET NULL
 );
+ALTER TABLE tickets ADD COLUMN resolution_notes TEXT NULL;
+ALTER TABLE tickets ADD COLUMN rejected_reason TEXT NULL;
+ALTER TABLE tickets ADD COLUMN first_responded_at DATETIME NULL;
+ALTER TABLE tickets ADD COLUMN resolved_at DATETIME NULL;
+
+INSERT INTO ticket_history (
+    ticket_id,
+    actor_user_id,
+    action_type,
+    note,
+    created_at
+)
+SELECT
+    t.id,
+    t.due_extended_by,
+    'DUE_EXTENDED',
+    CONCAT('Due date extended to ', DATE_FORMAT(t.due_at, '%Y-%m-%d %H:%i:%s'), '. Note: ', t.due_extension_note),
+    COALESCE(t.due_extended_at, CURRENT_TIMESTAMP)
+FROM tickets t
+WHERE t.due_extended_by IS NOT NULL
+  AND t.due_extension_note IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM ticket_history h
+      WHERE h.ticket_id = t.id
+        AND h.action_type = 'DUE_EXTENDED'
+  );
+
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notification_preferences_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_notification_pref_user_type UNIQUE (user_id, type)
+);
 
 -- =========================================================
 -- 12. NOTIFICATIONS
@@ -173,20 +234,36 @@ CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     ticket_id BIGINT NULL,
+    booking_id BIGINT NULL,
     type VARCHAR(50) NOT NULL,
     title VARCHAR(150) NOT NULL,
     message VARCHAR(500) NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_ticket FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+);
+
+CREATE TABLE notification_preferences (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notification_preferences_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uk_notification_pref_user_type UNIQUE (user_id, type)
     CONSTRAINT fk_notifications_user
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_ticket
-        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_booking
+        FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
 
 -- =========================================================
--- 13. AUDIT LOGS
+-- 14. AUDIT LOGS
 -- =========================================================
 CREATE TABLE audit_logs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -197,6 +274,30 @@ CREATE TABLE audit_logs (
     details VARCHAR(1000) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_audit_logs_actor
-        FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_audit_logs_actor FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

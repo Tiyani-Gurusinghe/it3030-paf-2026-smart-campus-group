@@ -43,4 +43,22 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("bookingId") Long bookingId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Booking b WHERE b.resource.id = :resourceId " +
+           "AND b.status NOT IN ('REJECTED', 'CANCELLED') " +
+           "AND b.startTime < :endTime AND b.endTime > :startTime")
+    long sumOverlappingQuantity(
+            @Param("resourceId") Long resourceId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    @Query("SELECT COALESCE(SUM(b.quantity), 0) FROM Booking b WHERE b.resource.id = :resourceId " +
+           "AND b.id != :bookingId " +
+           "AND b.status NOT IN ('REJECTED', 'CANCELLED') " +
+           "AND b.startTime < :endTime AND b.endTime > :startTime")
+    long sumOverlappingQuantityExcludingId(
+            @Param("resourceId") Long resourceId,
+            @Param("bookingId") Long bookingId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
 }

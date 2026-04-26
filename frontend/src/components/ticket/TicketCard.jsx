@@ -15,14 +15,16 @@ function isDueOverdue(dueAt) {
   return new Date(dueAt) < new Date();
 }
 
-export default function TicketCard({ ticket, linkBase = "/tickets" }) {
+export default function TicketCard({ ticket, linkBase = "/tickets", onDelete = null }) {
   const priority = PRIORITY_LEVEL[ticket.priority] ?? "medium";
-  const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
 
   return (
-    <div className="card ticket-card">
+    <div className="card ticket-card" title={ticket.title}>
       <div className="ticket-card-top">
-        <h3>{ticket.title}</h3>
+        <h3 className="ticket-card-title" title={ticket.title}>
+          {ticket.title}
+        </h3>
         <StatusBadge status={ticket.status} />
       </div>
 
@@ -33,12 +35,7 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
             {ticket.resourceName}
           </div>
         )}
-        {ticket.requiredSkillName && (
-          <div className="ticket-meta-item">
-            <strong>Skill</strong>
-            {ticket.requiredSkillName}
-          </div>
-        )}
+
         <div className="ticket-meta-item">
           <strong>Priority</strong>
           <span className={`priority-badge priority-badge-${priority}`}>
@@ -50,27 +47,39 @@ export default function TicketCard({ ticket, linkBase = "/tickets" }) {
           <strong>Assigned To</strong>
           {ticket.assignedToName ? (
             <span className="assignee-badge">
-              🧑‍🔧 {ticket.assignedToName}
+              {ticket.assignedToName}
             </span>
           ) : (
             <span className="unassigned-badge">
-              ⚠️ Unassigned
+              Unassigned
             </span>
           )}
         </div>
         {ticket.dueAt && (
-          <div className={`ticket-meta-item ${overdue ? "text-danger" : ""}`}>
+          <div className="ticket-meta-item">
             <strong>Due</strong>
-            {overdue && <span className="due-alert">⚠️ </span>}
-            {formatDate(ticket.dueAt)}
+            <span style={{ 
+              color: ticket.dueExtendedAt ? "var(--sliit-orange)" : (overdue ? "#dc2626" : "var(--sliit-blue)"), 
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}>
+              {ticket.dueExtendedAt ? "Extended:" : (overdue ? "Overdue:" : "")} {formatDate(ticket.dueAt)}
+            </span>
           </div>
         )}
       </div>
 
       <div className="card-actions">
         <Link to={`${linkBase}/${ticket.id}`} className="btn secondary">
-          View →
+          View
         </Link>
+        {onDelete && (
+          <button type="button" className="btn danger" onClick={() => onDelete(ticket.id)}>
+            Delete
+          </button>
+        )}
       </div>
     </div>
   );

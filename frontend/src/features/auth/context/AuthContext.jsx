@@ -39,9 +39,9 @@ export function getPrimaryRole(roles = []) {
 
 export function getLandingRoute(roles = []) {
   const primary = getPrimaryRole(roles);
-  if (primary === "ADMIN") return "/admin/tickets";
-  if (primary === "TECHNICIAN") return "/technician/tickets";
-  return "/tickets/my";
+  if (primary === "ADMIN") return "/admin/dashboard";
+  if (primary === "TECHNICIAN") return "/technician/dashboard";
+  return "/user/dashboard";
 }
 
 function getStoredUser() {
@@ -58,6 +58,7 @@ function getStoredUser() {
   } catch {
     localStorage.removeItem("authUser");
     localStorage.removeItem("userId");
+    localStorage.removeItem("jwtToken");
     return null;
   }
 }
@@ -65,7 +66,7 @@ function getStoredUser() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(getStoredUser);
 
-  function login(userData) {
+  function login(userData, token) {
     const roles = extractRoles(userData);
     const normalizedUser = {
       id: userData.id,
@@ -75,6 +76,9 @@ export function AuthProvider({ children }) {
     };
     localStorage.setItem("authUser", JSON.stringify(normalizedUser));
     localStorage.setItem("userId", String(userData.id));
+    if (token) {
+        localStorage.setItem("jwtToken", token);
+    }
     setUser(normalizedUser);
     return normalizedUser;
   }
@@ -82,6 +86,7 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem("authUser");
     localStorage.removeItem("userId");
+    localStorage.removeItem("jwtToken");
     setUser(null);
   }
 
@@ -89,14 +94,15 @@ export function AuthProvider({ children }) {
     () => {
       const roles = user?.roles ?? [];
       const primary = getPrimaryRole(roles);
+      const roleStr = primary;
       return {
         user,
+        roles: user?.roles || ["USER"],
+        primaryRole: roleStr,
         isAuthenticated: !!user,
-        roles,
-        primaryRole: primary,
         isAdmin: primary === "ADMIN",
         isTechnician: primary === "TECHNICIAN",
-        isStaff: primary === "ADMIN" || primary === "TECHNICIAN",
+        isStaff: !!user && primary !== "USER" && primary !== "STUDENT",
         getLandingRoute: () => getLandingRoute(roles),
         login,
         logout,

@@ -3,14 +3,32 @@ import { Link } from "react-router-dom";
 import { getNotifications, markAllRead } from "../../api/notification/notificationApi";
 import useAuth from "../../features/auth/hooks/useAuth";
 
+const TYPE_ICONS = {
+  TICKET_STATUS_CHANGED: "🔄",
+  NEW_COMMENT: "💬",
+  TICKET_ASSIGNED: "👤",
+  TICKET_UPDATED: "📝",
+  BOOKING_APPROVED: "✅",
+  BOOKING_REJECTED: "❌",
+  NEW_TICKET: "🎟️",
+  NEW_BOOKING: "📅",
+};
+
 function NotificationPanelPage() {
   const { isAdmin, isTechnician } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  function getTicketPath(referenceId) {
+  function getNotificationPath(referenceId, type) {
     if (!referenceId) return "/notifications";
+
+    const isBooking = ["NEW_BOOKING", "BOOKING_APPROVED", "BOOKING_REJECTED"].includes(type);
+    
+    if (isBooking) {
+        return `/bookings`;
+    }
+
     if (isAdmin) return `/admin/tickets/${referenceId}`;
     if (isTechnician) return `/technician/tickets/${referenceId}`;
     return `/tickets/${referenceId}`;
@@ -37,7 +55,7 @@ function NotificationPanelPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Notifications</h1>
-          <p className="page-subtitle">Recent updates for your tickets and assignments.</p>
+          <p className="page-subtitle">Recent updates for your tickets, bookings, and assignments.</p>
         </div>
         {notifications.length > 0 && (
           <button className="btn secondary" onClick={handleMarkAllRead}>
@@ -46,7 +64,7 @@ function NotificationPanelPage() {
         )}
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
 
       {loading ? (
         <div className="skeleton-grid">
@@ -61,7 +79,7 @@ function NotificationPanelPage() {
           {notifications.map((notification) => (
             <Link
               key={notification.id}
-              to={getTicketPath(notification.referenceId)}
+              to={getNotificationPath(notification.referenceId, notification.type)}
               className="notification-item"
               style={{
                 display: "flex",
@@ -72,8 +90,9 @@ function NotificationPanelPage() {
                 background: notification.read ? "transparent" : "var(--bg-hover)",
               }}
             >
-              <span className="notification-icon">🔔</span>
+              <span className="notification-icon"><img src="/notification.png" alt="" className="notification-bell-icon" /></span>
               <div className="notification-body">
+                <p className="notification-title" style={{ fontWeight: 600, color: "var(--text-main)", marginBottom: 4 }}>{notification.title}</p>
                 <p className="notification-message">{notification.message}</p>
                 <span className="notification-time">
                   {new Date(notification.createdAt).toLocaleString()}

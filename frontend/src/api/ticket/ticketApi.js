@@ -1,18 +1,12 @@
 const BASE = import.meta.env.VITE_API_ORIGIN || "http://localhost:8081";
 const TICKET_BASE = `${BASE}/api/v1/tickets`;
-const TECH_BASE = `${BASE}/api/technician/tickets`;
-const ADMIN_BASE = `${BASE}/api/admin/tickets`;
 
 // ─── Headers ──────────────────────────────────────────────────────────────────
 
-function getUserId() {
-  return localStorage.getItem("userId");
-}
-
 function getHeaders(extra = {}) {
-  const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = { "Content-Type": "application/json" };
-  if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   return { ...headers, ...extra };
 }
 
@@ -47,6 +41,7 @@ async function handleResponse(res) {
  */
 export async function getAllTickets(filters = {}) {
   const params = new URLSearchParams();
+  params.set("scope", filters.scope ?? "ALL");
   if (filters.status) params.set("status", filters.status);
   if (filters.priority) params.set("priority", filters.priority);
   if (filters.reportedBy) params.set("reportedBy", String(filters.reportedBy));
@@ -63,14 +58,10 @@ export async function getAllTickets(filters = {}) {
  * reportedBy is injected from localStorage userId.
  */
 export async function createTicket(payload) {
-  const userId = getUserId();
   const res = await fetch(TICKET_BASE, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify({
-      ...payload,
-      reportedBy: userId ? Number(userId) : null,
-    }),
+    body: JSON.stringify(payload),
   });
   return handleResponse(res);
 }
@@ -126,7 +117,7 @@ export async function getTicketById(id) {
  * payload: { status, resolutionNotes? }
  */
 export async function updateTicketStatus(id, payload) {
-  const res = await fetch(`${TICKET_BASE}/${id}/status`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -147,6 +138,19 @@ export async function updateTicketResolution(id, payload) {
   return handleResponse(res);
 }
 
+/**
+ * Extend due date (assigned TECHNICIAN / ADMIN).
+ * payload: { dueAt, note }
+ */
+export async function updateTicketDueDate(id, payload) {
+  const res = await fetch(`${TICKET_BASE}/${id}/due-date`, {
+    method: "PATCH",
+    headers: getHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(res);
+}
+
 // ─── Technician APIs ──────────────────────────────────────────────────────────
 
 /**
@@ -155,12 +159,13 @@ export async function updateTicketResolution(id, payload) {
  */
 export async function getTechnicianTickets(filters = {}) {
   const params = new URLSearchParams();
+  params.set("scope", "ASSIGNED_TO_ME");
   if (filters.status) params.set("status", filters.status);
   if (filters.overdue) params.set("overdue", "true");
   if (filters.dueSoon) params.set("dueSoon", "true");
   params.set("page", String(filters.page ?? 0));
   params.set("size", String(filters.size ?? 10));
-  const res = await fetch(`${TECH_BASE}?${params}`, {
+  const res = await fetch(`${TICKET_BASE}?${params}`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
@@ -173,7 +178,7 @@ export async function getTechnicianTickets(filters = {}) {
  * payload: { assignedTo: userId }
  */
 export async function assignTicket(id, payload) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/assign`, {
+  const res = await fetch(`${TICKET_BASE}/${id}/assignment`, {
     method: "PATCH",
     headers: getHeaders(),
     body: JSON.stringify(payload),
@@ -186,28 +191,28 @@ export async function assignTicket(id, payload) {
  * payload: { rejectedReason }
  */
 export async function rejectTicket(id, payload) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/reject`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ status: "REJECTED", ...payload }),
   });
   return handleResponse(res);
 }
 
 /**
- * Close a resolved ticket (ADMIN).
+ * Close a resolved ticket (reporter / ADMIN).
  */
 export async function closeTicket(id) {
-  const res = await fetch(`${ADMIN_BASE}/${id}/close`, {
+  const res = await fetch(`${TICKET_BASE}/${id}`, {
     method: "PATCH",
     headers: getHeaders(),
-    body: JSON.stringify({}),
+    body: JSON.stringify({ status: "CLOSED" }),
   });
   return handleResponse(res);
 }
 
 export async function getAssignableTechnicians(ticketId) {
-  const res = await fetch(`${ADMIN_BASE}/${ticketId}/technicians`, {
+  const res = await fetch(`${TICKET_BASE}/${ticketId}/technicians`, {
     headers: getHeaders(),
   });
   return handleResponse(res);
@@ -274,9 +279,9 @@ export async function getAttachments(ticketId) {
 export async function uploadAttachments(ticketId, files) {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
-  const userId = getUserId();
+  const token = localStorage.getItem("jwtToken");
   const headers = {};
-  if (userId) headers["X-User-Id"] = userId;
+  if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",
     headers, // No Content-Type: let browser set multipart boundary

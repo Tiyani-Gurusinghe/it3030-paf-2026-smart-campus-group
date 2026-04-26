@@ -2,12 +2,16 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Auth & Layout
 import LoginPage from "../pages/auth/LoginPage";
+import SignupPage from "../pages/auth/SignupPage";
 import UnauthorizedPage from "../pages/auth/UnauthorizedPage";
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
+import HomePage from "../pages/home/HomePage";
 
 // Resources
-import DashboardPage from "../pages/dashboard/DashboardPage";
+import AdminDashboardPage from "../pages/dashboard/AdminDashboardPage";
+import TechnicianDashboardPage from "../pages/dashboard/TechnicianDashboardPage";
+import UserDashboardPage from "../pages/dashboard/UserDashboardPage";
 import ResourceListPage from "../pages/resources/ResourceListPage";
 import ResourceFormPage from "../pages/resources/ResourceFormPage";
 import ResourceDetailsPage from "../pages/resources/ResourceDetailsPage";
@@ -38,7 +42,9 @@ import RouteErrorPage from "../pages/common/RouteErrorPage";
 
 const router = createBrowserRouter([
   // --- PUBLIC ROUTES ---
+  { path: "/home", element: <HomePage />, errorElement: <RouteErrorPage /> },
   { path: "/login", element: <LoginPage />, errorElement: <RouteErrorPage /> },
+  { path: "/signup", element: <SignupPage />, errorElement: <RouteErrorPage /> },
   { path: "/unauthorized", element: <UnauthorizedPage />, errorElement: <RouteErrorPage /> },
 
   // --- PROTECTED ROUTES ---
@@ -53,14 +59,38 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <UserDashboardPage />,
       },
-      { path: "dashboard", element: <DashboardPage /> },
+      { path: "admin/dashboard", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminDashboardPage />
+        </ProtectedRoute>
+      )},
+      { path: "technician/dashboard", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianDashboardPage />
+        </ProtectedRoute>
+      )},
+      { path: "user/dashboard", element: <UserDashboardPage /> },
 
       // --- RESOURCES ---
       { path: "resources", element: <ResourceListPage /> },
-      { path: "resources/new", element: <ResourceFormPage /> },
-      { path: "resources/edit/:id", element: <ResourceFormPage /> },
+      { 
+        path: "resources/new", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
+            <ResourceFormPage />
+          </ProtectedRoute>
+        ) 
+      },
+      { 
+        path: "resources/edit/:id", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TECHNICIAN"]}>
+            <ResourceFormPage />
+          </ProtectedRoute>
+        ) 
+      },
       { path: "resources/:id", element: <ResourceDetailsPage /> },
 
       // --- BOOKINGS ---
@@ -76,12 +106,28 @@ const router = createBrowserRouter([
       { path: "tickets/:id/edit", element: <EditTicketPage /> },
 
       // --- TICKETS (admin) ---
-      { path: "admin/tickets", element: <AdminTicketsPage /> },
-      { path: "admin/tickets/:id", element: <AdminTicketDetailPage /> },
+      { path: "admin/tickets", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminTicketsPage />
+        </ProtectedRoute>
+      ) },
+      { path: "admin/tickets/:id", element: (
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <AdminTicketDetailPage />
+        </ProtectedRoute>
+      ) },
 
       // --- TICKETS (technician) ---
-      { path: "technician/tickets", element: <TechnicianTicketsPage /> },
-      { path: "technician/tickets/:id", element: <TechnicianTicketDetailPage /> },
+      { path: "technician/tickets", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianTicketsPage />
+        </ProtectedRoute>
+      ) },
+      { path: "technician/tickets/:id", element: (
+        <ProtectedRoute allowedRoles={["TECHNICIAN"]}>
+          <TechnicianTicketDetailPage />
+        </ProtectedRoute>
+      ) },
 
       // --- NOTIFICATIONS & PROFILE ---
       { path: "notifications", element: <NotificationPanelPage /> },

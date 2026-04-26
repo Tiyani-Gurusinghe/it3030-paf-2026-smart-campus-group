@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import useAuth from "../../features/auth/hooks/useAuth";
 
 const USER_NAV = [
+  { to: "/user/dashboard", icon: "⊞", label: "Dashboard" },
   { to: "/tickets/my", icon: "🎫", label: "My Tickets" },
   { to: "/tickets/create", icon: "➕", label: "Create Ticket" },
   { to: "/resources", icon: "🏢", label: "Facilities" },
@@ -11,6 +12,7 @@ const USER_NAV = [
 ];
 
 const TECHNICIAN_NAV = [
+  { to: "/technician/dashboard", icon: "⊞", label: "Dashboard" },
   { to: "/technician/tickets", icon: "🔧", label: "Assigned Tickets" },
   { to: "/resources", icon: "🏢", label: "Facilities" },
   { to: "/bookings", icon: "📅", label: "Bookings" },
@@ -19,8 +21,8 @@ const TECHNICIAN_NAV = [
 ];
 
 const ADMIN_NAV = [
+  { to: "/admin/dashboard", icon: "⊞", label: "Dashboard" },
   { to: "/admin/tickets", icon: "🛡️", label: "All Tickets" },
-  { to: "/dashboard", icon: "⊞", label: "Dashboard" },
   { to: "/resources", icon: "🏢", label: "Facilities" },
   { to: "/bookings", icon: "📅", label: "Bookings" },
   { to: "/notifications", icon: "🔔", label: "Notifications" },
@@ -46,14 +48,13 @@ function Sidebar() {
       </div>
       <div className="sidebar-section-label">Menu</div>
       <nav>
-        {navItems.map(({ to, icon, label }) => (
+        {navItems.map(({ to, label }) => (
           <NavLink
             key={to}
             to={to}
             end={to === "/"}
             className={({ isActive }) => (isActive ? "active" : "")}
           >
-            <span className="sidebar-icon">{icon}</span>
             {label}
           </NavLink>
         ))}

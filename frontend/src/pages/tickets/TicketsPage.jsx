@@ -20,6 +20,7 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [myTickets, setMyTickets] = useState(false);
   const [filters, setFilters] = useState({ status: "", priority: "" });
 
@@ -34,7 +35,7 @@ export default function TicketsPage() {
           ...(myTickets && user?.id ? { reportedBy: user.id } : {}),
         };
         const data = await getTickets(activeFilters);
-        setTickets(data);
+        setTickets(Array.isArray(data) ? data : data.content ?? []);
       } catch (err) {
         setError(err.message || "Failed to load tickets");
       } finally {
@@ -46,13 +47,13 @@ export default function TicketsPage() {
   }, [filters, myTickets, user?.id]);
 
   async function handleDelete(id) {
-    const confirmed = window.confirm("Are you sure you want to delete this ticket?");
-    if (!confirmed) return;
     try {
+      setError("");
       await deleteTicket(id);
       setTickets((prev) => prev.filter((t) => t.id !== id));
+      setPendingDeleteId(null);
     } catch (err) {
-      alert(err.message || "Failed to delete ticket");
+      setError(err.message || "Failed to delete ticket");
     }
   }
 
@@ -71,7 +72,7 @@ export default function TicketsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">🎫 Tickets</h1>
+          <h1 className="page-title">Tickets</h1>
           <p className="page-subtitle">
             Create, track, and manage campus maintenance & incident reports.
             {!loading && (
@@ -110,24 +111,37 @@ export default function TicketsPage() {
             className={`btn secondary filter-toggle ${myTickets ? "active" : ""}`}
             onClick={() => setMyTickets((v) => !v)}
           >
-            👤 My Tickets
+            My Tickets
           </button>
           {hasActiveFilters && (
             <button className="btn secondary" onClick={clearFilters}>
-              ✕ Clear
+              Clear
             </button>
           )}
         </div>
       </div>
 
-      {error && <div className="error-box"><span>⚠️</span> {error}</div>}
+      {error && <div className="error-box"><span>Error</span> {error}</div>}
       {loading && <SkeletonCards />}
       {!loading && !error && (
-        <TicketList
-          tickets={tickets}
-          onDelete={handleDelete}
-          emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
-        />
+        <>
+          {pendingDeleteId && (
+            <div className="error-box" style={{ marginBottom: 16 }}>
+              <span>Confirm</span> Delete ticket #{pendingDeleteId}?
+              <button className="btn danger" style={{ marginLeft: 12 }} onClick={() => handleDelete(pendingDeleteId)}>
+                Delete
+              </button>
+              <button className="btn secondary" style={{ marginLeft: 8 }} onClick={() => setPendingDeleteId(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
+          <TicketList
+            tickets={tickets}
+            onDelete={setPendingDeleteId}
+            emptyAction={<Link to="/tickets/new" className="btn">+ Create Ticket</Link>}
+          />
+        </>
       )}
     </div>
   );

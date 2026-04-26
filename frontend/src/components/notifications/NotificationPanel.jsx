@@ -7,6 +7,11 @@ const TYPE_ICONS = {
   TICKET_STATUS_CHANGED: "🔄",
   NEW_COMMENT: "💬",
   TICKET_ASSIGNED: "👤",
+  TICKET_UPDATED: "📝",
+  BOOKING_APPROVED: "✅",
+  BOOKING_REJECTED: "❌",
+  NEW_TICKET: "🎟️",
+  NEW_BOOKING: "📅",
 };
 
 function timeAgo(dateStr) {
@@ -26,8 +31,15 @@ export default function NotificationPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef();
 
-  function getTicketPath(referenceId) {
+  function getNotificationPath(referenceId, type) {
     if (!referenceId) return "/notifications";
+
+    const isBooking = ["NEW_BOOKING", "BOOKING_APPROVED", "BOOKING_REJECTED"].includes(type);
+    
+    if (isBooking) {
+        return `/bookings`;
+    }
+
     if (isAdmin) return `/admin/tickets/${referenceId}`;
     if (isTechnician) return `/technician/tickets/${referenceId}`;
     return `/tickets/${referenceId}`;
@@ -71,7 +83,7 @@ export default function NotificationPanel() {
   return (
     <div className="notification-wrapper" ref={panelRef}>
       <button className="notification-bell" onClick={handleOpen} aria-label="Notifications">
-        🔔
+        <img src="/notification.png" alt="" className="notification-bell-icon" />
         {unreadCount > 0 && (
           <span className="notification-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
         )}
@@ -91,18 +103,19 @@ export default function NotificationPanel() {
           <div className="notification-list">
             {notifications.length === 0 ? (
               <div className="notification-empty">
-                <p>🎉 You're all caught up!</p>
+                <p>You are all caught up.</p>
               </div>
             ) : (
               notifications.map((n) => (
                 <Link
                   key={n.id}
-                  to={getTicketPath(n.referenceId)}
+                  to={getNotificationPath(n.referenceId, n.type)}
                   className={`notification-item ${!n.read ? "unread" : ""}`}
                   onClick={() => setOpen(false)}
                 >
-                  <span className="notification-icon">{TYPE_ICONS[n.type] ?? "📢"}</span>
+                  <span className="notification-icon">{TYPE_ICONS[n.type] ?? "NT"}</span>
                   <div className="notification-body">
+                    <p className="notification-title">{n.title}</p>
                     <p className="notification-message">{n.message}</p>
                     <span className="notification-time">{timeAgo(n.createdAt)}</span>
                   </div>

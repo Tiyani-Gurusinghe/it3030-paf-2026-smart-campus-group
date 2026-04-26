@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
+import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
+import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
+import UserTicketActions from "../../components/ticket/UserTicketActions";
 import {
   CommentsSection,
   AttachmentsSection,
@@ -20,8 +23,13 @@ function isDueOverdue(dueAt) {
   return new Date(dueAt) < new Date();
 }
 
+function hasDisplayValue(value) {
+  return typeof value === "string" ? value.trim().length > 0 : value != null;
+}
+
 export default function TicketDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [error, setError] = useState("");
 
@@ -34,8 +42,8 @@ export default function TicketDetailsPage() {
   if (error) {
     return (
       <div className="page">
-        <div className="error-box"><span>⚠️</span> {error}</div>
-        <Link to="/tickets/my" className="btn secondary" style={{ marginTop: 12 }}>← Back</Link>
+        <div className="error-box"><span>Error</span> {error}</div>
+        <Link to="/tickets/my" className="btn secondary" style={{ marginTop: 12 }}>Back</Link>
       </div>
     );
   }
@@ -50,25 +58,31 @@ export default function TicketDetailsPage() {
     );
   }
 
-  const overdue = isDueOverdue(ticket.dueAt) && !["RESOLVED", "CLOSED"].includes(ticket.status);
+  const overdue = isDueOverdue(ticket.dueAt) && ["OPEN", "IN_PROGRESS"].includes(ticket.status);
+  const hasRequiredSkill = hasDisplayValue(ticket.requiredSkillName);
+  const hasPreferredContact = hasDisplayValue(ticket.preferredContact);
 
   return (
     <div className="page">
-      <div className="card details-card">
+      <div className="form-layout-wrapper">
+        <button onClick={() => navigate(-1)} className="btn-back btn-back-floating">
+          Back
+        </button>
+        <div className="card details-card">
 
         {/* Header */}
         <div className="details-header">
           <div>
             <h1 className="details-title">{ticket.title}</h1>
             {ticket.resourceName && (
-              <p className="details-location">📦 {ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}</p>
+              <p className="details-location">{ticket.resourceName} {ticket.resourceType ? `(${ticket.resourceType})` : ""}</p>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <StatusBadge status={ticket.status} />
             {ticket.commentCount > 0 && (
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                💬 {ticket.commentCount} comment{ticket.commentCount !== 1 ? "s" : ""}
+                {ticket.commentCount} comment{ticket.commentCount !== 1 ? "s" : ""}
               </span>
             )}
           </div>
@@ -91,16 +105,15 @@ export default function TicketDetailsPage() {
               {ticket.assignedToName ?? <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>Unassigned</span>}
             </div>
           </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Required Skill</div>
-            <div className="detail-item-value">{ticket.requiredSkillName ?? "—"}</div>
-          </div>
-          <div className="detail-item">
-            <div className="detail-item-label">Preferred Contact</div>
-            <div className="detail-item-value">{ticket.preferredContactDetails ?? "—"}</div>
-          </div>
+
+          {hasPreferredContact && (
+            <div className="detail-item">
+              <div className="detail-item-label">Preferred Contact</div>
+              <div className="detail-item-value">{ticket.preferredContact}</div>
+            </div>
+          )}
           <div className={`detail-item ${overdue ? "overdue-item" : ""}`}>
-            <div className="detail-item-label">Due At {overdue && "⚠️"}</div>
+            <div className="detail-item-label">Due At {overdue && "(overdue)"}</div>
             <div className="detail-item-value" style={overdue ? { color: "var(--color-danger)" } : {}}>
               {formatDate(ticket.dueAt)}
             </div>
@@ -111,6 +124,10 @@ export default function TicketDetailsPage() {
           </div>
         </div>
 
+        <TicketSlaPanel ticket={ticket} />
+
+        <hr className="details-section-divider" />
+
         {/* Description */}
         <div className="details-section">
           <div className="details-section-label">Description</div>
@@ -119,32 +136,18 @@ export default function TicketDetailsPage() {
 
         <hr className="details-section-divider" />
 
-        {/* Resolution Notes (read-only for user) */}
-        {ticket.resolutionNotes && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label">✅ Resolution Notes</div>
-              <p>{ticket.resolutionNotes}</p>
-              {ticket.resolvedAt && (
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
-                  Resolved on {formatDate(ticket.resolvedAt)}
-                </p>
-              )}
-            </div>
-            <hr className="details-section-divider" />
-          </>
+        <UserTicketActions
+          ticket={ticket}
+          onUpdated={(updated) => setTicket(updated)}
+        />
+
+        {["OPEN", "IN_PROGRESS", "RESOLVED"].includes(ticket.status) && (
+          <hr className="details-section-divider" />
         )}
 
-        {/* Rejected Reason */}
-        {ticket.rejectedReason && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>✕ Rejection Reason</div>
-              <p>{ticket.rejectedReason}</p>
-            </div>
-            <hr className="details-section-divider" />
-          </>
-        )}
+        {/* History Timeline */}
+        <TicketHistoryTimeline ticket={ticket} />
+        <hr className="details-section-divider" />
 
         {/* Attachments */}
         <AttachmentsSection ticketId={ticket.id} canUpload={true} />
@@ -156,8 +159,9 @@ export default function TicketDetailsPage() {
 
         {/* Actions */}
         <div className="card-actions">
-          <Link to="/tickets/my" className="btn secondary">← Back to My Tickets</Link>
+          <button onClick={() => navigate(-1)} className="btn secondary">Back to List</button>
         </div>
+      </div>
       </div>
     </div>
   );

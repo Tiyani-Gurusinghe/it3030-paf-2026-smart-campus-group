@@ -1,6 +1,7 @@
 package lk.sliit.smartcampus.booking.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
@@ -37,6 +38,10 @@ public class Booking {
     @Column(name = "end_time", nullable = false)
     @NotNull(message = "End time is required")
     private LocalDateTime endTime;
+
+    @Column(name = "booking_quantity", nullable = false)
+    @Min(value = 1, message = "Quantity must be at least 1")
+    private Integer quantity = 1;
 
     @Column(columnDefinition = "TEXT")
     @NotBlank(message = "Purpose is required")
@@ -98,6 +103,14 @@ public class Booking {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public String getPurpose() {

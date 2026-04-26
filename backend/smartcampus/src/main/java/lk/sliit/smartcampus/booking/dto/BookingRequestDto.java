@@ -2,6 +2,7 @@ package lk.sliit.smartcampus.booking.dto;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -22,6 +23,9 @@ public class BookingRequestDto {
     @NotNull(message = "End time is required")
     @Future(message = "End time must be in the future")
     private LocalDateTime endTime;
+
+    @Min(value = 1, message = "Quantity must be at least 1")
+    private Integer quantity = 1;
 
     @NotBlank(message = "Purpose is required")
     private String purpose;
@@ -61,6 +65,14 @@ public class BookingRequestDto {
 
     public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
     public String getPurpose() {
