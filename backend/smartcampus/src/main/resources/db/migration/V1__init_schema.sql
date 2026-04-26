@@ -93,6 +93,7 @@ CREATE TABLE bookings (
     booking_date DATE NOT NULL,
     start_time DATETIME(6) NOT NULL,
     end_time DATETIME(6) NOT NULL,
+    booking_quantity INT NOT NULL DEFAULT 1,
     purpose VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -151,17 +152,10 @@ CREATE TABLE tickets (
     CONSTRAINT fk_tickets_required_skill
         FOREIGN KEY (required_skill_id) REFERENCES skills(id),
 
-ALTER TABLE tickets
-    ADD COLUMN original_due_at DATETIME NULL AFTER due_at,
-    ADD COLUMN due_extended_at DATETIME NULL AFTER closed_at,
-    ADD COLUMN due_extended_by BIGINT NULL AFTER due_extended_at,
-    ADD COLUMN due_extension_note TEXT NULL AFTER due_extended_by,
-    ADD CONSTRAINT fk_tickets_due_extended_by
-        FOREIGN KEY (due_extended_by) REFERENCES users(id) ON DELETE SET NULL;
-
-UPDATE tickets
-SET original_due_at = due_at
-WHERE original_due_at IS NULL;
+    CONSTRAINT fk_tickets_due_extended_by
+        FOREIGN KEY (due_extended_by) REFERENCES users(id)
+        ON DELETE SET NULL
+);
 
 -- =========================================================
 -- 11. TICKET HISTORY
@@ -284,7 +278,6 @@ CREATE TABLE audit_logs (
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
-
 
 
 

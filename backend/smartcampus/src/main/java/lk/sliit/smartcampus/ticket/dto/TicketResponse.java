@@ -5,6 +5,7 @@ import lk.sliit.smartcampus.ticket.entity.TicketStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public class TicketResponse {
 
@@ -51,6 +52,7 @@ public class TicketResponse {
     private String rejectedReason;
     private Long timeToFirstResponseMinutes;
     private Long timeToResolutionMinutes;
+    private Map<String, String> links;
 
     public Long getId() {
         return id;
@@ -192,6 +194,10 @@ public class TicketResponse {
         return timeToResolutionMinutes;
     }
 
+    public Map<String, String> getLinks() {
+        return links;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -330,5 +336,9 @@ public class TicketResponse {
 
     public void setTimeToResolutionMinutes(Long timeToResolutionMinutes) {
         this.timeToResolutionMinutes = timeToResolutionMinutes;
+    }
+
+    public void setLinks(Map<String, String> links) {
+        this.links = links;
     }
 }

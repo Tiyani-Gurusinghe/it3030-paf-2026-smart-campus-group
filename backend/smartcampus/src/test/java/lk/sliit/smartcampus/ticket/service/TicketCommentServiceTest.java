@@ -46,6 +46,7 @@ class TicketCommentServiceTest {
     }
 
     @Test
+    // Test proof: comment owner can edit their own comment.
     void commentOwnerCanEditOwnComment() {
         Ticket ticket = new Ticket();
         ticket.setId(1L);
@@ -75,6 +76,7 @@ class TicketCommentServiceTest {
     }
 
     @Test
+    // Test proof: non-owner receives 403-style UnauthorizedException when editing a comment.
     void nonOwnerCannotEditComment() {
         Ticket ticket = new Ticket();
         ticket.setId(1L);
@@ -97,6 +99,7 @@ class TicketCommentServiceTest {
     }
 
     @Test
+    // Test proof: non-owner receives 403-style UnauthorizedException when deleting a comment.
     void nonOwnerCannotDeleteComment() {
         Ticket ticket = new Ticket();
         ticket.setId(1L);

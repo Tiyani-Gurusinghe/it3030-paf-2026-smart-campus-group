@@ -47,8 +47,11 @@ public class TicketValidationService {
     }
 
     public void validateCreateRequest(TicketRequest request) {
+        // Validation: required ticket fields are checked before deeper business rules.
         validateText(request);
+        // Validation: resource must exist and be ACTIVE before a ticket can be created.
         validateResourceExistsAndActive(request.getResourceId());
+        // Validation: selected skill must match the affected resource type.
         validateSkillAllowedForResourceType(
                 request.getResourceId(),
                 request.getRequiredSkillId()
@@ -56,10 +59,12 @@ public class TicketValidationService {
     }
 
     private void validateText(TicketRequest request) {
+        // Validation: title is required so staff can identify the issue quickly.
         if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new BadRequestException("Title is required");
         }
 
+        // Validation: description is required so the service team has enough detail.
         if (request.getDescription() == null || request.getDescription().isBlank()) {
             throw new BadRequestException("Description is required");
         }
@@ -76,6 +81,7 @@ public class TicketValidationService {
     }
 
     public void validateResourceExistsAndActive(Long resourceId) {
+        // Validation: query the resource record used by the ticket.
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
                 "SELECT id,status FROM resources WHERE id=?",
                 resourceId
@@ -87,12 +93,14 @@ public class TicketValidationService {
 
         String status = String.valueOf(rows.get(0).get("status"));
 
+        // Validation: inactive resources cannot receive new tickets.
         if (!"ACTIVE".equalsIgnoreCase(status)) {
             throw new BadRequestException("Selected resource is not active");
         }
     }
 
     public void validateSkillAllowedForResourceType(Long resourceId, Long skillId) {
+        // Validation: resource type controls which skills are valid for the ticket.
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
                 "SELECT resource_type FROM resources WHERE id=?",
                 resourceId
@@ -112,6 +120,7 @@ public class TicketValidationService {
                         skillId
                 );
 
+        // Validation: reject mismatched skill-resource combinations.
         if (!allowed) {
             throw new BadRequestException(
                     "Selected skill is not allowed for this resource type"
@@ -120,6 +129,7 @@ public class TicketValidationService {
     }
 
     public void validateTechnicianHasSkill(Long technicianId, Long skillId) {
+        // Validation: assigned technician must have the required skill.
         boolean hasSkill =
                 technicianSkillRepository.existsByUserIdAndSkillId(
                         technicianId,
@@ -138,6 +148,7 @@ public class TicketValidationService {
             return;
         }
 
+        // Validation: a single upload request can contain at most 3 files.
         if (files.size() > MAX_FILES) {
             throw new BadRequestException("Maximum 3 files allowed");
         }
@@ -149,10 +160,12 @@ public class TicketValidationService {
                     ? ""
                     : file.getContentType().toLowerCase(Locale.ROOT).trim();
 
+            // Validation: attachments are limited to image content types.
             if (!ALLOWED_IMAGE_TYPES.contains(type)) {
                 throw new BadRequestException("Only JPEG, PNG, GIF, or WEBP images are allowed");
             }
 
+            // Validation: file size is capped to keep uploads safe and manageable.
             if (file.getSize() > MAX_FILE_BYTES) {
                 throw new BadRequestException("Each file must be 5MB or smaller");
             }
@@ -165,6 +178,7 @@ public class TicketValidationService {
         }
 
         long incomingCount = files.stream().filter(file -> !file.isEmpty()).count();
+        // Validation: existing plus new attachments must not exceed the ticket limit.
         if (existingCount + incomingCount > MAX_FILES) {
             throw new BadRequestException("A ticket can have at most 3 attachments");
         }
@@ -177,6 +191,7 @@ public class TicketValidationService {
     ) {
         TicketStatus current = ticket.getStatus();
 
+        // Validation: status changes must follow the allowed ticket workflow.
         if (current == newStatus) {
             return;
         }

@@ -8,10 +8,12 @@ import lk.sliit.smartcampus.booking.dto.BookingResponseDto;
 import lk.sliit.smartcampus.booking.enums.BookingStatus;
 import lk.sliit.smartcampus.booking.service.BookingService;
 import lk.sliit.smartcampus.common.dto.ApiSuccessResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -59,6 +61,17 @@ public class BookingController {
     public ResponseEntity<ApiSuccessResponse<List<BookingResponseDto>>> getBookingsByResourceId(@PathVariable Long resourceId) {
         List<BookingResponseDto> bookings = bookingService.getBookingsByResourceId(resourceId);
         return ResponseEntity.ok(ApiSuccessResponse.success(bookings, "Resource bookings fetched successfully"));
+    }
+
+    @GetMapping("/resource/{resourceId}/available-quantity")
+    @Operation(summary = "Get remaining available quantity for a resource and time window")
+    public ResponseEntity<ApiSuccessResponse<Integer>> getAvailableQuantity(
+            @PathVariable Long resourceId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+            @RequestParam(required = false) Long excludingBookingId) {
+        int availableQuantity = bookingService.getAvailableQuantity(resourceId, startTime, endTime, excludingBookingId);
+        return ResponseEntity.ok(ApiSuccessResponse.success(availableQuantity, "Available quantity fetched successfully"));
     }
 
     @PatchMapping("/{id}/status")

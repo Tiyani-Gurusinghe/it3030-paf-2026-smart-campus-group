@@ -13,6 +13,7 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
   const [loadingTechnicians, setLoadingTechnicians] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -106,12 +107,12 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
   }
 
   async function handleClose() {
-    if (!window.confirm("Close this ticket? This marks it as completed.")) return;
     setSaving(true);
     setError("");
     try {
       const updated = await closeTicket(ticket.id);
       onUpdated(updated);
+      setConfirmClose(false);
     } catch (err) {
       setError(err.message || "Failed to close ticket");
     } finally {
@@ -179,9 +180,22 @@ export default function TicketAssignmentPanel({ ticket, onUpdated }) {
         <div className="admin-panel-section">
           <label className="admin-panel-label">Close Ticket</label>
           <p className="admin-panel-hint">Ticket is resolved. Close it to complete the workflow.</p>
-          <button className="btn" onClick={handleClose} disabled={saving}>
+          <button className="btn" onClick={() => setConfirmClose(true)} disabled={saving}>
             Close Ticket
           </button>
+          {confirmClose && (
+            <div className="admin-panel-section" style={{ marginTop: 12 }}>
+              <p className="admin-panel-hint" style={{ marginBottom: 8 }}>Close this ticket as completed?</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn" onClick={handleClose} disabled={saving}>
+                  Confirm Close
+                </button>
+                <button className="btn secondary" onClick={() => setConfirmClose(false)} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -31,7 +31,6 @@ function isOverdue(ticket) {
 
 export default function TicketSlaPanel({ ticket }) {
   const overdue = isOverdue(ticket);
-  const dueExtended = Boolean(ticket.dueExtendedAt);
 
   return (
     <div className="details-section">
@@ -42,18 +41,7 @@ export default function TicketSlaPanel({ ticket }) {
           <div className="detail-item-value" style={overdue ? { color: "var(--color-danger)" } : {}}>
             {formatDateTime(ticket.dueAt)}{overdue ? " (overdue)" : ""}
           </div>
-          {dueExtended && (
-            <div className="admin-panel-hint" style={{ marginTop: 6 }}>
-              Due date extended by {ticket.dueExtendedByName || "Unknown"}.
-            </div>
-          )}
         </div>
-        {dueExtended && (
-          <div className="detail-item">
-            <div className="detail-item-label">Original Due Time</div>
-            <div className="detail-item-value">{formatDateTime(ticket.originalDueAt)}</div>
-          </div>
-        )}
         <div className="detail-item">
           <div className="detail-item-label">Time to First Response</div>
           <div className="detail-item-value">{formatDuration(ticket.timeToFirstResponseMinutes)}</div>
@@ -63,18 +51,30 @@ export default function TicketSlaPanel({ ticket }) {
           <div className="detail-item-value">{formatDuration(ticket.timeToResolutionMinutes)}</div>
         </div>
       </div>
-      {dueExtended && (
-        <p className="admin-panel-hint" style={{ marginTop: 10 }}>
-          Due date extended on {formatDateTime(ticket.dueExtendedAt)} by {ticket.dueExtendedByName || "Unknown"}:
-          {" "}{ticket.dueExtensionNote || "No note provided."}
-        </p>
-      )}
-      <p className="admin-panel-hint" style={{ marginTop: 10 }}>
-        Due time is set when the ticket is created from priority: HIGH is due in 1 day,
-        MEDIUM in 5 days, and LOW in 14 days. Overdue status is only counted while the ticket
-        is OPEN or IN_PROGRESS. First response is measured from creation to the first admin or
-        technician engagement; resolution time is measured from creation to RESOLVED.
-      </p>
+
+      <div style={{ marginTop: 20, padding: 16, backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)', fontSize: 13, color: 'var(--text-secondary)' }}>
+        <h4 style={{ margin: '0 0 12px 0', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: 'var(--color-primary)' }}>ℹ</span> SLA Guidelines
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+          <div>
+            <strong style={{ display: 'block', marginBottom: 4, color: 'var(--text-primary)' }}>Priority Windows</strong>
+            <ul style={{ margin: 0, paddingLeft: 16, listStyleType: 'disc' }}>
+              <li><strong>HIGH:</strong> 1 day</li>
+              <li><strong>MEDIUM:</strong> 5 days</li>
+              <li><strong>LOW:</strong> 14 days</li>
+            </ul>
+          </div>
+          <div>
+            <strong style={{ display: 'block', marginBottom: 4, color: 'var(--text-primary)' }}>Time Tracking</strong>
+            <ul style={{ margin: 0, paddingLeft: 16, listStyleType: 'disc' }}>
+              <li><strong>Overdue:</strong> Counted only when OPEN or IN PROGRESS</li>
+              <li><strong>First Response:</strong> From creation to first staff engagement</li>
+              <li><strong>Resolution:</strong> From creation to RESOLVED status</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -20,6 +20,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -100,25 +101,26 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: covers full create -> assign -> progress -> resolve -> close flow with SLA fields.
     void createAssignResolveAndExposeSlaFields() throws Exception {
         long ticketId = createTicket(20L);
 
-        mockMvc.perform(patch("/api/admin/tickets/{id}/assignment", ticketId)
-                        .header("X-User-Id", 10L)
+        mockMvc.perform(patch("/api/v1/admin/tickets/{id}/assignment", ticketId)
+                        .with(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"assignedTo\":30}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.assignedTo").value(30));
 
-        mockMvc.perform(patch("/api/v1/tickets/{id}/status", ticketId)
-                        .header("X-User-Id", 30L)
+        mockMvc.perform(patch("/api/v1/tickets/{id}", ticketId)
+                        .with(technician())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"IN_PROGRESS\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
 
-        mockMvc.perform(patch("/api/v1/tickets/{id}/status", ticketId)
-                        .header("X-User-Id", 30L)
+        mockMvc.perform(patch("/api/v1/tickets/{id}", ticketId)
+                        .with(technician())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"RESOLVED\",\"resolutionNotes\":\"Cable replaced and tested\"}"))
                 .andExpect(status().isOk())
@@ -129,8 +131,8 @@ class TicketModuleIntegrationTest {
                 .andExpect(jsonPath("$.timeToFirstResponseMinutes", notNullValue()))
                 .andExpect(jsonPath("$.timeToResolutionMinutes", notNullValue()));
 
-        mockMvc.perform(patch("/api/admin/tickets/{id}/status", ticketId)
-                        .header("X-User-Id", 10L)
+        mockMvc.perform(patch("/api/v1/tickets/{id}", ticketId)
+                        .with(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"CLOSED\"}"))
                 .andExpect(status().isOk())
@@ -139,11 +141,12 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: admin rejection persists the rejected status and reason.
     void adminCanRejectAndRejectedReasonIsPersisted() throws Exception {
         long ticketId = createTicket(20L);
 
-        mockMvc.perform(patch("/api/admin/tickets/{id}/status", ticketId)
-                        .header("X-User-Id", 10L)
+        mockMvc.perform(patch("/api/v1/tickets/{id}", ticketId)
+                        .with(admin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"REJECTED\",\"rejectedReason\":\"Duplicate ticket - already under investigation\"}"))
                 .andExpect(status().isOk())
@@ -152,6 +155,7 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: enforces max 3 attachments and blocks unauthorized uploads with 403.
     void attachmentLimitIsCumulativeAndUnauthorizedUploadIsBlocked() throws Exception {
         long ticketId = createTicket(20L);
 
@@ -161,7 +165,7 @@ class TicketModuleIntegrationTest {
         mockMvc.perform(multipart("/api/v1/tickets/{id}/attachments", ticketId)
                         .file(file1)
                         .file(file2)
-                        .header("X-User-Id", 20L)
+                        .with(reporter())
                         .with(request -> {
                             request.setMethod("POST");
                             return request;
@@ -172,7 +176,7 @@ class TicketModuleIntegrationTest {
         mockMvc.perform(multipart("/api/v1/tickets/{id}/attachments", ticketId)
                         .file(image("three.png"))
                         .file(image("four.png"))
-                        .header("X-User-Id", 20L)
+                        .with(reporter())
                         .with(request -> {
                             request.setMethod("POST");
                             return request;
@@ -182,7 +186,7 @@ class TicketModuleIntegrationTest {
 
         mockMvc.perform(multipart("/api/v1/tickets/{id}/attachments", ticketId)
                         .file(image("unauthorized.png"))
-                        .header("X-User-Id", 40L)
+                        .with(otherUser())
                         .with(request -> {
                             request.setMethod("POST");
                             return request;
@@ -191,21 +195,22 @@ class TicketModuleIntegrationTest {
     }
 
     @Test
+    // Test proof: non-owner receives 403 for ticket edits and comment edits/deletes.
     void ticketOwnershipAndCommentOwnershipRulesAreEnforced() throws Exception {
         long ticketId = createTicket(20L);
 
         mockMvc.perform(put("/api/v1/tickets/{id}", ticketId)
-                        .header("X-User-Id", 40L)
+                        .with(otherUser())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(ticketRequestJson("Updated title")))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(delete("/api/v1/tickets/{id}", ticketId)
-                        .header("X-User-Id", 40L))
+                        .with(otherUser()))
                 .andExpect(status().isForbidden());
 
         MvcResult commentResult = mockMvc.perform(post("/api/v1/tickets/{id}/comments", ticketId)
-                        .header("X-User-Id", 20L)
+                        .with(reporter())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"Initial comment\"}"))
                 .andExpect(status().isCreated())
@@ -215,17 +220,18 @@ class TicketModuleIntegrationTest {
         long commentId = commentJson.get("id").asLong();
 
         mockMvc.perform(put("/api/v1/tickets/{ticketId}/comments/{commentId}", ticketId, commentId)
-                        .header("X-User-Id", 40L)
+                        .with(otherUser())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"content\":\"Try edit\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(delete("/api/v1/tickets/{ticketId}/comments/{commentId}", ticketId, commentId)
-                        .header("X-User-Id", 40L))
+                        .with(otherUser()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
+    // Test proof: notification preferences can suppress ticket status notifications.
     void notificationPreferencesCanDisableTicketNotifications() throws Exception {
         mockMvc.perform(patch("/api/v1/notifications/preferences/{type}", "TICKET_STATUS_CHANGED")
                         .header("X-User-Id", 20L)
@@ -237,8 +243,8 @@ class TicketModuleIntegrationTest {
 
         long ticketId = createTicket(20L);
 
-        mockMvc.perform(patch("/api/v1/tickets/{id}/status", ticketId)
-                        .header("X-User-Id", 30L)
+        mockMvc.perform(patch("/api/v1/tickets/{id}", ticketId)
+                        .with(technician())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"IN_PROGRESS\"}"))
                 .andExpect(status().isOk());
@@ -255,7 +261,7 @@ class TicketModuleIntegrationTest {
 
     private long createTicket(Long userId) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/tickets")
-                        .header("X-User-Id", userId)
+                        .with(userId.equals(10L) ? admin() : userId.equals(30L) ? technician() : reporter())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(ticketRequestJson("Projector issue")))
                 .andExpect(status().isCreated())
@@ -283,5 +289,21 @@ class TicketModuleIntegrationTest {
     private MockMultipartFile image(String filename) {
         byte[] payload = new byte[]{1, 2, 3, 4, 5};
         return new MockMultipartFile("files", filename, MediaType.IMAGE_PNG_VALUE, payload);
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor admin() {
+        return user("admin@test.com").roles("ADMIN");
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor reporter() {
+        return user("reporter@test.com").roles("USER");
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor technician() {
+        return user("tech@test.com").roles("TECHNICIAN");
+    }
+
+    private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor otherUser() {
+        return user("other@test.com").roles("USER");
     }
 }
