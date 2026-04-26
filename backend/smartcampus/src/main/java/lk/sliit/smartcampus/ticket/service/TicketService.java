@@ -391,6 +391,12 @@ public class TicketService {
                 ticket.setFirstRespondedAt(LocalDateTime.now());
             }
         }
+        
+        if (currentStatus == TicketStatus.RESOLVED && nextStatus == TicketStatus.OPEN) {
+            ticket.setRejectedReason(request.getRejectedReason().trim());
+            ticket.setResolutionNotes(null);
+            ticket.setResolvedAt(null);
+        }
 
         if (nextStatus == TicketStatus.CLOSED) {
             ticket.setClosedAt(LocalDateTime.now());
@@ -536,6 +542,16 @@ public class TicketService {
         if (current == TicketStatus.RESOLVED && next == TicketStatus.CLOSED) {
             if (!isAdmin && !isReporter) {
                 throw new UnauthorizedException("Only reporter or admin can close a resolved ticket");
+            }
+            return;
+        }
+
+        if (current == TicketStatus.RESOLVED && next == TicketStatus.OPEN) {
+            if (!isAdmin && !isReporter) {
+                throw new UnauthorizedException("Only reporter or admin can reopen a resolved ticket");
+            }
+            if (request.getRejectedReason() == null || request.getRejectedReason().isBlank()) {
+                throw new BadRequestException("Reason is required when reopening a ticket");
             }
             return;
         }

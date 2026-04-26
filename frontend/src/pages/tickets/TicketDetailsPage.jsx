@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
+import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
 import UserTicketActions from "../../components/ticket/UserTicketActions";
 import {
   CommentsSection,
@@ -144,32 +145,9 @@ export default function TicketDetailsPage() {
           <hr className="details-section-divider" />
         )}
 
-        {/* Resolution Notes (read-only for user) */}
-        {ticket.resolutionNotes && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label">Resolution Notes</div>
-              <p>{ticket.resolutionNotes}</p>
-              {ticket.resolvedAt && (
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
-                  Resolved on {formatDate(ticket.resolvedAt)}
-                </p>
-              )}
-            </div>
-            <hr className="details-section-divider" />
-          </>
-        )}
-
-        {/* Rejected Reason */}
-        {ticket.rejectedReason && (
-          <>
-            <div className="details-section">
-              <div className="details-section-label" style={{ color: "var(--color-danger)" }}>Rejection Reason</div>
-              <p>{ticket.rejectedReason}</p>
-            </div>
-            <hr className="details-section-divider" />
-          </>
-        )}
+        {/* History Timeline */}
+        <TicketHistoryTimeline ticket={ticket} />
+        <hr className="details-section-divider" />
 
         {/* Attachments */}
         <AttachmentsSection ticketId={ticket.id} canUpload={true} />

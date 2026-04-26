@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getTicketById } from "../../api/ticket/ticketApi";
 import StatusBadge from "../../components/ticket/StatusBadge";
 import TicketResolutionEditor from "../../components/ticket/TicketResolutionEditor";
+import TicketHistoryTimeline from "../../components/ticket/TicketHistoryTimeline";
 import TicketSlaPanel from "../../components/ticket/TicketSlaPanel";
 import {
   CommentsSection,
@@ -97,6 +98,8 @@ export default function TechnicianTicketDetailPage() {
           <p>{ticket.description || "No description."}</p>
         </div>
 
+        {/* History Timeline */}
+        <TicketHistoryTimeline ticket={ticket} />
         <hr className="details-section-divider" />
 
         {/* Work Panel */}
