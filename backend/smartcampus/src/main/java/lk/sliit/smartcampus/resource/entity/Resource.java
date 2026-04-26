@@ -88,6 +88,30 @@ public class Resource {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    private Integer healthScore;
+
+    @Transient
+    private String healthLabel;
+
+    @Transient
+    private String healthReason;
+
+    @Transient
+    private Long healthTotalTickets;
+
+    @Transient
+    private Long healthOpenTickets;
+
+    @Transient
+    private Long healthRecentTickets;
+
+    @Transient
+    private Long healthRecentBookings;
+
+    @Transient
+    private Long healthRecentMaintenance;
+
     // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -133,4 +157,28 @@ public class Resource {
 
     public String getFloor() { return floor; }
     public void setFloor(String floor) { this.floor = floor; }
+
+    public Integer getHealthScore() { return healthScore; }
+    public void setHealthScore(Integer healthScore) { this.healthScore = healthScore; }
+
+    public String getHealthLabel() { return healthLabel; }
+    public void setHealthLabel(String healthLabel) { this.healthLabel = healthLabel; }
+
+    public String getHealthReason() { return healthReason; }
+    public void setHealthReason(String healthReason) { this.healthReason = healthReason; }
+
+    public Long getHealthTotalTickets() { return healthTotalTickets; }
+    public void setHealthTotalTickets(Long healthTotalTickets) { this.healthTotalTickets = healthTotalTickets; }
+
+    public Long getHealthOpenTickets() { return healthOpenTickets; }
+    public void setHealthOpenTickets(Long healthOpenTickets) { this.healthOpenTickets = healthOpenTickets; }
+
+    public Long getHealthRecentTickets() { return healthRecentTickets; }
+    public void setHealthRecentTickets(Long healthRecentTickets) { this.healthRecentTickets = healthRecentTickets; }
+
+    public Long getHealthRecentBookings() { return healthRecentBookings; }
+    public void setHealthRecentBookings(Long healthRecentBookings) { this.healthRecentBookings = healthRecentBookings; }
+
+    public Long getHealthRecentMaintenance() { return healthRecentMaintenance; }
+    public void setHealthRecentMaintenance(Long healthRecentMaintenance) { this.healthRecentMaintenance = healthRecentMaintenance; }
 }

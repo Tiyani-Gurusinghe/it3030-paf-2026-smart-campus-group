@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import resourceApi from '../../features/resources/api/resourceApi';
 import { useAuthContext } from '../../features/auth/context/AuthContext';
 
+const getHealthClass = (label) => {
+    if (label === 'Excellent') return 'excellent';
+    if (label === 'Needs Attention') return 'attention';
+    return 'risk';
+};
+
+const isBookableResource = (resource) => ['SPACE', 'EQUIPMENT', 'UTILITY'].includes(resource.category);
+
 const ResourceListPage = () => {
     const navigate = useNavigate();
     const [resources, setResources] = useState([]);
@@ -346,6 +354,24 @@ const canManage = isStaff;
                             <div className="card-category" style={{marginBottom: '5px', fontSize: '12px', fontWeight: 'bold', color: 'var(--primary-color)'}}>
                                 {resource.category} - {resource.type}
                             </div>
+
+                            {resource.category !== 'BUILDING' && resource.healthScore != null && (
+                                <div className={`resource-health resource-health-${getHealthClass(resource.healthLabel)}`}>
+                                    <div className="resource-health-header">
+                                        <span>Health Score</span>
+                                        <strong>{resource.healthLabel} · {resource.healthScore}%</strong>
+                                    </div>
+                                    <div className="resource-health-track">
+                                        <i style={{ width: `${resource.healthScore}%` }} />
+                                    </div>
+                                    <p>{resource.healthReason}</p>
+                                    <div className="resource-health-stats">
+                                        <span>{resource.healthOpenTickets || 0} open</span>
+                                        <span>{resource.healthRecentTickets || 0} recent tickets</span>
+                                        <span>{resource.healthRecentBookings || 0} bookings</span>
+                                    </div>
+                                </div>
+                            )}
                             
                             {resource.faculties && resource.faculties.length > 0 && (
                                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -376,12 +402,21 @@ const canManage = isStaff;
                             </div>
                             
                             <div className="card-actions" style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); navigate(`/bookings/new?resourceId=${resource.id}&resourceName=${encodeURIComponent(resource.name)}`); }} 
-                                    className="btn primary" 
-                                    style={{ flex: 1 }}>
-                                    Book
-                                </button>
+                                {isBookableResource(resource) ? (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/bookings/new?resourceId=${resource.id}&resourceName=${encodeURIComponent(resource.name)}`); }}
+                                        className="btn primary"
+                                        style={{ flex: 1 }}>
+                                        Book
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setSelectedBuildingId(resource.id); }}
+                                        className="btn primary"
+                                        style={{ flex: 1 }}>
+                                        View Spaces
+                                    </button>
+                                )}
                                 {isStaff && (
                                     <>
                                         <button onClick={(e) => { e.stopPropagation(); navigate(`/resources/edit/${resource.id}`); }} className="btn secondary" style={{ flex: 1 }}>
