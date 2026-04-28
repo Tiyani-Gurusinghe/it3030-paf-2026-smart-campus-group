@@ -6,6 +6,7 @@ const TICKET_BASE = `${BASE}/api/v1/tickets`;
 function getHeaders(extra = {}) {
   const token = localStorage.getItem("jwtToken");
   const headers = { "Content-Type": "application/json" };
+  // Authorization header: sends the Bearer JWT so the backend can authenticate this request.
   if (token) headers["Authorization"] = `Bearer ${token}`;
   return { ...headers, ...extra };
 }
@@ -281,6 +282,7 @@ export async function uploadAttachments(ticketId, files) {
   files.forEach((f) => formData.append("files", f));
   const token = localStorage.getItem("jwtToken");
   const headers = {};
+  // Authorization header: multipart uploads still send the Bearer JWT for authentication.
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(`${TICKET_BASE}/${ticketId}/attachments`, {
     method: "POST",

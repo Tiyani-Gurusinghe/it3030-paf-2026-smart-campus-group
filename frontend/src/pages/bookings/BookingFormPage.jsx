@@ -185,6 +185,7 @@ const BookingFormPage = () => {
     };
 
     const isInventory = selectedResource && ['EQUIPMENT', 'UTILITY'].includes(selectedResource.category);
+    const isBuildingResource = selectedResource?.category === 'BUILDING';
     const totalQuantity = selectedResource?.capacity || 1;
     const maxQuantity = availableQuantity ?? totalQuantity;
     const availabilityStart = selectedResource?.availableFrom?.slice(0, 5) || '08:00';
@@ -419,6 +420,11 @@ const BookingFormPage = () => {
             return;
         }
 
+        if (isBuildingResource) {
+            setError("Buildings are not directly bookable. Please choose a space or asset inside the building.");
+            return;
+        }
+
         const start = new Date(formData.startTime);
         const end = new Date(formData.endTime);
         const durationMinutes = (end - start) / 60000;
@@ -479,6 +485,11 @@ const BookingFormPage = () => {
             </div>
 
             {error && <div className="error-box">{error}</div>}
+            {isBuildingResource && (
+                <div className="error-box">
+                    Buildings are navigation containers. Select a faculty space, auditorium, lab, room, or asset inside this building to create a booking.
+                </div>
+            )}
 
             <div className="booking-create-layout">
             <div className="card booking-form-card">
@@ -583,7 +594,7 @@ const BookingFormPage = () => {
 
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button type="button" onClick={() => navigate(-1)} className="btn secondary">Cancel</button>
-                        <button type="submit" disabled={loading} className="btn primary">
+                        <button type="submit" disabled={loading || isBuildingResource} className="btn primary">
                             {loading ? 'Submitting...' : 'Confirm Booking'}
                         </button>
                     </div>

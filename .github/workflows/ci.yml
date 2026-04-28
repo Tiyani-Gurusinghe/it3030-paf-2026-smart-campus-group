@@ -1,5 +1,7 @@
 name: CI
-
+# Runs when:
+# - pushes are made directly to main
+# - when a PR is opened/updated (PR targeting main)
 on:
   push:
     branches: [ "main" ]
@@ -7,8 +9,9 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # backend-build: tests Spring Boot backend
   backend-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # linux virtual machine
 
     defaults:
       run:
@@ -30,6 +33,7 @@ jobs:
 
       - name: Run tests
         run: ./mvnw test
+  # frontend-build: builds React frontend
   frontend-build:
     runs-on: ubuntu-latest
     defaults:

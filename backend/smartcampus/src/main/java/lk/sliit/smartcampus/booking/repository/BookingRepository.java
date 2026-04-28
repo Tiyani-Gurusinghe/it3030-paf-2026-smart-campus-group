@@ -23,6 +23,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findTop5ByOrderByCreatedAtDesc();
 
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.resource.id = :resourceId " +
+           "AND b.startTime >= :since " +
+           "AND b.status NOT IN ('REJECTED', 'CANCELLED')")
+    long countRecentBookingsForResource(
+            @Param("resourceId") Long resourceId,
+            @Param("since") LocalDateTime since);
+
     // Check for overlapping bookings for a specific resource
     // An overlap occurs if a booking exists with a start time before the new end time 
     // AND an end time after the new start time, AND the status is not REJECTED or CANCELLED.

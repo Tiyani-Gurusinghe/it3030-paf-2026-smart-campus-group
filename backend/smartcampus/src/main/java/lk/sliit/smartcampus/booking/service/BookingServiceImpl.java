@@ -55,6 +55,7 @@ public class BookingServiceImpl implements BookingService {
         if (resource.getStatus() != ResourceStatus.ACTIVE) {
             throw new ConflictException("Cannot book an inactive resource");
         }
+        validateBookableResource(resource);
 
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
             throw new ConflictException("Start time must be before end time");
@@ -124,6 +125,7 @@ public class BookingServiceImpl implements BookingService {
     public int getAvailableQuantity(Long resourceId, LocalDateTime startTime, LocalDateTime endTime, Long excludingBookingId) {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+        validateBookableResource(resource);
 
         if (startTime.isAfter(endTime)) {
             throw new ConflictException("Start time must be before end time");
@@ -190,6 +192,7 @@ public class BookingServiceImpl implements BookingService {
         if (resource.getStatus() != ResourceStatus.ACTIVE) {
             throw new ConflictException("Cannot book an inactive resource");
         }
+        validateBookableResource(resource);
 
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
             throw new ConflictException("Start time must be before end time");
@@ -227,6 +230,8 @@ public class BookingServiceImpl implements BookingService {
         dto.setId(booking.getId());
         dto.setResourceId(booking.getResource().getId());
         dto.setResourceName(booking.getResource().getName());
+        dto.setResourceCategory(booking.getResource().getCategory().name());
+        dto.setResourceType(booking.getResource().getType().name());
         dto.setUserId(booking.getUser().getId());
         dto.setUserName(booking.getUser().getFullName());
         dto.setStartTime(booking.getStartTime());
@@ -281,6 +286,12 @@ public class BookingServiceImpl implements BookingService {
 
     private boolean isInventory(Resource resource) {
         return resource.getCategory() == ResourceCategory.EQUIPMENT || resource.getCategory() == ResourceCategory.UTILITY;
+    }
+
+    private void validateBookableResource(Resource resource) {
+        if (resource.getCategory() == ResourceCategory.BUILDING) {
+            throw new ConflictException("Buildings are not directly bookable. Please choose a space or asset inside the building.");
+        }
     }
 
     private void validateTimeRules(LocalDateTime startTime, LocalDateTime endTime) {

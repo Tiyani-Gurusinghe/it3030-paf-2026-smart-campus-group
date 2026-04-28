@@ -50,6 +50,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: list endpoints return paginated bodies with no-store cache headers.
     void listEndpointsReturnPaginatedNoStoreResponses() {
         var page = new PageImpl<>(List.of(ticket()), PageRequest.of(0, 10), 1);
         when(ticketService.getAllTickets(eq(20L), any(), any(), any(), eq(0), eq(10))).thenReturn(page);
@@ -69,6 +70,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: technician ticket filtering works through the main ticket resource path.
     void resourceScopedTicketEndpointSupportsAssignedToMeWithoutRoleUrl() {
         var page = new PageImpl<>(List.of(ticket()), PageRequest.of(0, 10), 1);
         when(ticketService.getTechnicianTickets(eq(20L), any(), eq(true), eq(false), eq(0), eq(10))).thenReturn(page);
@@ -90,6 +92,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: lookup data returns 200 OK and explicit short-term cache headers.
     void lookupEndpointIsExplicitlyCacheable() {
         when(ticketService.getSkillsForResource(100L)).thenReturn(List.of(new SkillOptionResponse(200L, "IT_SUPPORT")));
 
@@ -100,6 +103,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: verifies POST returns 201 Created and DELETE returns 204 No Content.
     void ticketCrudAndStateEndpointsUseRestfulStatuses() {
         TicketResponse created = ticket();
         created.setId(99L);
@@ -132,6 +136,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: ticket responses expose REST navigation links for related resources.
     void ticketResponsesExposeHypermediaLinks() {
         TicketResponse ticket = ticket();
 
@@ -142,6 +147,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: comment endpoints use nested ticket resources and correct status codes.
     void commentEndpointsUseNestedResources() {
         TicketCommentResponse comment = new TicketCommentResponse();
         comment.setId(7L);
@@ -163,6 +169,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: attachment endpoints use nested resources and no-store cache headers.
     void attachmentEndpointsUseNestedResourcesAndNoStore() {
         List<String> urls = List.of("http://localhost:8081/uploads/tickets/99/image.png");
         List<MultipartFile> files = List.of(new MockMultipartFile("files", "image.png", "image/png", new byte[]{1}));
@@ -182,6 +189,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: admin assignment endpoints are versioned and cache lookup data briefly.
     void adminAssignmentEndpointsAreVersionedResources() {
         TicketResponse ticket = ticket();
         when(ticketService.getAssignableTechnicians(99L, 20L))
@@ -198,6 +206,7 @@ class TicketRestContractTest {
     }
 
     @Test
+    // Test proof: assignment actions are also available from the ticket resource itself.
     void assignmentEndpointsAreAvailableOnTicketResource() {
         TicketResponse ticket = ticket();
         when(ticketService.getAssignableTechnicians(99L, 20L))
